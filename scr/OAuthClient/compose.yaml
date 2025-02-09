@@ -1,0 +1,6 @@
+﻿services:
+  oauthclient:
+    image: oauthclient
+    build:
+      context: .
+      dockerfile: OAuthClient/Dockerfile

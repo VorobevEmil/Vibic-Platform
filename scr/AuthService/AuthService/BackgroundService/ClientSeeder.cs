@@ -29,7 +29,7 @@ public class ClientSeeder : IHostedService
 
         var scopeDescriptor = new OpenIddictScopeDescriptor
         {
-            Name = "vibic_scope",
+            Name = "admin_scope",
             Resources = { "vibic_resource" }
         };
 
@@ -51,19 +51,29 @@ public class ClientSeeder : IHostedService
 
         var appDescriptor = new OpenIddictApplicationDescriptor
         {
-            ClientId = "vibic_web",
+            ClientId = "vibic_client",
             ClientSecret = "vibic_secret",
+            DisplayName = "Vibic Client",
+            RedirectUris = { new Uri("https://localhost:7296/signin-oidc") }, 
             ClientType = OpenIddictConstants.ClientTypes.Confidential,
             Permissions =
             {
                 OpenIddictConstants.Permissions.Endpoints.Token,
                 OpenIddictConstants.Permissions.Endpoints.Introspection,
                 OpenIddictConstants.Permissions.Endpoints.Revocation,
+                OpenIddictConstants.Permissions.Endpoints.Authorization,
+                
+                OpenIddictConstants.Permissions.ResponseTypes.Code,
 
+                OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                 OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
                 OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                OpenIddictConstants.GrantTypes.ClientCredentials,
+                OpenIddictConstants.Scopes.OpenId,
+                OpenIddictConstants.Scopes.Profile,
+                OpenIddictConstants.Scopes.Email,
 
-                OpenIddictConstants.Permissions.Prefixes.Scope + "vibic_scope"
+                OpenIddictConstants.Permissions.Prefixes.Scope + "admin_scope"
             }
         };
 

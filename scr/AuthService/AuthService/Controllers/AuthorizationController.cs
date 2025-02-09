@@ -11,7 +11,43 @@ namespace AuthService.Controllers;
 [ApiController]
 public class AuthorizationController : ControllerBase
 {
-    [HttpPost("~/token")]
+    [HttpGet("~/connect/authorize")]
+    public async Task<IActionResult> Authorize()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest();
+        if (request == null)
+        {
+            return BadRequest("Invalid OpenID Connect request.");
+        }
+
+        // Если пользователь не аутентифицирован, отправляем его на страницу входа
+        if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            return Challenge(new AuthenticationProperties { RedirectUri = "/connect/authorize" });
+        }
+
+        // Создаём список клеймов (Claims) для пользователя
+        List<Claim> claims =
+        [
+            new(OpenIddictConstants.Claims.Subject, User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? ""),
+            new(OpenIddictConstants.Claims.Name, User.Identity.Name ?? ""),
+            new(OpenIddictConstants.Claims.Email, User.FindFirst(ClaimTypes.Email)?.Value ?? "")
+        ];
+
+        // Создаём ClaimsIdentity с указанной схемой аутентификации
+        var identity = new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+
+        // Создаём ClaimsPrincipal, который будет передан клиенту
+        var principal = new ClaimsPrincipal(identity);
+
+        // Добавляем разрешенные области (scopes), если они есть в запросе
+        principal.SetScopes(OpenIddictConstants.Scopes.OpenId, OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Email);
+
+        // Генерируем и возвращаем authorization code
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    [HttpPost("~/connect/token")]
     public async Task<IActionResult> Exchange()
     {
         var request = HttpContext.GetOpenIddictServerRequest() ??
