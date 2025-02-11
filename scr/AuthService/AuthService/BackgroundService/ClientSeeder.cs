@@ -54,7 +54,7 @@ public class ClientSeeder : IHostedService
             ClientId = "vibic_client",
             ClientSecret = "vibic_secret",
             DisplayName = "Vibic Client",
-            RedirectUris = { new Uri("https://localhost:7296/signin-oidc") }, 
+            RedirectUris = { new Uri("https://localhost:7296/callback") }, 
             ClientType = OpenIddictConstants.ClientTypes.Confidential,
             Permissions =
             {
@@ -68,12 +68,16 @@ public class ClientSeeder : IHostedService
                 OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
                 OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
                 OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+                
                 OpenIddictConstants.GrantTypes.ClientCredentials,
+                OpenIddictConstants.GrantTypes.AuthorizationCode,
+                
                 OpenIddictConstants.Scopes.OpenId,
                 OpenIddictConstants.Scopes.Profile,
                 OpenIddictConstants.Scopes.Email,
 
-                OpenIddictConstants.Permissions.Prefixes.Scope + "admin_scope"
+                OpenIddictConstants.Permissions.Scopes.Email,
+                OpenIddictConstants.Permissions.Scopes.Profile
             }
         };
 

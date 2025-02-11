@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
@@ -12,7 +13,7 @@ namespace AuthService.Controllers;
 public class AuthorizationController : ControllerBase
 {
     [HttpGet("~/connect/authorize")]
-    public async Task<IActionResult> Authorize()
+    public IActionResult Authorize()
     {
         var request = HttpContext.GetOpenIddictServerRequest();
         if (request == null)
@@ -23,7 +24,7 @@ public class AuthorizationController : ControllerBase
         // Если пользователь не аутентифицирован, отправляем его на страницу входа
         if (!User.Identity?.IsAuthenticated ?? true)
         {
-            return Challenge(new AuthenticationProperties { RedirectUri = "/connect/authorize" });
+            return Challenge(new AuthenticationProperties { RedirectUri = "https://localhost:7296/" });
         }
 
         // Создаём список клеймов (Claims) для пользователя
@@ -40,9 +41,22 @@ public class AuthorizationController : ControllerBase
         // Создаём ClaimsPrincipal, который будет передан клиенту
         var principal = new ClaimsPrincipal(identity);
 
-        // Добавляем разрешенные области (scopes), если они есть в запросе
-        principal.SetScopes(OpenIddictConstants.Scopes.OpenId, OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Email);
+// Включить все claims в access token
+        foreach (var claim in principal.Claims)
+        {
+            if (claim.Type == OpenIddictConstants.Claims.Name || claim.Type == OpenIddictConstants.Claims.Email)
+            {
+                claim.SetDestinations(OpenIddictConstants.Destinations.IdentityToken);
+            }
+            else
+            {
+                claim.SetDestinations(OpenIddictConstants.Destinations.AccessToken);
+            }
+        }
 
+        // Добавляем разрешенные области (scopes), если они есть в запросе
+        principal.SetScopes(OpenIddictConstants.Scopes.OpenId, OpenIddictConstants.Scopes.Profile,
+            OpenIddictConstants.Scopes.Email);
         // Генерируем и возвращаем authorization code
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
@@ -55,7 +69,8 @@ public class AuthorizationController : ControllerBase
 
         if (request.IsRefreshTokenGrantType())
         {
-            var claimsPrincipal = (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme))
+            var claimsPrincipal =
+                (await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme))
                 .Principal!;
 
             return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -73,6 +88,52 @@ public class AuthorizationController : ControllerBase
             return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
+        if (request.IsAuthorizationCodeGrantType())
+        {
+            var result = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            if (!result.Succeeded)
+            {
+                return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            }
+
+            var claims = result.Principal.Claims.ToList();
+            
+            var identity = new ClaimsIdentity(claims, TokenValidationParameters.DefaultAuthenticationType,
+                OpenIddictConstants.Claims.Name, OpenIddictConstants.Claims.Role);
+
+            // Создание нового ClaimsPrincipal с обновленным набором данных
+            var principal = new ClaimsPrincipal(identity);
+            principal.SetScopes(result.Principal.GetScopes());
+
+            foreach (var claim in principal.Claims)
+            {
+                if (claim.Type == OpenIddictConstants.Claims.Name || claim.Type == OpenIddictConstants.Claims.Email)
+                {
+                    claim.SetDestinations(OpenIddictConstants.Destinations.AccessToken);
+                }
+            }
+            
+            return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        }
+
         throw new NotImplementedException("The specified grant type is not implemented.");
+    }
+
+    [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
+    [HttpGet("~/connect/userinfo"), HttpPost("~/connect/userinfo")]
+    public IActionResult GetUserInfo()
+    {
+        var claims = new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
+            [OpenIddictConstants.Claims.Subject] = User.FindFirst(OpenIddictConstants.Claims.Subject)?.Value!,
+            [OpenIddictConstants.Claims.Name] = User.FindFirst(OpenIddictConstants.Claims.Name)?.Value!,
+            [OpenIddictConstants.Claims.Email] = User.FindFirst(OpenIddictConstants.Claims.Email)?.Value!,
+        };
+
+        // Note: the complete list of standard claims supported by the OpenID Connect specification
+        // can be found here: http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+
+        return Ok(claims);
     }
 }
