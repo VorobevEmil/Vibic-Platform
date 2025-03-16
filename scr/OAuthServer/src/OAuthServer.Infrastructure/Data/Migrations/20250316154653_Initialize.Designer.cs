@@ -12,7 +12,7 @@ using OAuthServer.Infrastructure.Data;
 namespace OAuthServer.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250315101140_Initialize")]
+    [Migration("20250316154653_Initialize")]
     partial class Initialize
     {
         /// <inheritdoc />
@@ -73,10 +73,6 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("OpenIddictApplicationId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ProviderType")
                         .IsRequired()
                         .HasColumnType("text");
 

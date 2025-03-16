@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OAuthServer.Application.Exceptions;
 using OAuthServer.Infrastructure.Data;
-using OAuthServer.Web.Exceptions;
+using OAuthServer.Web.ExceptionHandlers;
 
 namespace OAuthServer.Web;
 

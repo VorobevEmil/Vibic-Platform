@@ -3,7 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OAuthServer.Application.Interfaces;
-using OAuthServer.Application.Interfaces.OpenIdDict;
+using OAuthServer.Application.Interfaces.OpenId;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
@@ -13,16 +13,16 @@ namespace OAuthServer.Web.Controllers;
 [Route("api/connect")]
 public class ConnectController : ControllerBase
 {
-    private readonly IOpenIdDictAuthorizationService _openIdDictAuthorizationService;
-    private readonly IOpenIdDictTokenService _ioAuthTokenService;
-    private readonly IOpenIdDictUserService _ioAuthUserService;
+    private readonly IOpenIdAuthorizationService _openIdAuthorizationService;
+    private readonly IOpenIdTokenService _ioAuthTokenService;
+    private readonly IOpenIdUserService _ioAuthUserService;
 
     public ConnectController(
-        IOpenIdDictAuthorizationService openIdDictAuthorizationService,
-        IOpenIdDictTokenService ioAuthTokenService,
-        IOpenIdDictUserService ioAuthUserService)
+        IOpenIdAuthorizationService openIdAuthorizationService,
+        IOpenIdTokenService ioAuthTokenService,
+        IOpenIdUserService ioAuthUserService)
     {
-        _openIdDictAuthorizationService = openIdDictAuthorizationService;
+        _openIdAuthorizationService = openIdAuthorizationService;
         _ioAuthTokenService = ioAuthTokenService;
         _ioAuthUserService = ioAuthUserService;
     }
@@ -34,7 +34,7 @@ public class ConnectController : ControllerBase
         if (request == null)
             return BadRequest("Invalid OpenID Connect request.");
 
-        ClaimsPrincipal principal = _openIdDictAuthorizationService.Authorize(User, request);
+        ClaimsPrincipal principal = _openIdAuthorizationService.Authorize(User, request);
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 

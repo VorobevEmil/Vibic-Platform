@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OAuthServer.Application.DTOs.UserAuthenticationService;
+using OAuthServer.Application.DTOs.Auth;
 using OAuthServer.Application.Interfaces;
 
 namespace OAuthServer.Web.Controllers;

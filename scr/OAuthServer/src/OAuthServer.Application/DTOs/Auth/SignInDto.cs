@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace OAuthServer.Application.DTOs.UserAuthenticationService;
+namespace OAuthServer.Application.DTOs.Auth;
 
 public record SignInDto
 {

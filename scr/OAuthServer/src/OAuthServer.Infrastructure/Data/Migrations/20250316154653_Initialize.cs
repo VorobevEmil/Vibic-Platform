@@ -106,8 +106,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OpenIddictApplicationId = table.Column<string>(type: "text", nullable: false),
-                    ProviderType = table.Column<string>(type: "text", nullable: false)
+                    OpenIddictApplicationId = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {

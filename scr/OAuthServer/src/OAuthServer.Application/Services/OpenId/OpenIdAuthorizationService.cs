@@ -1,12 +1,11 @@
 using System.Security.Claims;
-using OAuthServer.Application.Interfaces;
-using OAuthServer.Application.Interfaces.OpenIdDict;
+using OAuthServer.Application.Interfaces.OpenId;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
-namespace OAuthServer.Application.Services.OpenIdDict;
+namespace OAuthServer.Application.Services.OpenId;
 
-public class OpenIdDictAuthorizationService : IOpenIdDictAuthorizationService
+public class OpenIdAuthorizationService : IOpenIdAuthorizationService
 {
     public ClaimsPrincipal Authorize(ClaimsPrincipal user, OpenIddictRequest request)
     {
@@ -22,10 +21,10 @@ public class OpenIdDictAuthorizationService : IOpenIdDictAuthorizationService
             new(OpenIddictConstants.Claims.Email, user.FindFirst(ClaimTypes.Email)?.Value ?? "")
         ];
 
-        var identity = new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
+        ClaimsIdentity identity = new(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        ClaimsPrincipal principal = new(identity);
 
-        foreach (var claim in principal.Claims)
+        foreach (Claim claim in principal.Claims)
         {
             claim.SetDestinations(OpenIddictConstants.Destinations.AccessToken);
         }

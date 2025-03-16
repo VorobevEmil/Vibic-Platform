@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using OAuthServer.Application.Exceptions;
 
-namespace OAuthServer.Web.Exceptions;
+namespace OAuthServer.Web.ExceptionHandlers;
 
 internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
 {

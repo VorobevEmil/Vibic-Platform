@@ -1,11 +1,10 @@
 using System.Security.Claims;
-using OAuthServer.Application.Interfaces;
-using OAuthServer.Application.Interfaces.OpenIdDict;
+using OAuthServer.Application.Interfaces.OpenId;
 using OpenIddict.Abstractions;
 
-namespace OAuthServer.Application.Services.OpenIdDict;
+namespace OAuthServer.Application.Services.OpenId;
 
-public class OpenIdDictUserService : IOpenIdDictUserService
+public class OpenIdUserService : IOpenIdUserService
 {
     public Dictionary<string, object> GetUserInfo(ClaimsPrincipal user)
     {

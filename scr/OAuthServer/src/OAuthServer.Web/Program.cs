@@ -1,7 +1,6 @@
 using OAuthServer.Application;
 using OAuthServer.Infrastructure;
 using OAuthServer.Web;
-using OAuthServer.Web.Helpers;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -22,7 +21,6 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 }
 WebApplication app = builder.Build();
 {
-    await SeedData.InitializeAsync(app.Services);
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();

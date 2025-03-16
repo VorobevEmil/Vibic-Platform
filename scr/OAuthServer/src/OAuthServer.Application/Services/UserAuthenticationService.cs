@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using OAuthServer.Application.DTOs.UserAuthenticationService;
+using OAuthServer.Application.DTOs.Auth;
 using OAuthServer.Application.Exceptions;
 using OAuthServer.Application.Interfaces;
 using OAuthServer.Core.Entities;

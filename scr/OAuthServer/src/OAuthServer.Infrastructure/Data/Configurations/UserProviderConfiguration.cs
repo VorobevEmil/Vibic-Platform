@@ -9,7 +9,6 @@ public class UserProviderConfiguration : IEntityTypeConfiguration<UserProvider>
     public void Configure(EntityTypeBuilder<UserProvider> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.ProviderType).IsRequired();
         builder.HasOne(x => x.User)
             .WithMany(x => x.UserProviders)
             .HasForeignKey(x => x.UserId)

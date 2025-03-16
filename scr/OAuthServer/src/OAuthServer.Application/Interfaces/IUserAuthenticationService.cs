@@ -1,4 +1,4 @@
-using OAuthServer.Application.DTOs.UserAuthenticationService;
+using OAuthServer.Application.DTOs.Auth;
 
 namespace OAuthServer.Application.Interfaces;
 

@@ -1,8 +1,8 @@
 using System.Security.Claims;
 
-namespace OAuthServer.Application.Interfaces.OpenIdDict;
+namespace OAuthServer.Application.Interfaces.OpenId;
 
-public interface IOpenIdDictUserService
+public interface IOpenIdUserService
 {
     Dictionary<string, object> GetUserInfo(ClaimsPrincipal user);
 }

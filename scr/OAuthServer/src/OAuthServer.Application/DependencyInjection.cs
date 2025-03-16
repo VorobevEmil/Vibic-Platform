@@ -1,10 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using OAuthServer.Application.Interfaces;
-using OAuthServer.Application.Interfaces.OpenIdDict;
+using OAuthServer.Application.Interfaces.OpenId;
 using OAuthServer.Application.Services;
-using OAuthServer.Application.Services.OpenIdDict;
-using OAuthServer.Core.Entities;
-using OpenIdDictUserService = OAuthServer.Application.Services.OpenIdDict.OpenIdDictUserService;
+using OAuthServer.Application.Services.OpenId;
 
 namespace OAuthServer.Application;
 
@@ -18,10 +16,11 @@ public static class DependencyInjection
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
-        services.AddScoped<IOpenIdDictAuthorizationService, OpenIdDictAuthorizationService>();
-        services.AddScoped<IOpenIdDictTokenService, OpenIdDictTokenService>();
-        services.AddScoped<OpenIdDictUserService, OpenIdDictUserService>();
+        services.AddScoped<IOpenIdAuthorizationService, OpenIdAuthorizationService>();
+        services.AddScoped<IOpenIdTokenService, OpenIdTokenService>();
+        services.AddScoped<OpenIdUserService, OpenIdUserService>();
         services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
+        services.AddScoped<IOpenIdApplicationService, OpenIdApplicationService>();
         return services;
     }
 }

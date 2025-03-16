@@ -2,13 +2,13 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
-using OAuthServer.Application.Interfaces.OpenIdDict;
+using OAuthServer.Application.Interfaces.OpenId;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
-namespace OAuthServer.Application.Services.OpenIdDict;
+namespace OAuthServer.Application.Services.OpenId;
 
-public class OpenIdDictTokenService : IOpenIdDictTokenService
+public class OpenIdTokenService : IOpenIdTokenService
 {
     public async Task<ClaimsPrincipal> ExchangeTokenAsync(OpenIddictRequest request, HttpContext httpContext)
     {
