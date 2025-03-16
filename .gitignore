@@ -32,3 +32,19 @@ publish/
 .vs/
 .vscode/
 .idea/
+
+# React
+# 📌 Папки зависимостей и сборки
+node_modules/
+dist/
+build/
+# 📌 Файлы кеша и менеджеров пакетов
+.npm/
+.yarn/
+.pnp.*
+# 📌 Логи и отладочные файлы
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

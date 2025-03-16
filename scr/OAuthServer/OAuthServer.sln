@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E7E11D88-8CAD-4F4C-8705-1EF557AA6D7A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7276A8F8-F093-4C9B-923F-4CD04851C4C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthServer.Web", "src\OAuthServer.Web\OAuthServer.Web.csproj", "{A56B55B0-FA1C-4B54-BE64-2071CFA58787}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthServer.Core", "src\OAuthServer.Core\OAuthServer.Core.csproj", "{9B216020-7566-4A3F-8B5E-BF7A48A2FE95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthServer.Application", "src\OAuthServer.Application\OAuthServer.Application.csproj", "{BDD5689C-0572-4EA7-9D2B-D8D708C27F52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OAuthServer.Infrastructure", "src\OAuthServer.Infrastructure\OAuthServer.Infrastructure.csproj", "{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A56B55B0-FA1C-4B54-BE64-2071CFA58787} = {E7E11D88-8CAD-4F4C-8705-1EF557AA6D7A}
+		{9B216020-7566-4A3F-8B5E-BF7A48A2FE95} = {E7E11D88-8CAD-4F4C-8705-1EF557AA6D7A}
+		{BDD5689C-0572-4EA7-9D2B-D8D708C27F52} = {E7E11D88-8CAD-4F4C-8705-1EF557AA6D7A}
+		{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F} = {E7E11D88-8CAD-4F4C-8705-1EF557AA6D7A}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A56B55B0-FA1C-4B54-BE64-2071CFA58787}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A56B55B0-FA1C-4B54-BE64-2071CFA58787}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A56B55B0-FA1C-4B54-BE64-2071CFA58787}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A56B55B0-FA1C-4B54-BE64-2071CFA58787}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B216020-7566-4A3F-8B5E-BF7A48A2FE95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B216020-7566-4A3F-8B5E-BF7A48A2FE95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B216020-7566-4A3F-8B5E-BF7A48A2FE95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B216020-7566-4A3F-8B5E-BF7A48A2FE95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDD5689C-0572-4EA7-9D2B-D8D708C27F52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDD5689C-0572-4EA7-9D2B-D8D708C27F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDD5689C-0572-4EA7-9D2B-D8D708C27F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDD5689C-0572-4EA7-9D2B-D8D708C27F52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E8902D4-BB1B-4AD5-9689-5405EB9EA08F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
