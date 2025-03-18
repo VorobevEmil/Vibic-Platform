@@ -1,8 +1,8 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
 using OAuthServer.Application.DTOs.Settings.Applications;
 using OAuthServer.Application.Exceptions;
+using OAuthServer.Application.Helpers;
 using OAuthServer.Application.Interfaces.OpenId;
 using OAuthServer.Core.Entities;
 using OAuthServer.Core.Interfaces;
@@ -32,7 +32,7 @@ public class OpenIdApplicationService : IOpenIdApplicationService
 
     public async Task<string> CreateAsync(ApplicationDto dto)
     {
-        string clientId = GenerateClientId();
+        string clientId = SecurityHelper.GenerateClientId();
 
         if (await _applicationManager.FindByClientIdAsync(clientId) is not null)
         {
@@ -42,6 +42,7 @@ public class OpenIdApplicationService : IOpenIdApplicationService
         OpenIddictApplicationDescriptor descriptor = new()
         {
             ClientId = clientId,
+            ClientSecret = SecurityHelper.GenerateSecureClientSecret(),
             DisplayName = dto.DisplayName
         };
 
@@ -74,14 +75,6 @@ public class OpenIdApplicationService : IOpenIdApplicationService
         await _userProviderRepository.CreateAsync(userProvider);
 
         return clientId;
-    }
-
-    private static string GenerateClientId()
-    {
-        return Convert.ToBase64String(RandomNumberGenerator.GetBytes(16))
-            .TrimEnd('=')
-            .Replace('+', '-')
-            .Replace('/', '_');
     }
 
     //TODO: Implement method
