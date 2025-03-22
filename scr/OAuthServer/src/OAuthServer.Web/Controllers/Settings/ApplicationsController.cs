@@ -20,21 +20,22 @@ public class ApplicationsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllApplications()
     {
-        return Ok();
+        List<ApplicationResponse> result = await _openIdApplicationService.GetAllAsync();
+        return Ok(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> CreateApplication(ApplicationDto dto)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetApplicationById(string id)
     {
-        string clientId = await _openIdApplicationService.CreateAsync(dto);
-
-        return Created(clientId, null);
+        ApplicationResponse result = await _openIdApplicationService.GetByIdAsync(id);
+        return Ok(result);
     }
 
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> RemoveApplication(Guid id)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateApplication(string id, [FromBody] ApplicationDto dto)
     {
+        dto.Id = id;
+        await _openIdApplicationService.UpdateAsync(dto);
         return NoContent();
     }
 }

@@ -49,11 +49,4 @@ public class AuthController : ControllerBase
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
     }
-
-    [HttpGet("check")]
-    [Authorize]
-    public IActionResult Check()
-    {
-        return Ok(new { authenticated = true });
-    }
 }

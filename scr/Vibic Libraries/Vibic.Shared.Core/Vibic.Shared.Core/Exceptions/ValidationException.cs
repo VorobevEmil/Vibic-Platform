@@ -1,4 +1,4 @@
-namespace OAuthServer.Application.Exceptions;
+namespace Vibic.Shared.Core.Exceptions;
 
 public class ValidationException : Exception
 {

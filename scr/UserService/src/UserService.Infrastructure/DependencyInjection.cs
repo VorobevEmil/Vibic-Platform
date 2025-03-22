@@ -2,11 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using OAuthServer.Core.Interfaces;
-using OAuthServer.Infrastructure.Data;
-using OAuthServer.Infrastructure.Data.Repositories;
+using UserService.Core.Interfaces;
+using UserService.Infrastructure.Data;
+using UserService.Infrastructure.Repositories;
 
-namespace OAuthServer.Infrastructure;
+namespace UserService.Infrastructure;
 
 public static class DependencyInjection
 {
@@ -34,9 +34,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IUserProviderRepository, UserProviderRepository>();
-        
+        services.AddScoped<IUserProfileRepository, UserProfileRepository>();
         return services;
     }
 }

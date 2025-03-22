@@ -1,13 +1,13 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using OAuthServer.Application.DTOs.Settings.Applications;
-using OAuthServer.Application.Exceptions;
 using OAuthServer.Application.Helpers;
 using OAuthServer.Application.Interfaces.OpenId;
 using OAuthServer.Core.Entities;
 using OAuthServer.Core.Interfaces;
 using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
+using Vibic.Shared.Core.Exceptions;
 
 namespace OAuthServer.Application.Services.OpenId;
 
@@ -30,19 +30,20 @@ public class OpenIdApplicationService : IOpenIdApplicationService
         _userProviderRepository = userProviderRepository;
     }
 
-    public async Task<string> CreateAsync(ApplicationDto dto)
+    public async Task<ApplicationResponse> CreateAsync(ApplicationDto dto)
     {
         string clientId = SecurityHelper.GenerateClientId();
+        string clientSecret = SecurityHelper.GenerateSecureClientSecret();
 
         if (await _applicationManager.FindByClientIdAsync(clientId) is not null)
         {
             throw new ValidationException($"Client with ID '{clientId}' already exists.");
         }
-
+        
         OpenIddictApplicationDescriptor descriptor = new()
         {
             ClientId = clientId,
-            ClientSecret = SecurityHelper.GenerateSecureClientSecret(),
+            ClientSecret = clientSecret,
             DisplayName = dto.DisplayName
         };
 
@@ -61,30 +62,95 @@ public class OpenIdApplicationService : IOpenIdApplicationService
             descriptor.Permissions.Add(item);
         }
 
-        OpenIddictEntityFrameworkCoreApplication? application =
-            await _applicationManager.CreateAsync(descriptor) as OpenIddictEntityFrameworkCoreApplication;
+        OpenIddictEntityFrameworkCoreApplication application = (OpenIddictEntityFrameworkCoreApplication)
+            (await _applicationManager.CreateAsync(descriptor));
 
-        string userId = _httpContextAccessor.HttpContext!.User.Claims
-            .First(x => x.Type == ClaimTypes.NameIdentifier)
-            .Value;
+        string userId = _httpContextAccessor.HttpContext!.User.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        User user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException("User not found");
+        await _userProviderRepository.CreateAsync(new UserProvider(user, application));
 
-        User? user = await _userRepository.GetByIdAsync(userId);
-
-        UserProvider userProvider = new(user!, application!);
-        
-        await _userProviderRepository.CreateAsync(userProvider);
-
-        return clientId;
+        return new ApplicationResponse
+        {
+            Id = application.Id!,
+            ClientId = application.ClientId!,
+            ClientSecret = application.ClientSecret!,
+            DisplayName = application.DisplayName!
+        };
     }
 
-    //TODO: Implement method
-    public Task UpdateAsync(ApplicationDto dto)
+    public async Task<List<ApplicationResponse>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        List<ApplicationResponse> result = [];
+
+        await foreach (object app in _applicationManager.ListAsync())
+        {
+            if (app is OpenIddictEntityFrameworkCoreApplication application)
+            {
+                result.Add(new ApplicationResponse
+                {
+                    Id = application.Id!,
+                    ClientId = application.ClientId!,
+                    ClientSecret = application.ClientSecret!,
+                    DisplayName = application.DisplayName!
+                });
+            }
+        }
+
+        return result;
+    }
+    public async Task<ApplicationResponse> GetByIdAsync(string id)
+    {
+        OpenIddictEntityFrameworkCoreApplication application = await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
+                                                               ?? throw new NotFoundException("Application not found");
+
+        return new ApplicationResponse
+        {
+            Id = application.Id!,
+            ClientId = application.ClientId!,
+            ClientSecret = application.ClientSecret!,
+            DisplayName = application.DisplayName!
+        };
     }
 
-    public Task DeleteAsync(string id)
+    public async Task UpdateAsync(ApplicationDto dto)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(dto.Id))
+            throw new ValidationException("Application ID is required");
+
+        OpenIddictEntityFrameworkCoreApplication app = await _applicationManager.FindByIdAsync(dto.Id) as OpenIddictEntityFrameworkCoreApplication
+                                                       ?? throw new NotFoundException("Application not found");
+
+        OpenIddictApplicationDescriptor descriptor = new()
+        {
+            ClientId = app.ClientId,
+            ClientSecret = app.ClientSecret,
+            DisplayName = dto.DisplayName
+        };
+
+        foreach (Uri item in dto.RedirectUris.Select(uri => new Uri(uri)))
+        {
+            descriptor.RedirectUris.Add(item);
+        }
+
+        foreach (Uri item in dto.PostLogoutRedirectUris.Select(uri => new Uri(uri)))
+        {
+            descriptor.PostLogoutRedirectUris.Add(item);
+        }
+
+        foreach (string item in dto.Permissions)
+        {
+            descriptor.Permissions.Add(item);
+        }
+
+
+        await _applicationManager.UpdateAsync(app, descriptor);
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        OpenIddictEntityFrameworkCoreApplication app = await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
+                                                       ?? throw new NotFoundException("Application not found");
+
+        await _applicationManager.DeleteAsync(app);
     }
 }

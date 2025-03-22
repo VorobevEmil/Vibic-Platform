@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\UserService.Core\UserService.Core.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Reference Include="Vibic.Shared.Messaging">
+        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

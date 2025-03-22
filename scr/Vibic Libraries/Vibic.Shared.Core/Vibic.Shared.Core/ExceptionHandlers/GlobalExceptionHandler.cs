@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using OAuthServer.Application.Exceptions;
+using Vibic.Shared.Core.Exceptions;
 
-namespace OAuthServer.Web.ExceptionHandlers;
+namespace Vibic.Shared.Core.ExceptionHandlers;
 
 internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetailsService) : IExceptionHandler
 {

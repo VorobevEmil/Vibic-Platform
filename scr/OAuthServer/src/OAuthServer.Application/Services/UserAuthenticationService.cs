@@ -1,24 +1,30 @@
 using System.Security.Claims;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using OAuthServer.Application.DTOs.Auth;
-using OAuthServer.Application.Exceptions;
 using OAuthServer.Application.Interfaces;
 using OAuthServer.Core.Entities;
 using OAuthServer.Core.Interfaces;
+using Vibic.Shared.Core.Exceptions;
+using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace OAuthServer.Application.Services;
 
 public class UserAuthenticationService : IUserAuthenticationService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public UserAuthenticationService(IUserRepository userRepository, IHttpContextAccessor httpContextAccessor)
+    public UserAuthenticationService(
+        IUserRepository userRepository,
+        IPublishEndpoint publishEndpoint,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
+        _publishEndpoint = publishEndpoint;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -38,6 +44,12 @@ public class UserAuthenticationService : IUserAuthenticationService
 
         User user = new(signUpDto.Username, signUpDto.Email, passwordHash);
         await _userRepository.AddAsync(user);
+        
+        await _publishEndpoint.Publish(new UserRegistered(
+            user.Id,
+            user.Username,
+            user.Email
+        ));
     }
 
     public async Task SignInAsync(SignInDto signInDto)
