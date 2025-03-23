@@ -39,7 +39,7 @@ public class OpenIdApplicationService : IOpenIdApplicationService
         {
             throw new ValidationException($"Client with ID '{clientId}' already exists.");
         }
-        
+
         OpenIddictApplicationDescriptor descriptor = new()
         {
             ClientId = clientId,
@@ -86,11 +86,12 @@ public class OpenIdApplicationService : IOpenIdApplicationService
         {
             if (app is OpenIddictEntityFrameworkCoreApplication application)
             {
+                string appSecret = application.ClientSecret!;
                 result.Add(new ApplicationResponse
                 {
                     Id = application.Id!,
                     ClientId = application.ClientId!,
-                    ClientSecret = application.ClientSecret!,
+                    ClientSecret = new string('*', appSecret.Length / 2) + appSecret.Substring(appSecret.Length - 5, 5),
                     DisplayName = application.DisplayName!
                 });
             }
@@ -98,27 +99,31 @@ public class OpenIdApplicationService : IOpenIdApplicationService
 
         return result;
     }
+
     public async Task<ApplicationResponse> GetByIdAsync(string id)
     {
-        OpenIddictEntityFrameworkCoreApplication application = await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
-                                                               ?? throw new NotFoundException("Application not found");
+        OpenIddictEntityFrameworkCoreApplication application =
+            await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
+            ?? throw new NotFoundException("Application not found");
 
+        string appSecret = application.ClientSecret!;
         return new ApplicationResponse
         {
             Id = application.Id!,
             ClientId = application.ClientId!,
-            ClientSecret = application.ClientSecret!,
+            ClientSecret = new string('*', appSecret.Length / 2) + appSecret.Substring(appSecret.Length - 5, 5),
             DisplayName = application.DisplayName!
         };
     }
 
-    public async Task UpdateAsync(ApplicationDto dto)
+    public async Task UpdateAsync(string id, ApplicationDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Id))
+        if (string.IsNullOrWhiteSpace(id))
             throw new ValidationException("Application ID is required");
 
-        OpenIddictEntityFrameworkCoreApplication app = await _applicationManager.FindByIdAsync(dto.Id) as OpenIddictEntityFrameworkCoreApplication
-                                                       ?? throw new NotFoundException("Application not found");
+        OpenIddictEntityFrameworkCoreApplication app =
+            await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
+            ?? throw new NotFoundException("Application not found");
 
         OpenIddictApplicationDescriptor descriptor = new()
         {
@@ -148,8 +153,9 @@ public class OpenIdApplicationService : IOpenIdApplicationService
 
     public async Task DeleteAsync(string id)
     {
-        OpenIddictEntityFrameworkCoreApplication app = await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
-                                                       ?? throw new NotFoundException("Application not found");
+        OpenIddictEntityFrameworkCoreApplication app =
+            await _applicationManager.FindByIdAsync(id) as OpenIddictEntityFrameworkCoreApplication
+            ?? throw new NotFoundException("Application not found");
 
         await _applicationManager.DeleteAsync(app);
     }

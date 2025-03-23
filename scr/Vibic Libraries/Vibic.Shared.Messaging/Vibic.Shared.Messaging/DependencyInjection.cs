@@ -13,8 +13,21 @@ public static class DependencyInjection
 
         services.AddMassTransit(x =>
         {
-            x.AddConsumers(Assembly.GetEntryAssembly());
+            Assembly entryAssembly = Assembly.GetEntryAssembly()!;
+            AssemblyName[] referencedAssemblies = entryAssembly.GetReferencedAssemblies();
 
+            string globalName = entryAssembly.GetName().Name!.Split('.')[0];
+
+            AssemblyName? applicationAssemblyName = referencedAssemblies
+                .FirstOrDefault(a => a.Name != null && a.Name == $"{globalName}.Application");
+
+            if (applicationAssemblyName != null)
+            {
+                Assembly applicationAssembly = Assembly.Load(applicationAssemblyName);
+            
+                x.AddConsumers(applicationAssembly);
+            }
+            
             x.SetKebabCaseEndpointNameFormatter();
 
             x.UsingRabbitMq((context, cfg) =>
@@ -25,7 +38,7 @@ public static class DependencyInjection
                 cfg.ConfigureEndpoints(context);
             });
         });
-        
+
         return services;
     }
 }

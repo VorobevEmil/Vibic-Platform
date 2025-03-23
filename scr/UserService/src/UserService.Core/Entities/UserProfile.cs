@@ -8,12 +8,12 @@ public class UserProfile
     public string Username { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
 
-    public string? AvatarUrl { get; set; }
-    public string? Bio { get; set; }
-    public UserStatus Status { get; set; }
+    public string? AvatarUrl { get; private set; }
+    public string? Bio { get; private set; }
+    public UserStatus Status { get; private set; }
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+    public DateTime CreatedAt { get; private set; }
+
     private UserProfile() {}
 
     public UserProfile(Guid id, string username, string email)
@@ -21,5 +21,6 @@ public class UserProfile
         Id = id;
         Username = username;
         Email = email;
+        CreatedAt = DateTime.UtcNow;
     }
 }

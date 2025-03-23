@@ -7,6 +7,6 @@ public interface IOpenIdApplicationService
     Task<List<ApplicationResponse>> GetAllAsync();
     Task<ApplicationResponse> GetByIdAsync(string id);
     Task<ApplicationResponse> CreateAsync(ApplicationDto dto);
-    Task UpdateAsync(ApplicationDto dto);
+    Task UpdateAsync(string id, ApplicationDto dto);
     Task DeleteAsync(string id);
 }

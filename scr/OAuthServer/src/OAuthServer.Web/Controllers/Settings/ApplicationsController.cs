@@ -31,11 +31,24 @@ public class ApplicationsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CreateApplication(ApplicationDto dto)
+    {
+        ApplicationResponse response = await _openIdApplicationService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetApplicationById), new { id = response.Id }, response);
+    }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateApplication(string id, [FromBody] ApplicationDto dto)
     {
-        dto.Id = id;
-        await _openIdApplicationService.UpdateAsync(dto);
+        await _openIdApplicationService.UpdateAsync(id, dto);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteApplication(string id)
+    {
+        await _openIdApplicationService.DeleteAsync(id);
         return NoContent();
     }
 }

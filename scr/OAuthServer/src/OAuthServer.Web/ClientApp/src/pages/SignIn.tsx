@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { signIn } from "../api/authApi";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SignInForm {
     email: string;
@@ -10,11 +11,13 @@ interface SignInForm {
 const SignIn = () => {
     const { register, handleSubmit, formState: { errors } } = useForm<SignInForm>();
     const [errorMessage, setErrorMessage] = useState("");
+    const navigate = useNavigate();
 
     const onSubmit = async (data: SignInForm) => {
         try {
             const response = await signIn(data.email, data.password);
             console.log("Успешный вход:", response);
+            navigate("/");
         } catch (error) {
             setErrorMessage("Ошибка входа. Проверьте email и пароль.");
         }
