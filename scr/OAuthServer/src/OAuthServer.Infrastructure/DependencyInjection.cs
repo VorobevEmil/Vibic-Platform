@@ -36,7 +36,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserProviderRepository, UserProviderRepository>();
-        
+        services.AddScoped<IOpenIddictApplicationRepository, OpenIddictApplicationRepository>();
         return services;
     }
 }
