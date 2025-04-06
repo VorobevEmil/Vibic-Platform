@@ -1,20 +1,24 @@
 using MassTransit;
-using UserService.Application.Interfaces;
+using MediatR;
+using UserService.Application.Features.UserProfileFeatures.Create;
 using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace UserService.Application.Consumers;
 
-public class UserRegisteredConsumer : IConsumer<UserRegistered>
+public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
 {
-    private readonly IUserProfileService _profileService;
+    private readonly IMediator _mediator;
 
-    public UserRegisteredConsumer(IUserProfileService profileService)
+    public UserRegisteredConsumer(IMediator mediator)
     {
-        _profileService = profileService;
+        _mediator = mediator;
     }
 
-    public Task Consume(ConsumeContext<UserRegistered> context)
+    public Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {
-        return _profileService.CreateProfileAsync(context.Message);
+        UserRegisteredEvent message = context.Message;
+        CreateUserProfileCommand command = new(message.UserId, message.Username, message.Email);
+
+        return _mediator.Send(command);
     }
 }

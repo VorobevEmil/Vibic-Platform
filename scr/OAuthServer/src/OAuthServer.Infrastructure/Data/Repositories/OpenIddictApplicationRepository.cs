@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
-using OAuthServer.Core.Interfaces;
 using OpenIddict.EntityFrameworkCore.Models;
 
 namespace OAuthServer.Infrastructure.Data.Repositories;

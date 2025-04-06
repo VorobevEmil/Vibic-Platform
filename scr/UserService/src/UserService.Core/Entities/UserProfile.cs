@@ -1,18 +1,16 @@
 using UserService.Core.Enums;
+using Vibic.Shared.Core.Entities;
 
 namespace UserService.Core.Entities;
 
-public class UserProfile
+public class UserProfile : BaseEntity
 {
-    public Guid Id { get; private set; }
     public string Username { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
 
     public string? AvatarUrl { get; private set; }
     public string? Bio { get; private set; }
     public UserStatus Status { get; private set; }
-
-    public DateTime CreatedAt { get; private set; }
 
     private UserProfile() {}
 
@@ -22,5 +20,17 @@ public class UserProfile
         Username = username;
         Email = email;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateProfile(string username, string? avatarUrl, string? bio)
+    {
+        Username = username;
+        AvatarUrl = avatarUrl;
+        Bio = bio;
+    }
+
+    public void UpdateStatus(UserStatus status)
+    {
+        Status = status;
     }
 }

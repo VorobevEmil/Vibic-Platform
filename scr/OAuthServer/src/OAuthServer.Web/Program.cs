@@ -19,7 +19,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddReact();
+    // builder.Services.AddReact();
     builder.Services.AddRabbitMq();
 }
 WebApplication app = builder.Build();
@@ -30,13 +30,13 @@ WebApplication app = builder.Build();
         app.MapScalarApiReference();
     }
 
-    app.UseStaticFiles();
-    app.UseSpaStaticFiles();
+    // app.UseStaticFiles();
+    // app.UseSpaStaticFiles();
     app.UseRouting();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
-    app.UseReact();
+    // app.UseReact();
     app.Run();
 }

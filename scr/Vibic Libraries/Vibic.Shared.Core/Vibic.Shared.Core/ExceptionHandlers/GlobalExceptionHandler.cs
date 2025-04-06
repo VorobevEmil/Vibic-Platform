@@ -14,7 +14,7 @@ internal sealed class GlobalExceptionHandler(IProblemDetailsService problemDetai
     {
         httpContext.Response.StatusCode = exception switch
         {
-            ValidationException => StatusCodes.Status400BadRequest,
+            BadRequestException => StatusCodes.Status400BadRequest,
             NotFoundException => StatusCodes.Status404NotFound,
             UnauthorizedException => StatusCodes.Status401Unauthorized,
             _ => StatusCodes.Status500InternalServerError

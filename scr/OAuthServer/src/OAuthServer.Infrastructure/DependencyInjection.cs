@@ -2,9 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
-using OAuthServer.Core.Interfaces;
+using OAuthServer.Application.Repositories;
 using OAuthServer.Infrastructure.Data;
 using OAuthServer.Infrastructure.Data.Repositories;
+using Vibic.Shared.Core.Interfaces;
 
 namespace OAuthServer.Infrastructure;
 
@@ -37,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IUserProviderRepository, UserProviderRepository>();
         services.AddScoped<IOpenIddictApplicationRepository, OpenIddictApplicationRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;
     }
 }

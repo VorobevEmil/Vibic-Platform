@@ -1,5 +1,5 @@
+using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
-using OAuthServer.Core.Interfaces;
 
 namespace OAuthServer.Infrastructure.Data.Repositories;
 
@@ -15,6 +15,5 @@ public class UserProviderRepository : IUserProviderRepository
     public async Task CreateAsync(UserProvider userProvider)
     {
        await _db.AddAsync(userProvider);
-       await _db.SaveChangesAsync();
     }
 }

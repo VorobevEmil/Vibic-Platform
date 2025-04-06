@@ -7,8 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
-        <PackageReference Include="OpenIddict.EntityFrameworkCore.Models" Version="6.1.1"/>
+      <PackageReference Include="OpenIddict.EntityFrameworkCore.Models" Version="6.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Vibic.Shared.Core">
+        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

@@ -14,6 +14,11 @@ public class UserProfileRepository : IUserProfileRepository
         _dbContext = dbContext;
     }
 
+    public async Task<UserProfile?> GetByIdAsync(Guid userId)
+    {
+        return await _dbContext.UserProfiles.FindAsync(userId);
+    }
+
     public Task<bool> ExistsAsync(Guid id)
     {
         return _dbContext.UserProfiles.AnyAsync(p => p.Id == id);
@@ -21,7 +26,6 @@ public class UserProfileRepository : IUserProfileRepository
 
     public async Task AddAsync(UserProfile profile)
     {
-        _dbContext.UserProfiles.Add(profile);
-        await _dbContext.SaveChangesAsync();
+        await _dbContext.UserProfiles.AddAsync(profile);
     }
 }

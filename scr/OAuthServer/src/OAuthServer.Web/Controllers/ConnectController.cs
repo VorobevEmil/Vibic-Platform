@@ -1,11 +1,13 @@
 using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OAuthServer.Application.Interfaces;
-using OAuthServer.Application.Interfaces.OpenId;
+using OAuthServer.Application.Features.OpenId.Authorize;
+using OAuthServer.Application.Features.OpenId.ExchangeToken;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using Vibic.Shared.Core.Exceptions;
 
 namespace OAuthServer.Web.Controllers;
 
@@ -13,28 +15,22 @@ namespace OAuthServer.Web.Controllers;
 [Route("api/connect")]
 public class ConnectController : ControllerBase
 {
-    private readonly IOpenIdAuthorizationService _openIdAuthorizationService;
-    private readonly IOpenIdTokenService _ioAuthTokenService;
-    private readonly IOpenIdUserService _ioAuthUserService;
+    private readonly IMediator _mediator;
 
-    public ConnectController(
-        IOpenIdAuthorizationService openIdAuthorizationService,
-        IOpenIdTokenService ioAuthTokenService,
-        IOpenIdUserService ioAuthUserService)
+    public ConnectController(IMediator mediator)
     {
-        _openIdAuthorizationService = openIdAuthorizationService;
-        _ioAuthTokenService = ioAuthTokenService;
-        _ioAuthUserService = ioAuthUserService;
+        _mediator = mediator;
     }
 
     [HttpGet("authorize")]
-    public IActionResult Authorize()
+    public async Task<IActionResult> Authorize()
     {
         OpenIddictRequest? request = HttpContext.GetOpenIddictServerRequest();
         if (request == null)
-            return BadRequest("Invalid OpenID Connect request.");
+            throw new BadRequestException("Invalid OpenID Connect request.");
+        
 
-        ClaimsPrincipal principal = _openIdAuthorizationService.Authorize(User, request);
+        ClaimsPrincipal principal = await _mediator.Send(new AuthorizeCommand(request));
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -42,9 +38,9 @@ public class ConnectController : ControllerBase
     public async Task<IActionResult> Exchange()
     {
         OpenIddictRequest request = HttpContext.GetOpenIddictServerRequest() ??
-                                    throw new InvalidOperationException("Invalid OpenID Connect request.");
+                                    throw new BadRequestException("Invalid OpenID Connect request.");
 
-        ClaimsPrincipal principal = await _ioAuthTokenService.ExchangeTokenAsync(request, HttpContext);
+        ClaimsPrincipal principal = await _mediator.Send(new ExchangeTokenCommand(request));
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -52,7 +48,13 @@ public class ConnectController : ControllerBase
     [HttpGet("userinfo"), HttpPost("userinfo")]
     public IActionResult GetUserInfo()
     {
-        Dictionary<string, object> claims = _ioAuthUserService.GetUserInfo(User);
+        ClaimsPrincipal user = HttpContext.User;
+        Dictionary<string, object> claims = new()
+        {
+            [OpenIddictConstants.Claims.Subject] = user.FindFirst(OpenIddictConstants.Claims.Subject)?.Value!,
+            [OpenIddictConstants.Claims.Name] = user.FindFirst(OpenIddictConstants.Claims.Name)?.Value!,
+            [OpenIddictConstants.Claims.Email] = user.FindFirst(OpenIddictConstants.Claims.Email)?.Value!
+        };
         return Ok(claims);
     }
 }

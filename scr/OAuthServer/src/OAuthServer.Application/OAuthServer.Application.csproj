@@ -7,13 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
+        <PackageReference Include="MediatR" Version="12.5.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
         <PackageReference Include="OpenIddict.Abstractions" Version="6.1.1"/>
         <PackageReference Include="OpenIddict.Server.AspNetCore" Version="6.1.1" />
@@ -27,6 +24,10 @@
         <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
       </Reference>
 
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj" />
     </ItemGroup>
 
 </Project>

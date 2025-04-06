@@ -1,7 +1,15 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OAuthServer.Application.DTOs.Settings.Applications;
-using OAuthServer.Application.Interfaces.OpenId;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Common;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Create;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Delete;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Get;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.GetAll;
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Update;
+using OAuthServer.Web.Mappings;
+using OAuthServer.Web.Models.Settings.Applications.Requests;
+using OAuthServer.Web.Models.Settings.Applications.Responses;
 
 namespace OAuthServer.Web.Controllers.Settings;
 
@@ -10,45 +18,52 @@ namespace OAuthServer.Web.Controllers.Settings;
 [Authorize]
 public class ApplicationsController : ControllerBase
 {
-    private readonly IOpenIdApplicationService _openIdApplicationService;
+    private readonly IMediator _mediator;
 
-    public ApplicationsController(IOpenIdApplicationService openIdApplicationService)
+    public ApplicationsController(IMediator mediator)
     {
-        _openIdApplicationService = openIdApplicationService;
+        _mediator = mediator;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAllApplications()
     {
-        List<ApplicationResponse> result = await _openIdApplicationService.GetAllAsync();
+        List<ApplicationDTO> result = await _mediator.Send(new GetAllApplicationQuery());
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetApplicationById(string id)
     {
-        ApplicationResponse result = await _openIdApplicationService.GetByIdAsync(id);
+        ApplicationDTO result = await _mediator.Send(new GetApplicationQuery(id));
         return Ok(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateApplication(ApplicationDto dto)
+    public async Task<IActionResult> CreateApplication(ApplicationRequest request)
     {
-        ApplicationResponse response = await _openIdApplicationService.CreateAsync(dto);
+        CreateApplicationCommand command = request.MapToCreateCommand();
+
+        ApplicationDTO dto = await _mediator.Send(command);
+        
+        ApplicationResponse response = dto.MapToResponse();
+
         return CreatedAtAction(nameof(GetApplicationById), new { id = response.Id }, response);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateApplication(string id, [FromBody] ApplicationDto dto)
+    public async Task<IActionResult> UpdateApplication(string id, ApplicationRequest request)
     {
-        await _openIdApplicationService.UpdateAsync(id, dto);
+        UpdateApplicationCommand command = request.MapToUpdateCommand(id);
+
+        await _mediator.Send(command);
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteApplication(string id)
     {
-        await _openIdApplicationService.DeleteAsync(id);
+        await _mediator.Send(new DeleteApplicationCommand(id));
         return NoContent();
     }
 }

@@ -22,7 +22,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OAuthServer.Core.Entities.User", b =>
+            modelBuilder.Entity("OAuthServer.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,10 +31,10 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("DeletedAt")
+                    b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
@@ -47,12 +47,15 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Property<bool>("IsLockedOut")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LockoutEnd")
+                    b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -63,7 +66,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("OAuthServer.Core.Entities.UserProvider", b =>
+            modelBuilder.Entity("OAuthServer.Domain.Entities.UserProvider", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -293,7 +296,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.ToTable("OpenIddictTokens", (string)null);
                 });
 
-            modelBuilder.Entity("OAuthServer.Core.Entities.UserProvider", b =>
+            modelBuilder.Entity("OAuthServer.Domain.Entities.UserProvider", b =>
                 {
                     b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", "OpenIddictOpenIddictApplication")
                         .WithMany()
@@ -301,7 +304,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OAuthServer.Core.Entities.User", "User")
+                    b.HasOne("OAuthServer.Domain.Entities.User", "User")
                         .WithMany("UserProviders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -336,7 +339,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Navigation("Authorization");
                 });
 
-            modelBuilder.Entity("OAuthServer.Core.Entities.User", b =>
+            modelBuilder.Entity("OAuthServer.Domain.Entities.User", b =>
                 {
                     b.Navigation("UserProviders");
                 });

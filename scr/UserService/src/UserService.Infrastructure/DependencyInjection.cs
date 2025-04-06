@@ -5,6 +5,7 @@ using Npgsql;
 using UserService.Core.Interfaces;
 using UserService.Infrastructure.Data;
 using UserService.Infrastructure.Repositories;
+using Vibic.Shared.Core.Interfaces;
 
 namespace UserService.Infrastructure;
 
@@ -35,6 +36,7 @@ public static class DependencyInjection
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         return services;
     }
 }

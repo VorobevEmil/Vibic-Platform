@@ -9,12 +9,18 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <ProjectReference Include="..\OAuthServer.Application\OAuthServer.Application.csproj"/>
-        <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj"/>
+        <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
       <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="6.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Vibic.Shared.Core">
+        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
-using OAuthServer.Core.Interfaces;
 
 namespace OAuthServer.Infrastructure.Data.Repositories;
 
@@ -25,7 +25,6 @@ public class UserRepository : IUserRepository
 
     public async Task AddAsync(User user)
     {
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+       await  _context.Users.AddAsync(user);
     }
 }
