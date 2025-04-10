@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaService.Infrastructure
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaService.Core", "scr\MediaService.Core\MediaService.Core.csproj", "{FBE1AB97-B322-4350-8E29-5803042F7D4C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaService.Web", "MediaService.Web\MediaService.Web.csproj", "{34DD64DF-47F1-490F-B0FF-33AB0674A5E3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaService.Web", "scr\MediaService.Web\MediaService.Web.csproj", "{34DD64DF-47F1-490F-B0FF-33AB0674A5E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
