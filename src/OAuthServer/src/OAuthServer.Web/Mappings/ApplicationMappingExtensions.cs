@@ -1,6 +1,5 @@
+using OAuthServer.Application.Features.Settings.ApplicationFeatures.Commands;
 using OAuthServer.Application.Features.Settings.ApplicationFeatures.Common;
-using OAuthServer.Application.Features.Settings.ApplicationFeatures.Create;
-using OAuthServer.Application.Features.Settings.ApplicationFeatures.Update;
 using OAuthServer.Web.Models.Settings.Applications.Requests;
 using OAuthServer.Web.Models.Settings.Applications.Responses;
 
@@ -27,7 +26,7 @@ public static class ApplicationMappingExtensions
             request.Permissions);
     }
 
-    public static ApplicationResponse MapToResponse(this ApplicationDTO dto)
+    public static ApplicationResponse MapToResponse(this ApplicationDto dto)
     {
         return new()
         {

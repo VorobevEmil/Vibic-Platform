@@ -1,11 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UserService.Application.Features.UserProfileFeatures.Commands.Update;
+using UserService.Application.Features.UserProfileFeatures.Commands;
 using UserService.Application.Features.UserProfileFeatures.Common;
-using UserService.Application.Features.UserProfileFeatures.GetMyProfile;
-using UserService.Application.Features.UserProfileFeatures.Queries.Get;
-using UserService.Application.Features.UserProfileFeatures.UpdateUserStatus;
+using UserService.Application.Features.UserProfileFeatures.Queries;
 using UserService.Core.Enums;
 using UserService.Web.Mappings;
 using UserService.Web.Models.UserProfile;
@@ -13,7 +11,7 @@ using UserService.Web.Models.UserProfile;
 namespace UserService.Web.Controllers;
 
 [ApiController]
-[Route("api/user-profile")]
+[Route("user-profile")]
 [Authorize]
 public class UserProfileController : ControllerBase
 {
@@ -45,13 +43,27 @@ public class UserProfileController : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchProfiles(string username)
+    {
+        SearchUserProfilesByUsernameQuery query = new(username);
+
+        List<UserProfileDto> userProfiles = await _mediator.Send(query);
+        
+        List<UserProfileResponse> response = userProfiles
+            .Select(userProfile => userProfile.MapToResponse())
+            .ToList();
+
+        return Ok(response);
+    }
+
     [HttpPatch("user-status/{userStatus}")]
     public async Task<IActionResult> UpdateUserStatus(UserStatus userStatus)
     {
         UpdateUserStatusCommand command = new(userStatus);
-        
+
         await _mediator.Send(command);
-        
+
         return Ok();
     }
 
@@ -59,9 +71,9 @@ public class UserProfileController : ControllerBase
     public async Task<IActionResult> UpdateUserProfile(UserProfileRequest request)
     {
         UpdateUserProfileCommand command = request.MapToCommand();
-        
+
         await _mediator.Send(command);
-        
+
         return NoContent();
     }
 }

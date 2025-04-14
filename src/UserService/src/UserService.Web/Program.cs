@@ -1,6 +1,5 @@
 using Scalar.AspNetCore;
 using UserService.Application;
-using UserService.Application.Consumers;
 using UserService.Infrastructure;
 using Vibic.Shared.Core;
 using Vibic.Shared.Messaging;

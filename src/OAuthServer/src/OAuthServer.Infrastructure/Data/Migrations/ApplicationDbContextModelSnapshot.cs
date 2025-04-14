@@ -17,12 +17,12 @@ namespace OAuthServer.Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("OAuthServer.Domain.Entities.User", b =>
+            modelBuilder.Entity("OAuthServer.Core.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,15 +31,15 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsEmailConfirmed")
                         .HasColumnType("boolean");
@@ -47,14 +47,14 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Property<bool>("IsLockedOut")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
+                    b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Username")
@@ -66,7 +66,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("OAuthServer.Domain.Entities.UserProvider", b =>
+            modelBuilder.Entity("OAuthServer.Core.Entities.UserProvider", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -296,7 +296,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.ToTable("OpenIddictTokens", (string)null);
                 });
 
-            modelBuilder.Entity("OAuthServer.Domain.Entities.UserProvider", b =>
+            modelBuilder.Entity("OAuthServer.Core.Entities.UserProvider", b =>
                 {
                     b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", "OpenIddictOpenIddictApplication")
                         .WithMany()
@@ -304,7 +304,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("OAuthServer.Domain.Entities.User", "User")
+                    b.HasOne("OAuthServer.Core.Entities.User", "User")
                         .WithMany("UserProviders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -339,7 +339,7 @@ namespace OAuthServer.Infrastructure.Data.Migrations
                     b.Navigation("Authorization");
                 });
 
-            modelBuilder.Entity("OAuthServer.Domain.Entities.User", b =>
+            modelBuilder.Entity("OAuthServer.Core.Entities.User", b =>
                 {
                     b.Navigation("UserProviders");
                 });

@@ -1,28 +1,36 @@
-using ChatChannelService.Web.Components;
+using ChatChannelService.Application;
+using ChatChannelService.Infrastructure;
+using Scalar.AspNetCore;
+using Vibic.Shared.Core;
+using Vibic.Shared.Messaging;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    builder.Services
+        .AddApplication()
+        .AddInfrastructure();
+
+    builder.Services.AddExceptionHandlers();
+    builder.Services.AddAuthorization();
+    builder.Services.AddControllersConfiguration();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddOpenApi();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddRabbitMq();
 }
+WebApplication app = builder.Build();
+{
 
-app.UseHttpsRedirection();
+    if (app.Environment.IsDevelopment())
+    {
+        app.MapOpenApi();
+        app.MapScalarApiReference();
+    }
+    
+    app.UseExceptionHandler();
+    app.UseAuthentication();
+    app.UseAuthorization();
+    app.MapControllers();
 
-
-app.UseAntiforgery();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.Run();
+    app.Run();
+}

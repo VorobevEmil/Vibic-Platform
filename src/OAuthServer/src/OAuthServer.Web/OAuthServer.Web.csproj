@@ -26,14 +26,14 @@
 
     <ItemGroup>
       <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
-      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.3" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
+      <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="OpenIddict.AspNetCore" Version="6.1.1" />
-      <PackageReference Include="Scalar.AspNetCore" Version="2.1.1" />
+      <PackageReference Include="OpenIddict.AspNetCore" Version="6.2.0" />
+      <PackageReference Include="Scalar.AspNetCore" Version="2.1.13" />
     </ItemGroup>
 
     <ItemGroup>

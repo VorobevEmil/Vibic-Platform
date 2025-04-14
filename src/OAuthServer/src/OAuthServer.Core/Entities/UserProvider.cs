@@ -1,10 +1,10 @@
 using OpenIddict.EntityFrameworkCore.Models;
+using Vibic.Shared.Core.Entities;
 
 namespace OAuthServer.Core.Entities;
 
-public class UserProvider
+public class UserProvider : BaseEntity
 {
-    public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public string? OpenIddictApplicationId { get; private set; }
     public User User { get; private set; }

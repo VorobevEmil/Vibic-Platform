@@ -16,21 +16,26 @@ public class OpenIddictApplicationRepository : IOpenIddictApplicationRepository
 
     public async Task<OpenIddictEntityFrameworkCoreApplication?> GetApplicationByIdAndUserIdAsync(
         string applicationId,
-        Guid userId)
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         UserProvider? userProvider = await _dbContext.UserProvider
             .Include(p => p.OpenIddictOpenIddictApplication)
-            .FirstOrDefaultAsync(p => p.OpenIddictApplicationId == applicationId && p.UserId == userId);
-        
+            .FirstOrDefaultAsync(p => 
+                    p.OpenIddictApplicationId == applicationId && p.UserId == userId,
+                cancellationToken: cancellationToken);
+
         return userProvider?.OpenIddictOpenIddictApplication;
     }
 
-    public async Task<List<OpenIddictEntityFrameworkCoreApplication>> GetApplicationsByUserIdAsync(Guid userId)
+    public async Task<List<OpenIddictEntityFrameworkCoreApplication>> GetApplicationsByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         return await _dbContext.UserProvider
             .Include(x => x.OpenIddictOpenIddictApplication)
             .Where(x => x.UserId == userId)
             .Select(x => x.OpenIddictOpenIddictApplication)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
     }
 }

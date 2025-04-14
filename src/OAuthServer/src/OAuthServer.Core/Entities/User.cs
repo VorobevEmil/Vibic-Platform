@@ -1,8 +1,9 @@
 using Vibic.Shared.Core.Entities;
+using Vibic.Shared.Core.Interfaces;
 
 namespace OAuthServer.Core.Entities;
 
-public class User : BaseEntity
+public class User : BaseEntity, IUpdatable, ISoftDeletable
 {
     public string Username { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
@@ -10,8 +11,12 @@ public class User : BaseEntity
     public bool IsEmailConfirmed { get; private set; }
     public bool IsLockedOut { get; private set; }
     public int AccessFailedCount { get; private set; }
-    public DateTimeOffset? LockoutEnd { get; private set; }
+    public DateTime? LockoutEnd { get; private set; }
     public List<UserProvider> UserProviders { get; private set; } = new();
+
+    public DateTime? UpdatedAt { get; init; }
+    public bool IsDeleted { get; init; }
+    public DateTime? DeletedAt { get; init; }
 
     private User()
     {
@@ -23,6 +28,5 @@ public class User : BaseEntity
         Username = username;
         Email = email;
         PasswordHash = passwordHash;
-        CreatedAt = DateTimeOffset.Now;
     }
 }

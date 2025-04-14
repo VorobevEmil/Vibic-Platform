@@ -3,8 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OAuthServer.Application.Features.AuthFeatures.SignIn;
-using OAuthServer.Application.Features.AuthFeatures.SignUp;
+using OAuthServer.Application.Features.AuthFeatures.Commands;
 using OAuthServer.Web.Models.Auth;
 
 namespace OAuthServer.Web.Controllers;
@@ -23,7 +22,7 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Войти в систему
     /// </summary>
-    /// <param name="command">Модель запроса</param>
+    /// <param name="request">Модель запроса</param>
     /// <response code="200">Пользователь вошел</response>
     /// <response code="404">Пользователь не найден</response>
     /// <response code="401">Не верные учетные данные</response>
@@ -31,7 +30,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SignIn(SignInRequest request)
     {
-        SignInCommand command = new SignInCommand(request.Email, request.Password);
+        SignInCommand command = new(request.Email, request.Password);
 
         await _mediator.Send(command);
 

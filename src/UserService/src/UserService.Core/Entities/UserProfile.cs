@@ -18,7 +18,6 @@ public class UserProfile : BaseEntity
         Id = id;
         Username = username;
         Email = email;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public void UpdateProfile(string username, string? avatarUrl, string? bio)

@@ -1,4 +1,4 @@
-using UserService.Application.Features.UserProfileFeatures.Commands.Update;
+using UserService.Application.Features.UserProfileFeatures.Commands;
 using UserService.Application.Features.UserProfileFeatures.Common;
 using UserService.Web.Models.UserProfile;
 

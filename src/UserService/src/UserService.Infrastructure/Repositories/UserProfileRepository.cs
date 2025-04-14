@@ -14,6 +14,15 @@ public class UserProfileRepository : IUserProfileRepository
         _dbContext = dbContext;
     }
 
+    public async Task<List<UserProfile>> GetAllByUsernameAsync(string username)
+    {
+        List<UserProfile> users = await _dbContext.UserProfiles
+            .Where(x => x.Username.Contains(username))
+            .ToListAsync();
+
+        return users;
+    }
+
     public async Task<UserProfile?> GetByIdAsync(Guid userId)
     {
         return await _dbContext.UserProfiles.FindAsync(userId);
