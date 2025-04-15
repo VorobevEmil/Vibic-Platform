@@ -11,7 +11,7 @@ using Vibic.Shared.Core.Exceptions;
 namespace OAuthServer.Web.Controllers;
 
 [ApiController]
-[Route("api/connect")]
+[Route("connect")]
 public class ConnectController : ControllerBase
 {
     private readonly IMediator _mediator;

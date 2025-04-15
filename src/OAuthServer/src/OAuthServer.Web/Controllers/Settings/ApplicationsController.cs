@@ -11,7 +11,7 @@ using OAuthServer.Web.Models.Settings.Applications.Responses;
 namespace OAuthServer.Web.Controllers.Settings;
 
 [ApiController]
-[Route("api/settings/applications")]
+[Route("settings/applications")]
 [Authorize]
 public class ApplicationsController : ControllerBase
 {

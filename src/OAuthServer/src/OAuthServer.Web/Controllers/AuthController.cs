@@ -9,16 +9,9 @@ using OAuthServer.Web.Models.Auth;
 namespace OAuthServer.Web.Controllers;
 
 [ApiController]
-[Route("api/auth")]
-public class AuthController : ControllerBase
+[Route("auth")]
+public class AuthController(IMediator mediator) : ControllerBase
 {
-    private readonly IMediator _mediator;
-
-    public AuthController(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
     /// <summary>
     /// Войти в систему
     /// </summary>
@@ -32,7 +25,7 @@ public class AuthController : ControllerBase
     {
         SignInCommand command = new(request.Email, request.Password);
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
 
         return Ok();
     }
@@ -42,7 +35,7 @@ public class AuthController : ControllerBase
     {
         SignUpCommand command = new(request.Username, request.Email, request.Password);
 
-        await _mediator.Send(command);
+        await mediator.Send(command);
 
         return Created();
     }

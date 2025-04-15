@@ -19,8 +19,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
-    // builder.Services.AddReact();
     builder.Services.AddRabbitMq();
+    builder.Services.AddCors();
 }
 WebApplication app = builder.Build();
 {
@@ -29,14 +29,18 @@ WebApplication app = builder.Build();
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
+    
+    app.UseCors(p => p
+        .SetIsOriginAllowed(_ => true)
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
 
-    // app.UseStaticFiles();
-    // app.UseSpaStaticFiles();
+
     app.UseRouting();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
-    // app.UseReact();
     app.Run();
 }

@@ -70,10 +70,4 @@ public static class DependencyInjection
 
         return services;
     }
-
-    public static IServiceCollection AddReact(this IServiceCollection services)
-    {
-        services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-        return services;
-    }
 }
