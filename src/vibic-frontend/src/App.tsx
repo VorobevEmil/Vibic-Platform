@@ -3,6 +3,7 @@ import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import DashboardPage from './pages/DashboardPage';
 import HomePage from './pages/HomePage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -13,8 +14,9 @@ function App() {
       <Route path="/app" element={<DashboardPage />} />
       <Route path="/home" element={<HomePage />} />
       {/* 404 fallback */}
-      <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+
   );
 }
 
