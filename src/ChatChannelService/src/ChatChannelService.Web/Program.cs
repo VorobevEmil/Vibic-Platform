@@ -11,6 +11,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         .AddInfrastructure();
 
     builder.Services.AddExceptionHandlers();
+    builder.Services.AddVibicAuthentication();
     builder.Services.AddAuthorization();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
@@ -20,12 +21,17 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 }
 WebApplication app = builder.Build();
 {
-
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
+    
+    app.UseCors(p => p
+        .SetIsOriginAllowed(_ => true)
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
     
     app.UseExceptionHandler();
     app.UseAuthentication();

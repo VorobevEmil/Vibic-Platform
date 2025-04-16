@@ -14,6 +14,10 @@ public class ServerConfiguration : IEntityTypeConfiguration<Server>
             .HasMaxLength(100)
             .IsRequired();
 
+        builder.Property(s => s.Description)
+            .HasMaxLength(500)
+            .IsRequired();
+        
         builder.HasMany(s => s.Channels)
             .WithOne(c => c.Server)
             .HasForeignKey(c => c.ServerId);

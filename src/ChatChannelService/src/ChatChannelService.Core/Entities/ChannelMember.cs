@@ -2,8 +2,16 @@ namespace ChatChannelService.Core.Entities;
 
 public class ChannelMember
 {
-    public Guid ChannelId { get; private set; }
-    public Channel Channel { get; private set; } = null!;
-    public Guid UserId { get; private set; }
-    public ChatUser User { get; private set; } = null!;
+    private ChannelMember() { }
+    
+    public ChannelMember(Channel channel, Guid chatUserId)
+    {
+        Channel = channel;
+        ChatUserId = chatUserId;
+    }
+    
+    public Guid ChannelId { get; private init; }
+    public Channel Channel { get; private init; }
+    public Guid ChatUserId { get; private init; }
+    public ChatUser ChatUser { get; private init; } = null!;
 }

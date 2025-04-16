@@ -1,4 +1,4 @@
-using ChatChannelService.Application.Features.Servers;
+using ChatChannelService.Application.Features.ServersFeatures;
 using ChatChannelService.Web.Models.Servers.Responses;
 
 namespace ChatChannelService.Web.Mappings;

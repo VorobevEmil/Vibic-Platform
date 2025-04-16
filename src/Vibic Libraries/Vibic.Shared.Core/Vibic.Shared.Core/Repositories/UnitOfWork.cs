@@ -3,7 +3,7 @@ using Vibic.Shared.Core.Interfaces;
 
 namespace Vibic.Shared.Core.Repositories;
 
-public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : DbContext
+public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : SharedDbContext
 {
     private readonly TDbContext _context;
 

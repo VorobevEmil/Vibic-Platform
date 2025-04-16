@@ -25,6 +25,6 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
 
         UserProfile profile = new(request.UserId, request.Username, request.Email);
         await _repository.AddAsync(profile);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

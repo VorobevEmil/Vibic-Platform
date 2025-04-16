@@ -32,6 +32,7 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     IsDeleted = table.Column<bool>(type: "boolean", nullable: false),
@@ -116,11 +117,11 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                 columns: table => new
                 {
                     ChannelId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                    ChatUserId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ChannelMembers", x => new { x.ChannelId, x.UserId });
+                    table.PrimaryKey("PK_ChannelMembers", x => new { x.ChannelId, x.ChatUserId });
                     table.ForeignKey(
                         name: "FK_ChannelMembers_Channels_ChannelId",
                         column: x => x.ChannelId,
@@ -128,8 +129,8 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_ChannelMembers_ChatUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_ChannelMembers_ChatUsers_ChatUserId",
+                        column: x => x.ChatUserId,
                         principalTable: "ChatUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -189,9 +190,9 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_ChannelMembers_UserId",
+                name: "IX_ChannelMembers_ChatUserId",
                 table: "ChannelMembers",
-                column: "UserId");
+                column: "ChatUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Channels_ServerId",

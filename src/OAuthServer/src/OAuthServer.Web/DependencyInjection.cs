@@ -17,7 +17,7 @@ public static class DependencyInjection
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         return Task.CompletedTask;
                     },
-
+        
                     OnRedirectToAccessDenied = context =>
                     {
                         context.Response.StatusCode = StatusCodes.Status403Forbidden;
@@ -25,6 +25,7 @@ public static class DependencyInjection
                     }
                 };
             });
+
         
         return services;
     }

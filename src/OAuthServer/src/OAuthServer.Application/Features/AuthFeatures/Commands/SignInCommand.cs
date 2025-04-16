@@ -1,28 +1,27 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using MediatR;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
 using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
 using Vibic.Shared.Core.Exceptions;
 
 namespace OAuthServer.Application.Features.AuthFeatures.Commands;
 
-public record SignInCommand(string Email, string Password) : IRequest;
+public record SignInCommand(string Email, string Password) : IRequest<string>;
 
-public class SignInHandler : IRequestHandler<SignInCommand>
+public class SignInHandler : IRequestHandler<SignInCommand, string>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public SignInHandler(IUserRepository userRepository, IHttpContextAccessor httpContextAccessor)
+    public SignInHandler(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task Handle(SignInCommand command, CancellationToken cancellationToken)
+    public async Task<string> Handle(SignInCommand command, CancellationToken cancellationToken)
     {
         User? user = await _userRepository.GetByEmailAsync(command.Email, cancellationToken);
 
@@ -41,6 +40,9 @@ public class SignInHandler : IRequestHandler<SignInCommand>
             throw new UnauthorizedException("Account is locked");
         }
 
+        SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
+        SigningCredentials signingCredentials = new(key, SecurityAlgorithms.HmacSha256);
+
         List<Claim> claims =
         [
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -48,10 +50,9 @@ public class SignInHandler : IRequestHandler<SignInCommand>
             new(ClaimTypes.Email, user.Email)
         ];
 
-        ClaimsIdentity identity = new(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        ClaimsPrincipal principal = new(identity);
-        await _httpContextAccessor.HttpContext!.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal);
+        JwtSecurityToken jwt = new(claims: claims, signingCredentials: signingCredentials);
+
+
+        return new JwtSecurityTokenHandler().WriteToken(jwt);
     }
 }

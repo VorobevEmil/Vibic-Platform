@@ -1,14 +1,14 @@
 import ServerSidebar from '../components/ServerSidebar';
-import MainSidebar from '../components/MainSidebar';
-import ChatArea from '../components/ChatArea';
+import DMListSidebar from '../components/DMListSidebar';
+import FriendCenterPanel from '../components/FriendCenterPanel';
 import RightSidebar from '../components/RightSidebar';
 
 export default function AppShell() {
   return (
     <div className="h-screen w-screen flex bg-gray-900 text-white overflow-hidden">
       <ServerSidebar />
-      <MainSidebar />
-      <ChatArea />
+      <DMListSidebar />
+      <FriendCenterPanel />
       <RightSidebar />
     </div>
   );

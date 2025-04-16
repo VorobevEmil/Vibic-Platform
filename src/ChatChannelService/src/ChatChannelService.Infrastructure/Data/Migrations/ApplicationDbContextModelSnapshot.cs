@@ -54,12 +54,12 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                     b.Property<Guid>("ChannelId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid>("ChatUserId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("ChannelId", "UserId");
+                    b.HasKey("ChannelId", "ChatUserId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ChatUserId");
 
                     b.ToTable("ChannelMembers");
                 });
@@ -132,6 +132,11 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -243,15 +248,15 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ChatChannelService.Core.Entities.ChatUser", "User")
+                    b.HasOne("ChatChannelService.Core.Entities.ChatUser", "ChatUser")
                         .WithMany("ChannelMembers")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("ChatUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Channel");
 
-                    b.Navigation("User");
+                    b.Navigation("ChatUser");
                 });
 
             modelBuilder.Entity("ChatChannelService.Core.Entities.Message", b =>

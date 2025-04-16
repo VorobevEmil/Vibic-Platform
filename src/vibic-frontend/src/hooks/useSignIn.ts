@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authApi } from '../api/authApi';
 
 export function useSignIn() {
   const navigate = useNavigate();
@@ -11,23 +12,20 @@ export function useSignIn() {
     e.preventDefault();
 
     try {
-      const response = await fetch('https://localhost:7154/auth/sign-in', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await authApi.signIn({ email, password });
 
-      if (!response.ok) {
-        const error = await response.json();
-        alert('Login failed: ' + error.message);
+      const token = response.data.accessToken;
+      if (!token) {
+        alert('Ошибка: токен не получен');
         return;
       }
 
-      navigate('/app');
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong.');
+      localStorage.setItem('access_token', token);
+
+      navigate('/channels/@me');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      alert('Login failed: ' + (err.response?.data?.message || 'Unknown error'));
     }
   };
 

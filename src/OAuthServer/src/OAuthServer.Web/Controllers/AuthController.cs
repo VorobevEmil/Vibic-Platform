@@ -25,9 +25,9 @@ public class AuthController(IMediator mediator) : ControllerBase
     {
         SignInCommand command = new(request.Email, request.Password);
 
-        await mediator.Send(command);
+        string accessToken = await mediator.Send(command);
 
-        return Ok();
+        return Ok(new TokenResponse(accessToken));
     }
 
     [HttpPost("sign-up")]

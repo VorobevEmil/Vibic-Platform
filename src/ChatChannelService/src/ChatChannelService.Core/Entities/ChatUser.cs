@@ -16,10 +16,10 @@ public class ChatUser : BaseEntity, IUpdatable, ISoftDeletable
     }
 
     public string Username { get; private set; } = string.Empty;
-    public List<ServerMember> ServerMembers { get; init; } = new();
-    public List<ChannelMember> ChannelMembers { get; init; } = new();
-    public List<Message> Messages { get; init; } = new();
-    public DateTime? UpdatedAt { get; init; }
-    public bool IsDeleted { get; init; }
-    public DateTime? DeletedAt { get; init; }
+    public List<ServerMember> ServerMembers { get; private init; } = new();
+    public List<ChannelMember> ChannelMembers { get; private init; } = new();
+    public List<Message> Messages { get; private init; } = new();
+    public DateTime? UpdatedAt { get; private init; }
+    public bool IsDeleted { get; private init; }
+    public DateTime? DeletedAt { get; private init; }
 }

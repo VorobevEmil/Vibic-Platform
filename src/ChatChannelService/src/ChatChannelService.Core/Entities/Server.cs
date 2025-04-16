@@ -14,6 +14,7 @@ public class Server : BaseEntity, IUpdatable, ISoftDeletable
     private Server() { }
     
     public string Name { get; private set; } = string.Empty;
+    public string? Description { get; private set; } = null;
     public Guid OwnerId { get; init; }
     public List<Channel> Channels { get; init; } = new();
     public List<ServerMember> ServerMembers { get; init; } = new();

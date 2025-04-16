@@ -1,10 +1,14 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Vibic.Shared.Core.ExceptionHandlers;
 using Vibic.Shared.Core.Interfaces;
@@ -53,7 +57,7 @@ public static class DependencyInjection
     }
 
     public static IServiceCollection AddApplicationDbContext<TDbContext>(this IServiceCollection services)
-        where TDbContext : DbContext
+        where TDbContext : SharedDbContext
     {
         IConfiguration configuration = services.BuildServiceProvider().GetService<IConfiguration>()!;
         string? databaseConnection = configuration.GetConnectionString("Postgres");
@@ -68,5 +72,23 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
 
         return services;
+    }
+
+    public static AuthenticationBuilder AddVibicAuthentication(this IServiceCollection services)
+    {
+        SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
+
+        return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = false,
+                    ValidateIssuerSigningKey = false,
+                    IssuerSigningKey = key
+                };
+            });
     }
 }

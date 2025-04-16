@@ -4,9 +4,9 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Vibic.Shared.Core.Extensions;
 
-namespace ChatChannelService.Application.Features.Servers.Queries;
+namespace ChatChannelService.Application.Features.ServersFeatures.Queries;
 
-public record GetAllMyServersQuery() : IRequest<List<ServerDto>>;
+public record GetAllMyServersQuery : IRequest<List<ServerDto>>;
 
 public class GetAllMyServersHandler : IRequestHandler<GetAllMyServersQuery, List<ServerDto>>
 {

@@ -14,10 +14,10 @@ public class UserProfileRepository : IUserProfileRepository
         _dbContext = dbContext;
     }
 
-    public async Task<List<UserProfile>> GetAllByUsernameAsync(string username)
+    public async Task<List<UserProfile>> GetAllByUsernameAsync(string username, Guid userId)
     {
         List<UserProfile> users = await _dbContext.UserProfiles
-            .Where(x => x.Username.Contains(username))
+            .Where(x => x.Id != userId && x.Username.Contains(username))
             .ToListAsync();
 
         return users;

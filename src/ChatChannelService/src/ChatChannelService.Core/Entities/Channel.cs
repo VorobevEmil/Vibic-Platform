@@ -6,21 +6,34 @@ namespace ChatChannelService.Core.Entities;
 
 public class Channel : BaseEntity, IUpdatable
 {
-    private Channel() { }
-
-    public Channel(string name, ChannelType type, Guid serverId)
+    private Channel()
     {
-        Name = name;
-        Type = type;
-        ServerId = serverId;
     }
-    
-    public string Name { get; private set; } = string.Empty;
-    public ChannelType Type { get; private set; }
-    public Guid? ServerId { get; private set; }
-    public Server? Server { get; private set; }
 
-    public List<ChannelMember> ChannelMembers { get; init; } = new();
-    public List<Message> Messages { get; init; } = new();
-    public DateTime? UpdatedAt { get; init; }
+    public static Channel CreateDirectMessageChannel()
+    {
+        return new Channel
+        {
+            Type = ChannelType.DirectMessage
+        };
+    }
+
+    public static Channel CreateTextChannel(string name,  Guid serverId)
+    {
+        return new Channel
+        {
+            Name = name,
+            Type = ChannelType.Text,
+            ServerId = serverId
+        };
+    }
+
+    public string? Name { get; private set; }
+    public ChannelType Type { get; private init; }
+    public Guid? ServerId { get; private init; }
+    public Server? Server { get; private init; }
+
+    public List<ChannelMember> ChannelMembers { get; private init; } = new();
+    public List<Message> Messages { get; private init; } = new();
+    public DateTime? UpdatedAt { get; private init; }
 }

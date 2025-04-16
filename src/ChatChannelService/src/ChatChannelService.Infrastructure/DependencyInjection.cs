@@ -17,6 +17,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddScoped<IChannelRepository, ChannelRepository>();
         services.AddScoped<IChatUserRepository, ChatUserRepository>();
         services.AddScoped<IServerRepository, ServerRepository>();
         return services;

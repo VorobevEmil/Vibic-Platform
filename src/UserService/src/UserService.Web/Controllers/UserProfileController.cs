@@ -11,7 +11,7 @@ using UserService.Web.Models.UserProfile;
 namespace UserService.Web.Controllers;
 
 [ApiController]
-[Route("user-profile")]
+[Route("user-profiles")]
 [Authorize]
 public class UserProfileController : ControllerBase
 {
@@ -44,9 +44,9 @@ public class UserProfileController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<IActionResult> SearchProfiles(string username)
+    public async Task<IActionResult> SearchProfiles(string search)
     {
-        SearchUserProfilesByUsernameQuery query = new(username);
+        SearchUserProfilesByUsernameQuery query = new(search);
 
         List<UserProfileDto> userProfiles = await _mediator.Send(query);
         
