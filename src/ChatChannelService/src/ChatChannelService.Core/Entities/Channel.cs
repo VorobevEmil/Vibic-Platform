@@ -14,16 +14,16 @@ public class Channel : BaseEntity, IUpdatable
     {
         return new Channel
         {
-            Type = ChannelType.DirectMessage
+            Type = ChannelType.Direct
         };
     }
 
-    public static Channel CreateTextChannel(string name,  Guid serverId)
+    public static Channel CreateServerChannel(string name,  Guid serverId)
     {
         return new Channel
         {
             Name = name,
-            Type = ChannelType.Text,
+            Type = ChannelType.Server,
             ServerId = serverId
         };
     }

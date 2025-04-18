@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
 import { userProfilesApi } from '../api/userProfilesApi';
 import { Smile } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import UserProfileType from '../types/UserProfileType';
+import { channelsApi } from '../api/channelsApi';
+import DirectChannelType from '../types/DirectChannelType';
 
 interface Props {
+    channels: DirectChannelType[];
+    onUpdateChannel: (channel: DirectChannelType) => void;
     isOpen: boolean;
     onClose: () => void;
 }
 
-type User = {
-    id: string;
-    username: string;
-    avatarUrl?: string | null;
-};
-
-export default function SearchOverlay({ isOpen, onClose }: Props) {
+export default function SearchOverlay({ channels, onUpdateChannel, isOpen, onClose }: Props) {
     const [searchChannel, setSearchChannel] = useState('');
-    const [results, setResults] = useState<User[]>([]);
+    const [results, setResults] = useState<UserProfileType[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
@@ -49,6 +50,24 @@ export default function SearchOverlay({ isOpen, onClose }: Props) {
 
     if (!isOpen) return null;
 
+    const navigateToChannel = async (userId: string) => {
+        const response = await channelsApi.createDirectChannel(userId);
+
+        try {
+            if (response.status == 201 && response.data) {
+                onUpdateChannel(response.data);
+                navigate(`channels/${response.data.id}`);
+            }
+            else if (response.status == 204) {
+                const channel = channels.find(c => c.channelMembers.find(cm => cm.userId == userId) != null)!;
+                navigate(`channels/${channel.id}`);
+            }
+        }
+        catch (error) {
+            console.error('Ошибка создания канала:', error);
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div className="bg-[#2b2d31] text-white w-full max-w-xl rounded-lg p-6 shadow-lg">
@@ -71,6 +90,7 @@ export default function SearchOverlay({ isOpen, onClose }: Props) {
                             <div
                                 key={user.id}
                                 className="flex items-center gap-3 px-3 py-2 bg-[#3c3e45] rounded hover:bg-[#4b4e58] cursor-pointer transition"
+                                onClick={() => navigateToChannel(user.id)}
                             >
                                 {user.avatarUrl ? (
                                     <img

@@ -15,8 +15,7 @@ public class ServerConfiguration : IEntityTypeConfiguration<Server>
             .IsRequired();
 
         builder.Property(s => s.Description)
-            .HasMaxLength(500)
-            .IsRequired();
+            .HasMaxLength(500);
         
         builder.HasMany(s => s.Channels)
             .WithOne(c => c.Server)

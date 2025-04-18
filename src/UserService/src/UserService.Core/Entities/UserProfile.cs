@@ -13,11 +13,12 @@ public class UserProfile : BaseEntity
 
     private UserProfile() {}
 
-    public UserProfile(Guid id, string username, string email)
+    public UserProfile(Guid id, string username, string email, string? avatarUrl)
     {
         Id = id;
         Username = username;
         Email = email;
+        AvatarUrl = avatarUrl;
     }
 
     public void UpdateProfile(string username, string? avatarUrl, string? bio)

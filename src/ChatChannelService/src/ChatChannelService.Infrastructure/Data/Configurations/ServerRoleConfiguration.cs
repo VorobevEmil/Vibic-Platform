@@ -14,7 +14,9 @@ public class ServerRoleConfiguration : IEntityTypeConfiguration<ServerRole>
             .WithMany(s => s.ServerRoles)
             .HasForeignKey(sr => sr.ServerId);
         
-        builder.Property(sr => sr.Name).HasMaxLength(100).IsRequired();
+        builder.Property(sr => sr.Name)
+            .HasMaxLength(100)
+            .IsRequired();
 
         builder.HasMany(sr => sr.ServerMembers)
             .WithMany(sm => sm.ServerRoles);

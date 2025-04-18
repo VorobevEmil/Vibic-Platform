@@ -1,3 +1,4 @@
+using ChatChannelService.Application.Features.ChannelFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
@@ -8,9 +9,9 @@ using Vibic.Shared.Core.Interfaces;
 
 namespace ChatChannelService.Application.Features.ChannelFeatures.Commands;
 
-public record CreateDirectMessageCommand(Guid UserId) : IRequest<ChannelDirectMessageDto>;
+public record CreateDirectMessageCommand(Guid UserId) : IRequest<DirectChannelDto?>;
 
-public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCommand, ChannelDirectMessageDto>
+public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCommand, DirectChannelDto?>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChatUserRepository _chatUserRepository;
@@ -29,21 +30,34 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ChannelDirectMessageDto> Handle(CreateDirectMessageCommand request,
+    public async Task<DirectChannelDto?> Handle(CreateDirectMessageCommand request,
         CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        ChatUser? chatUser = await _chatUserRepository.GetByIdAsync(request.UserId, cancellationToken);
-        if (chatUser == null)
+        List<ChatUser?> chatUsers =
+        [
+            await _chatUserRepository.GetByIdAsync(request.UserId, cancellationToken),
+            await _chatUserRepository.GetByIdAsync(userId, cancellationToken)
+        ];
+
+        foreach (ChatUser? chatUser in chatUsers)
         {
-            throw new NotFoundException("Chat user not found");
+            if (chatUser == null)
+            {
+                throw new NotFoundException("Chat user not found");
+            }
+        }
+
+        if (await _channelRepository.IsChannelWithThisUsersExistsAsync(userId, request.UserId, cancellationToken))
+        {
+            return null;
         }
 
         Channel channel = Channel.CreateDirectMessageChannel();
 
-        foreach (Guid id in new[] { request.UserId, userId })
+        foreach (ChatUser? chatUser in chatUsers)
         {
-            ChannelMember channelMember = new(channel, id);
+            ChannelMember channelMember = new(channel, chatUser!);
 
             channel.ChannelMembers.Add(channelMember);
         }
@@ -52,6 +66,6 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return channel.MapToMessageDirectDto();
+        return channel.MapToDirectChannelDto();
     }
 }

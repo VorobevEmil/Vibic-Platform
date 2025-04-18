@@ -74,13 +74,15 @@ public static class DependencyInjection
         return services;
     }
 
-    public static AuthenticationBuilder AddVibicAuthentication(this IServiceCollection services)
+    public static AuthenticationBuilder AddVibicAuthentication(this IServiceCollection services, JwtBearerEvents? events = null)
     {
         SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
 
         return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                options.Events = events!;
+                
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,

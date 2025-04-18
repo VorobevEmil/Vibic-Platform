@@ -1,13 +1,14 @@
 using ChatChannelService.Application.Features.ChannelFeatures;
+using ChatChannelService.Application.Features.ChannelFeatures.Common;
 using ChatChannelService.Web.Models.Channels.Responses;
 
 namespace ChatChannelService.Web.Mappings;
 
 public static class ChannelMappingExtensions
 {
-    public static ChannelDirectMessageResponse MapToDirectMessageResponse(this ChannelDirectMessageDto dto)
+    public static ChannelDirectChannelResponse MapToDirectMessageResponse(this DirectChannelDto dto)
     {
-        return new ChannelDirectMessageResponse
+        return new ChannelDirectChannelResponse
         {
             Id = dto.Id,
             ChannelMembers = dto.ChannelMembers

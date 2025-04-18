@@ -7,13 +7,14 @@ using UserService.Application.Features.UserProfileFeatures.Queries;
 using UserService.Core.Enums;
 using UserService.Web.Mappings;
 using UserService.Web.Models.UserProfile;
+using Vibic.Shared.Core.Controllers;
 
 namespace UserService.Web.Controllers;
 
 [ApiController]
 [Route("user-profiles")]
 [Authorize]
-public class UserProfileController : ControllerBase
+public class UserProfileController : AuthenticateControllerBase
 {
     private readonly IMediator _mediator;
 
@@ -49,7 +50,7 @@ public class UserProfileController : ControllerBase
         SearchUserProfilesByUsernameQuery query = new(search);
 
         List<UserProfileDto> userProfiles = await _mediator.Send(query);
-        
+
         List<UserProfileResponse> response = userProfiles
             .Select(userProfile => userProfile.MapToResponse())
             .ToList();

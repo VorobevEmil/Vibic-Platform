@@ -12,7 +12,7 @@ export default function ServerSidebar() {
                 className="group w-12 h-12 rounded-2xl hover:rounded-3xl hover:bg-[#5865F2]/40 transition-all flex items-center justify-center overflow-hidden"
             >
                 <img
-                    src="/vibic_logo.svg" // путь до изображения
+                    src="/vibic_logo.svg"
                     alt="Vibic Logo"
                     className="w-7 h-7 object-contain"
                 />
@@ -22,7 +22,6 @@ export default function ServerSidebar() {
             <div className="w-10 h-10 bg-indigo-500 rounded-2xl transition-all"></div>
             <div className="w-10 h-10 bg-indigo-500 rounded-2xl transition-all"></div>
 
-            {/* Кнопка добавить */}
             <button
                 className="w-10 h-10 bg-gray-600 rounded-2xl transition-all text-white hover:rounded-3xl hover:bg-gray-500 flex items-center justify-center"
             >

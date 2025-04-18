@@ -4,10 +4,11 @@ public class ChannelMember
 {
     private ChannelMember() { }
     
-    public ChannelMember(Channel channel, Guid chatUserId)
+    public ChannelMember(Channel channel, ChatUser chatUser)
     {
         Channel = channel;
-        ChatUserId = chatUserId;
+        ChatUser = chatUser;
+        ChatUserId = chatUser.Id;
     }
     
     public Guid ChannelId { get; private init; }

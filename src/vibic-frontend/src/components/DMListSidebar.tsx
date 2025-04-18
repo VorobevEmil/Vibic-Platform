@@ -1,30 +1,24 @@
 import { useEffect, useState } from 'react';
 import FooterProfilePanel from './FooterProfilePanel';
-import { X } from 'lucide-react';
+import {  X } from 'lucide-react';
 import { channelsApi } from '../api/channelsApi';
 import SearchOverlay from './SearchOverlay';
-type Participant = {
-    id: string;
-    username: string;
-    avatarUrl?: string | null;
-};
+import { useAuth } from '../context/AuthContext';
+import DirectChannelType from '../types/DirectChannelType';
+import { useNavigate } from 'react-router-dom';
 
-type Channel = {
-    id: string;
-    type: string;
-    participants: Participant[];
-};
 
 export default function DMListSidebar() {
-    const currentUserId = 'user-1'; // ← заменить на реальный ID пользователя (через контекст или API)
-    const [dms, setDms] = useState<Channel[]>([]);
+    const user = useAuth();
+    const [channels, setChannels] = useState<DirectChannelType[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchDMs = async () => {
             try {
-                const response = await channelsApi.me();
-                const dmChannels = response.data;
-                setDms(dmChannels);
+                const response = await channelsApi.getDirectChannels();
+                const channels = response.data;
+                setChannels(channels);
             } catch (err) {
                 console.error('Failed to load channels:', err);
             }
@@ -34,6 +28,10 @@ export default function DMListSidebar() {
     }, []);
 
     const [searchOpen, setSearchOpen] = useState(false);
+
+    const onUpdateChannel = (channel: DirectChannelType) => {
+        setChannels((prevChannels) => [...prevChannels, channel]);
+    }
 
     return (
         <div className="w-64 bg-[#2b2d31] flex flex-col justify-between">
@@ -47,27 +45,27 @@ export default function DMListSidebar() {
                 <div className="mt-4 text-sm text-gray-400">Личные сообщения</div>
 
                 <div className="mt-2 space-y-2">
-                    {dms.map((dm) => {
-                        const other = dm.participants.find(p => p.id !== currentUserId);
-                        if (!other) return null;
+                    {channels.map((channel) => {
+                        const channelMember = channel.channelMembers.find(cm => cm.userId !== user?.id);
+                        if (!channelMember) return null;
 
                         return (
                             <div
-                                key={dm.id}
+                                key={channel.id}
                                 className="group flex items-center justify-between gap-2 p-2 hover:bg-[#3c3e45] rounded-lg cursor-pointer"
+                                onClick={() => navigate(`/channels/${channel.id}`)}
                             >
                                 <div className="flex items-center gap-2">
-                                    <img
-                                        src={other.avatarUrl || 'https://via.placeholder.com/32'}
+                                    <img src={channelMember.avatarUrl!}
                                         className="w-8 h-8 rounded-full"
-                                        alt={other.username}
+                                        alt={channelMember.username}
                                     />
-                                    <span className="text-sm">{other.username}</span>
+                                    <span className="text-sm">{channelMember.username}</span>
                                 </div>
 
                                 <button
                                     className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => console.log(`Close DM with ${other.username}`)}
+                                    onClick={() => console.log(`Close DM with ${channelMember.username}`)}
                                 >
                                     <X className="h-4" />
                                 </button>
@@ -79,7 +77,7 @@ export default function DMListSidebar() {
 
             <FooterProfilePanel />
 
-            <SearchOverlay isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+            <SearchOverlay channels={channels} onUpdateChannel={onUpdateChannel} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>
     );
 }

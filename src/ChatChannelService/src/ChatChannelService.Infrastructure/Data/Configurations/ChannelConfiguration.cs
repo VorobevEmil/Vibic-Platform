@@ -10,8 +10,7 @@ public class ChannelConfiguration : IEntityTypeConfiguration<Channel>
     {
         builder.HasKey(c => c.Id);
         builder.Property(x => x.Name)
-            .HasMaxLength(100)
-            .IsRequired();
+            .HasMaxLength(100);
 
         builder.HasOne(x => x.Server)
             .WithMany(x => x.Channels)

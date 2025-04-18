@@ -6,12 +6,12 @@ using ChatChannelService.Web.Models.Servers.Requests;
 using ChatChannelService.Web.Models.Servers.Responses;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Vibic.Shared.Core.Controllers;
 
 namespace ChatChannelService.Web.Controllers;
 
-[ApiController]
 [Route("/servers")]
-public class ServersController(IMediator mediator) : ControllerBase
+public class ServersController(IMediator mediator) : AuthenticateControllerBase
 {
     [HttpGet("mine")]
     [ProducesResponseType(typeof(List<ServerResponse>), StatusCodes.Status200OK)]
