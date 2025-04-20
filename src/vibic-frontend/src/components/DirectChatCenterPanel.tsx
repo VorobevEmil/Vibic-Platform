@@ -27,6 +27,24 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
 
     const { messages, sendMessage, connected } = useSignalRChannel(channelId);
 
+    const handleStartCall = () => {
+        if (!peerUser || !selfUser) return;
+      
+        const updatedRequest: CallRequestType = {
+          peerUserId: peerUser.id,
+          peerUsername: peerUser.username,
+          peerAvatarUrl: peerUser.avatarUrl,
+          initiatorUsername: selfUser.username,
+          initiatorAvatarUrl: selfUser.avatarUrl,
+          channelId: channelId,
+          isInitiator: true,
+        };
+      
+        setCallRequest(updatedRequest);
+        setIsCalling(true);
+      };
+      
+
     const handleSend = async () => {
         if (!inputValue.trim() || !connected || !selfUser) return;
 
@@ -46,6 +64,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
 
         const updateCallRequest: CallRequestType = {
             peerUserId: peerUser.id,
+            peerUsername: peerUser.username,
             peerAvatarUrl: peerUser.avatarUrl,
             initiatorUsername: selfUser.username,
             initiatorAvatarUrl: selfUser.avatarUrl,
@@ -78,8 +97,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
                     )}
                 </div>
                 <div className="flex gap-4 text-gray-300">
-                    <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={() => setIsCalling(true)} />
-                    <Camera className="hover:text-white cursor-pointer w-5 h-5" />
+                    <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall()} />
+                    <Camera className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall()} />
                     <Settings className="hover:text-white cursor-pointer w-5 h-5" />
                 </div>
             </div>

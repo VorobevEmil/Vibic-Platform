@@ -35,16 +35,12 @@ export default function CallListener() {
         if (!incomingCall) return;
 
         try {
-            // 1. Уведомляем сервер, что звонок принят
-            await callHubConnection.invoke('AcceptCall', incomingCall.peerUserId, incomingCall.channelId);
-
             const callData: CallRequestType = {
                 ...incomingCall,
                 isInitiator: false,
             };
 
 
-            // 2. Навигация + передача состояния
             navigate(`/channels/${incomingCall.channelId}`, {
                 state: {
                     isIncomingCall: true,
@@ -52,7 +48,6 @@ export default function CallListener() {
                 },
             });
 
-            // 3. Очистка состояния входящего вызова
             setIncomingCall(null);
         } catch (err) {
             console.error('Ошибка принятия вызова:', err);

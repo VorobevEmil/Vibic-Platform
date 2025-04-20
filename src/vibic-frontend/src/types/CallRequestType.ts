@@ -1,5 +1,6 @@
 type CallRequestType = {
   peerUserId: string;
+  peerUsername: string;
   peerAvatarUrl: string;
   initiatorUsername: string;   
   initiatorAvatarUrl: string;  

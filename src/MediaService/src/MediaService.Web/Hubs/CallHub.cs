@@ -30,6 +30,7 @@ public class CallHub : Hub
             await Clients.Client(targetConnectionId).SendAsync("IncomingCall", new
             {
                 PeerUserId = Context.UserIdentifier,
+                request.PeerUsername,
                 request.PeerAvatarUrl,
                 request.InitiatorUsername,
                 request.InitiatorAvatarUrl,
@@ -96,7 +97,6 @@ public class CallHub : Hub
     public async Task SendOffer(SendOfferRequest request)
     {
         string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
-        await Task.Delay(TimeSpan.FromSeconds(5));
         Console.WriteLine("Оффер получен");
         await Clients.Client(connectionId).SendAsync("ReceiveOffer", Context.UserIdentifier, request.Offer);
     }
