@@ -1,7 +1,7 @@
 type ChannelMember = {
     userId: string;
     username: string;
-    avatarUrl?: string | null;
+    avatarUrl: string;
 };
 
 type DirectChannelType = {

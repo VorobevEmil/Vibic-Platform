@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import FooterProfilePanel from './FooterProfilePanel';
-import {  X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { channelsApi } from '../api/channelsApi';
-import SearchOverlay from './SearchOverlay';
+import SearchUserOverlay from './SearchUserOverlay/SearchUserOverlay';
 import { useAuth } from '../context/AuthContext';
 import DirectChannelType from '../types/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
 
 
-export default function DMListSidebar() {
+export default function DirectChannelListSidebar() {
     const user = useAuth();
     const [channels, setChannels] = useState<DirectChannelType[]>([]);
     const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function DMListSidebar() {
                                 onClick={() => navigate(`/channels/${channel.id}`)}
                             >
                                 <div className="flex items-center gap-2">
-                                    <img src={channelMember.avatarUrl!}
+                                    <img src={channelMember.avatarUrl}
                                         className="w-8 h-8 rounded-full"
                                         alt={channelMember.username}
                                     />
@@ -77,7 +77,7 @@ export default function DMListSidebar() {
 
             <FooterProfilePanel />
 
-            <SearchOverlay channels={channels} onUpdateChannel={onUpdateChannel} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+            <SearchUserOverlay channels={channels} onUpdateChannel={onUpdateChannel} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>
     );
 }

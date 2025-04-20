@@ -13,6 +13,9 @@ public class ChatUserConfiguration : IEntityTypeConfiguration<ChatUser>
         builder.Property(c => c.Username)
             .HasMaxLength(100)
             .IsRequired();
+        
+        builder.Property(cu => cu.AvatarUrl)
+            .IsRequired();
 
         builder.HasMany(c => c.ServerMembers)
             .WithOne(c => c.ChatUser)

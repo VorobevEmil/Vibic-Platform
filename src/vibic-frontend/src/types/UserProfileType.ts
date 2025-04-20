@@ -1,7 +1,7 @@
 type UserProfileType = {
     id: string;
     username: string;
-    avatarUrl?: string | null;
+    avatarUrl: string;
     bio?: string | null;
     userStatus: number
 };

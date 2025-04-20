@@ -10,7 +10,7 @@ public class CreateUserChatConsumer(IMediator mediator) : IConsumer<CreateUserCh
     public Task Consume(ConsumeContext<CreateUserChatEvent> context)
     {
         CreateUserChatEvent message = context.Message;
-        CreateChatUserCommand command = new(message.UserId, message.Username);
+        CreateChatUserCommand command = new(message.UserId, message.Username, message.AvatarUrl);
 
         return mediator.Send(command);
     }

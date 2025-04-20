@@ -15,8 +15,8 @@ public static class ChannelMappingExtensions
     private static ChannelMemberDto MapToChannelMemberDto(this ChannelMember channelMember)
     {
         return new ChannelMemberDto(
-            channelMember.ChatUser.Id, 
-            channelMember.ChatUser.Username, 
-            "/default/vibic_avatar_1.svg");
+            channelMember.ChatUser.Id,
+            channelMember.ChatUser.Username,
+            channelMember.ChatUser.AvatarUrl);
     }
 }

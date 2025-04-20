@@ -45,9 +45,5 @@ public class SignUpHandler : IRequestHandler<SignUpCommand>
             user.Username,
             user.Email
         ), cancellationToken);
-        
-        await _bus.Publish(new CreateUserChatEvent(
-            user.Id,
-            user.Username), cancellationToken);
     }
 }

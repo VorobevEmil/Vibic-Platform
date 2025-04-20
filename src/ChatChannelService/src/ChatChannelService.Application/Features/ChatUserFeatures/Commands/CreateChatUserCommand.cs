@@ -5,7 +5,7 @@ using Vibic.Shared.Core.Interfaces;
 
 namespace ChatChannelService.Application.Features.ChatUserFeatures.Commands;
 
-public record CreateChatUserCommand(Guid UserId, string Username) : IRequest;
+public record CreateChatUserCommand(Guid UserId, string Username, string AvatarUrl) : IRequest;
 
 public class CreateChatUserHandler : IRequestHandler<CreateChatUserCommand>
 {
@@ -20,8 +20,8 @@ public class CreateChatUserHandler : IRequestHandler<CreateChatUserCommand>
     
     public async Task Handle(CreateChatUserCommand request, CancellationToken cancellationToken)
     {
-        ChatUser chatUser = new(request.UserId, request.Username);
-        await _chatUserRepository.CreateAsync(chatUser);
+        ChatUser chatUser = new(request.UserId, request.Username, request.AvatarUrl);
+        await _chatUserRepository.CreateAsync(chatUser, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

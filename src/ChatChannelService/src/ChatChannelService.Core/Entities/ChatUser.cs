@@ -9,13 +9,15 @@ public class ChatUser : BaseEntity, IUpdatable, ISoftDeletable
     {
     }
 
-    public ChatUser(Guid id, string username)
+    public ChatUser(Guid id, string username, string avatarUrl)
     {
         Id = id;
         Username = username;
+        AvatarUrl = avatarUrl;
     }
 
     public string Username { get; private set; } = string.Empty;
+    public string AvatarUrl { get; private set; } = string.Empty;
     public List<ServerMember> ServerMembers { get; private init; } = new();
     public List<ChannelMember> ChannelMembers { get; private init; } = new();
     public List<Message> Messages { get; private init; } = new();

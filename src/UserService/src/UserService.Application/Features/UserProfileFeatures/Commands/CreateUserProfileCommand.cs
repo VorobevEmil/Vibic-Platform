@@ -1,7 +1,9 @@
+using MassTransit;
 using MediatR;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
 using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace UserService.Application.Features.UserProfileFeatures.Commands;
 
@@ -11,6 +13,7 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
 {
     private readonly IUserProfileRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBus _bus;
 
     private static readonly List<string> DefaultAvatarUrls =
     [
@@ -19,10 +22,14 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
         "/default/vibic_avatar_3.svg"
     ];
 
-    public CreateUserProfileHandler(IUserProfileRepository repository, IUnitOfWork unitOfWork)
+    public CreateUserProfileHandler(
+        IUserProfileRepository repository, 
+        IUnitOfWork unitOfWork,
+        IBus bus)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _bus = bus;
     }
 
     public async Task Handle(CreateUserProfileCommand request, CancellationToken cancellationToken)
@@ -37,5 +44,8 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
         UserProfile profile = new(request.UserId, request.Username, request.Email, avatarUrl);
         await _repository.AddAsync(profile);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        
+        
+        await _bus.Publish(new CreateUserChatEvent(request.UserId, request.Username, avatarUrl), cancellationToken);
     }
 }

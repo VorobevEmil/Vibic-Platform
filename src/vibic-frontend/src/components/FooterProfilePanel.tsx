@@ -33,7 +33,7 @@ export default function FooterProfilePanel() {
     <div className="w-full px-3 py-2 bg-[#1e1f22] flex items-center justify-between text-sm text-white">
       <div className="flex items-center gap-2">
         <img
-          src={user.avatarUrl || 'https://via.placeholder.com/32'}
+          src={user.avatarUrl}
           className="w-8 h-8 rounded-full"
           alt={user.username}
         />
