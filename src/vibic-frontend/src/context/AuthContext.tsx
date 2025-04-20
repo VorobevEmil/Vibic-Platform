@@ -5,27 +5,27 @@ import UserProfileType from '../types/UserProfileType';
 
 const AuthContext = createContext<UserProfileType | null>(null);
 
-export function useAuth() {
+export function useAuthContext() {
   return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfileType | null>(null);
+  const [selfUser, setSelfUser] = useState<UserProfileType | null>(null);
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         const user = await userProfilesApi.me();
-        setUser(user.data);
+        setSelfUser(user.data);
       } catch {
-        setUser(null);
+        setSelfUser(null);
       }
     };
     loadUser();
   }, []);
 
   return (
-    <AuthContext.Provider value={user}>
+    <AuthContext.Provider value={selfUser}>
       {children}
     </AuthContext.Provider>
   );

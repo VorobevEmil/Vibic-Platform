@@ -10,7 +10,7 @@ export default function NotFoundPage() {
           Sorry, we couldn't find the page you were looking for.
         </p>
         <Link
-          to="/"
+          to="/channels/@me"
           className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-500 transition"
         >
           Go to Home

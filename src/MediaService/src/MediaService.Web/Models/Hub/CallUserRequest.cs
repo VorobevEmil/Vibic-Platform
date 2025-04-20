@@ -1,3 +1,9 @@
 namespace MediaService.Web.Models.Hub;
 
-public record CallUserRequest(string TargetUserId, string FromUsername, string FromAvatarUrl, string ChannelId);
+public record CallUserRequest(
+    string PeerUserId, 
+    string PeerAvatarUrl, 
+    string InitiatorUsername, 
+    string InitiatorAvatarUrl, 
+    string ChannelId, 
+    bool? IsInitiator);

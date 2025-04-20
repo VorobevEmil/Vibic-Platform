@@ -3,13 +3,13 @@ import FooterProfilePanel from './FooterProfilePanel';
 import { X } from 'lucide-react';
 import { channelsApi } from '../api/channelsApi';
 import SearchUserOverlay from './SearchUserOverlay/SearchUserOverlay';
-import { useAuth } from '../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 import DirectChannelType from '../types/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
 
 
 export default function DirectChannelListSidebar() {
-    const user = useAuth();
+    const user = useAuthContext();
     const [channels, setChannels] = useState<DirectChannelType[]>([]);
     const navigate = useNavigate();
 

@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Paperclip, Smile, Settings, Camera, Phone, Send } from 'lucide-react';
 import useDirectChannel from '../hooks/useDirectChannel';
 import useSignalRChannel from '../hooks/useSignalRChannel';
-import { useAuth } from '../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 import CallPanel from './Call/CallPanel';
-import CallRequestType from '../types/CallUserRequestType';
+import CallRequestType from '../types/CallRequestType';
 
 interface Props {
     channelId: string;
@@ -15,45 +15,46 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     const location = useLocation();
     const navigate = useNavigate();
     const state = location.state as {
-      isIncomingCall?: boolean;
-      callData?: CallRequestType;
+        isIncomingCall?: boolean;
+        callData?: CallRequestType;
     } | null;
-    
-    const currentUser = useAuth();
+
+    const selfUser = useAuthContext();
     const [inputValue, setInputValue] = useState('');
     const [isCalling, setIsCalling] = useState(false);
     const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
+    const peerUser = useDirectChannel(channelId, selfUser?.id);
 
-    const { memberUser } = useDirectChannel(channelId, currentUser?.id);
     const { messages, sendMessage, connected } = useSignalRChannel(channelId);
 
     const handleSend = async () => {
-        if (!inputValue.trim() || !connected || !currentUser) return;
+        if (!inputValue.trim() || !connected || !selfUser) return;
 
         await sendMessage({
             channelId,
-            senderId: currentUser.id,
+            senderId: selfUser.id,
             content: inputValue,
-            senderUsername: currentUser.username,
-            senderAvatarUrl: currentUser.avatarUrl,
+            senderUsername: selfUser.username,
+            senderAvatarUrl: selfUser.avatarUrl,
         });
 
         setInputValue('');
     };
 
     useEffect(() => {
-        if (!memberUser || !currentUser) return;
+        if (!peerUser || !selfUser) return;
 
         const updateCallRequest: CallRequestType = {
-            targetUserId: memberUser.id,
-            fromUsername: currentUser.username,
-            fromAvatarUrl: currentUser.avatarUrl,
+            peerUserId: peerUser.id,
+            peerAvatarUrl: peerUser.avatarUrl,
+            initiatorUsername: selfUser.username,
+            initiatorAvatarUrl: selfUser.avatarUrl,
             channelId: channelId,
             isInitiator: true
         };
 
         setCallRequest(updateCallRequest);
-    }, [currentUser, memberUser]);
+    }, [selfUser, peerUser]);
 
     useEffect(() => {
         if (state && state.isIncomingCall && state.callData) {
@@ -69,10 +70,10 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
             {/* Header */}
             <div className="h-14 px-4 flex items-center justify-between border-b border-[#1e1f22]">
                 <div className="flex items-center gap-3">
-                    {memberUser && (
+                    {peerUser && (
                         <>
-                            <img src={memberUser.avatarUrl} className="w-8 h-8 rounded-full" />
-                            <span className="font-bold text-white text-lg">{memberUser.username}</span>
+                            <img src={peerUser.avatarUrl} className="w-8 h-8 rounded-full" />
+                            <span className="font-bold text-white text-lg">{peerUser.username}</span>
                         </>
                     )}
                 </div>
@@ -108,7 +109,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
                 <button><Paperclip className="w-5 h-5 text-gray-400 hover:text-white" /></button>
                 <input
                     type="text"
-                    placeholder={memberUser ? `Написать @${memberUser.username}` : 'Загрузка...'}
+                    placeholder={peerUser ? `Написать @${peerUser.username}` : 'Загрузка...'}
                     className="flex-1 bg-[#1e1f22] rounded-md px-4 py-2 text-sm text-white placeholder-gray-400 outline-none"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}

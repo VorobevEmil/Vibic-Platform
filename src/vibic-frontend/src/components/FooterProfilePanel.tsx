@@ -1,8 +1,8 @@
 import { Settings, Mic, Headphones } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthContext } from '../context/AuthContext';
 
 export default function FooterProfilePanel() {
-  const user = useAuth();
+  const user = useAuthContext();
 
   if (!user) {
     return (

@@ -5,55 +5,6 @@ namespace MediaService.Web.Hubs;
 
 public class CallHub : Hub
 {
-    public async Task CallUser(CallUserRequest userRequest)
-    {
-        string? targetConnectionId = CallConnectionRegistry.GetConnectionId(userRequest.TargetUserId);
-        if (targetConnectionId != null)
-        {
-            await Clients.Client(targetConnectionId).SendAsync("IncomingCall", new
-            {
-                FromUserId = Context.UserIdentifier,
-                FromUsername = userRequest.FromUsername,
-                FromAvatarUrl = userRequest.FromAvatarUrl,
-                ChannelId = userRequest.ChannelId
-            });
-        }
-        else
-        {
-            Console.WriteLine($"⚠️ Пользователь {userRequest.TargetUserId} не в сети");
-        }
-    }
-
-    public async Task AcceptCall(string callerId, string channelId)
-    {
-        string receiverId = Context.UserIdentifier!;
-
-
-        // Добавить подключение в группу вызова
-        string? callerConnection = CallConnectionRegistry.GetConnectionId(callerId);
-        if (callerConnection is null)
-        {
-            Console.WriteLine("callerConnection не найден");
-            return;
-        }
-
-        Console.WriteLine($"✅ Пользователь {receiverId} принял звонок от пользователя {callerId} (канал: {channelId})");
-
-        await Clients.Client(callerConnection).SendAsync("CallAccepted", receiverId, channelId);
-    }
-
-    public async Task RejectCall(string callerId)
-    {
-        string? callerConnection = CallConnectionRegistry.GetConnectionId(callerId);
-        if (callerConnection is null)
-        {
-            Console.WriteLine("callerConnection не найден");
-            return;
-        }
-
-        await Clients.Client(callerConnection).SendAsync("CallRejected");
-    }
-
     public override Task OnConnectedAsync()
     {
         string userId = Context.UserIdentifier!;
@@ -70,6 +21,76 @@ public class CallHub : Hub
         CallConnectionRegistry.Remove(userId);
 
         return base.OnDisconnectedAsync(exception);
+    }
+    public async Task CallUser(CallUserRequest request)
+    {
+        string? targetConnectionId = CallConnectionRegistry.GetConnectionId(request.PeerUserId);
+        if (targetConnectionId != null)
+        {
+            await Clients.Client(targetConnectionId).SendAsync("IncomingCall", new
+            {
+                PeerUserId = Context.UserIdentifier,
+                request.PeerAvatarUrl,
+                request.InitiatorUsername,
+                request.InitiatorAvatarUrl,
+                request.ChannelId
+            });
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ Пользователь {request.PeerUserId} не в сети");
+        }
+    }
+
+    public async Task AcceptCall(string peerUserId, string channelId)
+    {
+        string receiverId = Context.UserIdentifier!;
+        
+        // Добавить подключение в группу вызова
+        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
+        if (peerUserConnection is null)
+        {
+            return;
+        }
+
+        Console.WriteLine($"✅ Пользователь {receiverId} принял звонок от пользователя {peerUserId} (канал: {channelId})");
+
+        await Clients.Client(peerUserConnection).SendAsync("CallAccepted", receiverId, channelId);
+    }
+
+    public async Task RejectCall(string peerUserId)
+    {
+        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
+        if (peerUserConnection is null)
+        {
+            return;
+        }
+
+        await Clients.Client(peerUserConnection).SendAsync("CallRejected");
+    }
+
+    public async Task CancelCall(string peerUserId, bool isAcceptedCall)
+    {
+        string method = isAcceptedCall ? "CancelAcceptedCall" : "CancelIncomingCall";
+        
+        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
+        if (peerUserConnection is null)
+        {
+            return;
+        }
+
+        await Clients.Client(peerUserConnection).SendAsync(method);
+    }
+
+    public async Task NotifyCameraStatusChanged(NotifyCameraStatusChangedRequest request)
+    {
+        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(request.ToUserId);
+        if (peerUserConnection is null)
+        {
+            return;
+        }
+        
+        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", request.IsCameraOn);
     }
     
     public async Task SendOffer(SendOfferRequest request)

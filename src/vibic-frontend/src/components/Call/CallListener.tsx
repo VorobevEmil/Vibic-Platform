@@ -2,17 +2,12 @@ import { useEffect, useState } from 'react';
 import { callHubConnection } from '../../services/signalRClient';
 import IncomingCallModal from './IncomingCallModal';
 import { useNavigate } from 'react-router-dom';
+import IncomingCallType from '../../types/IncomingCallType';
+import CallRequestType from '../../types/CallRequestType';
 
-
-type IncomingCallData = {
-    fromUserId: string;
-    fromUsername: string;
-    fromAvatarUrl?: string;
-    channelId: string;
-};
 
 export default function CallListener() {
-    const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null);
+    const [incomingCall, setIncomingCall] = useState<IncomingCallType | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,34 +15,40 @@ export default function CallListener() {
 
             if (callHubConnection.state === 'Disconnected') {
                 await callHubConnection.start();
-                console.log('✅ Call SignalR connected');
+                console.log('✅ CallListener SignalR connected');
             }
 
-            callHubConnection.on('IncomingCall', (data: IncomingCallData) => {
+            callHubConnection.on('IncomingCall', (data: CallRequestType) => {
                 console.log('📞 Входящий звонок:', data);
                 setIncomingCall(data);
             });
+
+            callHubConnection.on('CancelIncomingCall', () => {
+                console.log('📞 Звонок отменен');
+                setIncomingCall(null);
+            });
         }
         startListening();
-    }, []);
+    }, [callHubConnection.state]);
 
     const handleAccept = async () => {
         if (!incomingCall) return;
 
         try {
             // 1. Уведомляем сервер, что звонок принят
-            await callHubConnection.invoke('AcceptCall', incomingCall.fromUserId, incomingCall.channelId);
+            await callHubConnection.invoke('AcceptCall', incomingCall.peerUserId, incomingCall.channelId);
+
+            const callData: CallRequestType = {
+                ...incomingCall,
+                isInitiator: false,
+            };
+
 
             // 2. Навигация + передача состояния
             navigate(`/channels/${incomingCall.channelId}`, {
                 state: {
                     isIncomingCall: true,
-                    callData: {
-                        targetUserId: incomingCall.fromUserId,
-                        fromUsername: incomingCall.fromUsername,
-                        fromAvatarUrl: incomingCall.fromAvatarUrl,
-                        channelId: incomingCall.channelId,
-                    },
+                    callData
                 },
             });
 
@@ -61,7 +62,7 @@ export default function CallListener() {
     const handleReject = async () => {
         if (!incomingCall) return;
 
-        await callHubConnection.invoke('RejectCall', incomingCall.fromUserId);
+        await callHubConnection.invoke('RejectCall', incomingCall.peerUserId);
         setIncomingCall(null);
     };
 
@@ -69,7 +70,7 @@ export default function CallListener() {
         <>
             {incomingCall && (
                 <IncomingCallModal
-                    caller={incomingCall}
+                    callInfo={incomingCall}
                     onAccept={handleAccept}
                     onReject={handleReject}
                 />
