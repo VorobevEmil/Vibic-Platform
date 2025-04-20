@@ -34,6 +34,6 @@ public class UpdateUserStatusHandler : IRequestHandler<UpdateUserStatusCommand>
                                   ?? throw new NotFoundException("User profile not found");
 
         userProfile.UpdateStatus(request.UserStatus);
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

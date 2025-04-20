@@ -5,7 +5,11 @@ export default function useSignalRChannel(channelId: string) {
     const [messages, setMessages] = useState<any[]>([]);
     const [connected, setConnected] = useState(false);
 
+    const [typingUsername, setTypingUsername] = useState<string | null>(null);
+
     useEffect(() => {
+        let typingTimeout: NodeJS.Timeout;
+
         const connect = async () => {
             try {
                 if (chatHubConnection.state === 'Disconnected') {
@@ -19,6 +23,15 @@ export default function useSignalRChannel(channelId: string) {
                     setMessages(prev => [...prev, msg]);
                 });
 
+                chatHubConnection.on('UserTyping', (channelIdFromServer, username) => {
+                    if (channelIdFromServer === channelId) {
+                        setTypingUsername(username);
+
+                        if (typingTimeout) clearTimeout(typingTimeout);
+                        typingTimeout = setTimeout(() => setTypingUsername(null), 3000);
+                    }
+                });
+
                 await chatHubConnection.invoke('JoinChannel', channelId);
             } catch (err) {
                 console.error('❌ SignalR error:', err);
@@ -29,7 +42,9 @@ export default function useSignalRChannel(channelId: string) {
 
         return () => {
             chatHubConnection.off('ReceiveMessage');
+            chatHubConnection.off('UserTyping');
             chatHubConnection.stop();
+            clearTimeout(typingTimeout);
         };
     }, [channelId]);
 
@@ -37,5 +52,5 @@ export default function useSignalRChannel(channelId: string) {
         await chatHubConnection.invoke('SendMessageToChannel', message);
     };
 
-    return { messages, sendMessage, connected };
+    return { messages, sendMessage, connected, typingUsername };
 }

@@ -40,7 +40,13 @@ public class ChatHub : Hub
         // Отправка всем участникам группы (канала)
         await Clients.Group($"chat:{request.ChannelId}").SendAsync("ReceiveMessage", message);
     }
+    
+    public async Task SendTypingStatus(string channelId, string username)
+    {
+        await Clients.Group($"chat:{channelId}").SendAsync("UserTyping", channelId, username);
+    }
 
+    
     public override Task OnConnectedAsync()
     {
         Console.WriteLine($"🔌 Connected: {Context.ConnectionId}");
