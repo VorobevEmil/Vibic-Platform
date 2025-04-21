@@ -14,7 +14,7 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .WithMany(c => c.Messages)
             .HasForeignKey(m => m.ChannelId);
         
-        builder.HasOne(m => m.ChatUser)
+        builder.HasOne(m => m.Sender)
             .WithMany(c => c.Messages)
             .HasForeignKey(m => m.SenderId);
         

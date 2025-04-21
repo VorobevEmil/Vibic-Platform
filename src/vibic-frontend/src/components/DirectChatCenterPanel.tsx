@@ -27,10 +27,15 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     const [isCalling, setIsCalling] = useState(false);
     const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
     const peerUser = useDirectChannel(channelId, selfUser?.id);
-    const [messages, setMessages] = useState<MessageType[]>([]);
-    const { sendMessage, connected, typingUsername } = useSignalRChannel(channelId, setMessages);
 
+    const [messages, setMessages] = useState<MessageType[]>([]);
+    const [cursor, setCursor] = useState<string | undefined>(undefined);
+    const [hasMore, setHasMore] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    const { sendMessage, connected, typingUsername } = useSignalRChannel(channelId, setMessages);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
     const handleStartCall = () => {
         if (!peerUser || !selfUser) return;
@@ -70,16 +75,54 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
         }
     };
 
-    useEffect(() => {
-        const initializeMessages = async () => {
+    const initializeMessages = async () => {
+        const response = await messagesApi.getMessagesByChannelId(channelId);
+        if (response.status === 200) {
+            const data = response.data;
+            setMessages(data.items);
+            setCursor(data.cursor);
+            setHasMore(data.hasMore);
 
-            const response = await messagesApi.getMessagesByChannelId(channelId);
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 10);
+        }
+    };
 
-            setMessages(response.data);
+    const loadMoreMessages = async () => {
+        if (!hasMore || isLoadingMore) return;
+
+        setIsLoadingMore(true);
+
+        const response = await messagesApi.getMessagesByChannelId(channelId, cursor);
+        if (response.status === 200) {
+            const data = response.data;
+
+            setMessages(prev => [...data.items, ...prev]); // вставляем в начало
+            setCursor(data.cursor);
+            setHasMore(data.hasMore);
         }
 
+        setIsLoadingMore(false);
+    };
+
+    useEffect(() => {
         initializeMessages();
-    }, [])
+    }, []);
+
+    useEffect(() => {
+        const scrollEl = scrollContainerRef.current;
+        if (!scrollEl) return;
+
+        const handleScroll = () => {
+            if (scrollEl.scrollTop === 0 && hasMore && !isLoadingMore) {
+                loadMoreMessages();
+            }
+        };
+
+        scrollEl.addEventListener('scroll', handleScroll);
+        return () => scrollEl.removeEventListener('scroll', handleScroll);
+    }, [cursor, hasMore, isLoadingMore]);
 
     useEffect(() => {
         if (!peerUser || !selfUser) return;
@@ -130,7 +173,13 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
             )}
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4" ref={scrollContainerRef}>
+                {isLoadingMore && (
+                    <div className="text-sm text-gray-400 text-center animate-pulse">
+                        Загрузка сообщений...
+                    </div>
+                )}
+
                 {messages.map((msg) => (
                     <div key={msg.id} className="flex items-start gap-3">
                         <img src={msg.senderAvatarUrl} className="w-8 h-8 rounded-full" />
@@ -145,11 +194,13 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
                         </div>
                     </div>
                 ))}
+
                 {typingUsername && (
                     <div className="text-sm text-gray-400 mt-2 ml-2 animate-pulse">
                         {typingUsername} печатает...
                     </div>
                 )}
+
                 <div ref={messagesEndRef} />
             </div>
 

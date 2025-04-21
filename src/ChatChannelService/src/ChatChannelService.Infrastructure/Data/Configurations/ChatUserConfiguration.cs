@@ -22,7 +22,7 @@ public class ChatUserConfiguration : IEntityTypeConfiguration<ChatUser>
             .HasForeignKey(c => c.ChatUserId);
         
         builder.HasMany(c => c.Messages)
-            .WithOne(c => c.ChatUser)
+            .WithOne(c => c.Sender)
             .HasForeignKey(c => c.SenderId);
     }
 }

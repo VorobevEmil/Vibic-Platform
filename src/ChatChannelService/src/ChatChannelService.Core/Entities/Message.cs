@@ -10,14 +10,14 @@ public class Message : BaseEntity, IUpdatable, ISoftDeletable
     public Message(Channel channel, ChatUser sender, string content)
     {
         Channel = channel;
-        ChatUser = sender;
+        Sender = sender;
         Content = content;
     }
     
     public Guid ChannelId { get; init; }
     public Channel Channel { get; init; } = null!;
     public Guid SenderId { get; init; }
-    public ChatUser ChatUser { get; init; } = null!;
+    public ChatUser Sender { get; init; } = null!;
     public string Content { get; private set; } = string.Empty;
     public DateTime? UpdatedAt { get; init; }
     public bool IsDeleted { get; init; }

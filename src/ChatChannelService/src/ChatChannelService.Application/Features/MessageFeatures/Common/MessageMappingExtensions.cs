@@ -10,9 +10,9 @@ public static class MessageMappingExtensions
             message.Id,
             message.Channel.Id,
             message.Content,
-            message.ChatUser.Id,
-            message.ChatUser.Username,
-            message.ChatUser.AvatarUrl,
+            message.Sender.Id,
+            message.Sender.Username,
+            message.Sender.AvatarUrl,
             message.CreatedAt);
     }
 }

@@ -1,3 +1,4 @@
+using ChatChannelService.Application.Common.Pagination;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Features.MessageFeatures.Queries;
 using ChatChannelService.Web.Mappings;
@@ -12,15 +13,21 @@ namespace ChatChannelService.Web.Controllers.Channels;
 public class MessagesController(IMediator mediator) : AuthenticateControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetMessages(Guid channelId)
+    public async Task<IActionResult> GetMessages(
+        Guid channelId,
+        string? cursor = null,
+        int limit = 20,
+        CancellationToken cancellationToken = default)
     {
-        GetMessagesQuery query = new(channelId);
+        GetMessagesQuery query = new(channelId, cursor, limit);
 
-        List<MessageDto> messages = await mediator.Send(query);
+        CursorPaginatedResult<MessageDto> result = await mediator.Send(query, cancellationToken);
 
-        List<MessageResponse> responses = messages
+        List<MessageResponse> responses = result.Items
             .ConvertAll(m => m.MapToResponse());
 
-        return Ok(responses);
+        CursorPaginatedResult<MessageResponse> responseResult = new(responses, result.Cursor, result.HasMore);
+
+        return Ok(responseResult);
     }
 }
