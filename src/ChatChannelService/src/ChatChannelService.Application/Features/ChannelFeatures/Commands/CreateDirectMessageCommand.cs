@@ -48,7 +48,7 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
             }
         }
 
-        if (await _channelRepository.IsChannelWithThisUsersExistsAsync(userId, request.UserId, cancellationToken))
+        if (await _channelRepository.DoesDirectChannelWithUsersExistAsync(userId, request.UserId, cancellationToken))
         {
             return null;
         }

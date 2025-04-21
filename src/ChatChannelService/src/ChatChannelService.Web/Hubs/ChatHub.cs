@@ -1,10 +1,16 @@
+using ChatChannelService.Application.Features.MessageFeatures.Commands;
+using ChatChannelService.Application.Features.MessageFeatures.Common;
+using ChatChannelService.Web.Mappings;
+using ChatChannelService.Web.Models.Messages.Responses;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Vibic.Shared.Core.Extensions;
 
 namespace ChatChannelService.Web.Hubs;
 
 [Authorize]
-public class ChatHub : Hub
+public class ChatHub(IMediator mediator) : Hub
 {
     // Пользователь присоединяется к определённому каналу
     public async Task JoinChannel(string channelId)
@@ -23,30 +29,25 @@ public class ChatHub : Hub
     // Отправка сообщения в канал
     public async Task SendMessageToChannel(SendMessageRequest request)
     {
-        string? senderId = Context.UserIdentifier;
+        Guid channelId = Guid.Parse(request.ChannelId);
+        Guid userId = Context.User!.GetUserId();
 
-        // Здесь можно сохранить сообщение в БД (если нужно)
-        var message = new
-        {
-            id = Guid.NewGuid(),
-            channelId = request.ChannelId,
-            content = request.Content,
-            senderId,
-            senderUsername = request.SenderUsername,
-            senderAvatarUrl = request.SenderAvatarUrl,
-            sentAt = DateTime.UtcNow
-        };
+        CreateMessageCommand command = new(channelId, userId, request.Content);
+        
+        MessageDto message = await mediator.Send(command);
+        
+        MessageResponse response = message.MapToResponse();
 
         // Отправка всем участникам группы (канала)
-        await Clients.Group($"chat:{request.ChannelId}").SendAsync("ReceiveMessage", message);
+        await Clients.Group($"chat:{request.ChannelId}").SendAsync("ReceiveMessage", response);
     }
-    
+
     public async Task SendTypingStatus(string channelId, string username)
     {
         await Clients.Group($"chat:{channelId}").SendAsync("UserTyping", channelId, username);
     }
 
-    
+
     public override Task OnConnectedAsync()
     {
         Console.WriteLine($"🔌 Connected: {Context.ConnectionId}");
@@ -62,11 +63,6 @@ public class ChatHub : Hub
 
 public class SendMessageRequest
 {
-    public string ChannelId { get; set; } = default!;
-    public string SenderId { get; set; } = default!;
-    public string Content { get; set; } = default!;
-
-    // для отображения в UI
-    public string SenderUsername { get; set; } = default!;
-    public string? SenderAvatarUrl { get; set; }
+    public string ChannelId { get; set; } = null!;
+    public string Content { get; set; } = null!;
 }

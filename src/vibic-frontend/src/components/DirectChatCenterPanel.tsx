@@ -7,6 +7,8 @@ import { useAuthContext } from '../context/AuthContext';
 import CallPanel from './Call/CallPanel';
 import CallRequestType from '../types/CallRequestType';
 import { chatHubConnection } from '../services/signalRClient';
+import { messagesApi } from '../api/messagesApi';
+import MessageType from '../types/MessageType';
 
 interface Props {
     channelId: string;
@@ -25,7 +27,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     const [isCalling, setIsCalling] = useState(false);
     const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
     const peerUser = useDirectChannel(channelId, selfUser?.id);
-    const { messages, sendMessage, connected, typingUsername } = useSignalRChannel(channelId);
+    const [messages, setMessages] = useState<MessageType[]>([]);
+    const { sendMessage, connected, typingUsername } = useSignalRChannel(channelId, setMessages);
 
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -51,15 +54,11 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
 
         await sendMessage({
             channelId,
-            senderId: selfUser.id,
             content: inputValue,
-            senderUsername: selfUser.username,
-            senderAvatarUrl: selfUser.avatarUrl,
         });
 
         setInputValue('');
 
-        // Прокрутка вниз после отправки своего сообщения
         setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
         }, 50);
@@ -70,6 +69,17 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
             chatHubConnection.invoke('SendTypingStatus', channelId, selfUser.username);
         }
     };
+
+    useEffect(() => {
+        const initializeMessages = async () => {
+
+            const response = await messagesApi.getMessagesByChannelId(channelId);
+
+            setMessages(response.data);
+        }
+
+        initializeMessages();
+    }, [])
 
     useEffect(() => {
         if (!peerUser || !selfUser) return;
@@ -122,7 +132,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
                 {messages.map((msg) => (
-                    <div key={msg.id || msg.sentAt} className="flex items-start gap-3">
+                    <div key={msg.id} className="flex items-start gap-3">
                         <img src={msg.senderAvatarUrl} className="w-8 h-8 rounded-full" />
                         <div>
                             <div className="text-sm font-semibold text-white">

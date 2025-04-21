@@ -45,7 +45,7 @@ public class ChannelRepository : IChannelRepository
         await _dbContext.Channels.AddAsync(channel, cancellationToken);
     }
 
-    public async Task<bool> IsChannelWithThisUsersExistsAsync(Guid userId, Guid memberUserId,
+    public async Task<bool> DoesDirectChannelWithUsersExistAsync(Guid userId, Guid memberUserId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Channels

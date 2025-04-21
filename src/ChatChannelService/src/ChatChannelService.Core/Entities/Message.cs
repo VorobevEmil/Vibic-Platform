@@ -7,10 +7,10 @@ public class Message : BaseEntity, IUpdatable, ISoftDeletable
 {
     private Message() { }
 
-    public Message(Guid channelId, Guid senderId, string content)
+    public Message(Channel channel, ChatUser sender, string content)
     {
-        ChannelId = channelId;
-        SenderId = senderId;
+        Channel = channel;
+        ChatUser = sender;
         Content = content;
     }
     

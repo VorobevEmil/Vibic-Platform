@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IChannelRepository, ChannelRepository>();
         services.AddScoped<IChatUserRepository, ChatUserRepository>();
         services.AddScoped<IServerRepository, ServerRepository>();
+        services.AddScoped<IMessageRepository, MessageRepository>();
         return services;
     }
 }

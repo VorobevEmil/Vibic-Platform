@@ -1,6 +1,6 @@
-using ChatChannelService.Application.Features.ServersFeatures;
-using ChatChannelService.Application.Features.ServersFeatures.Commands;
-using ChatChannelService.Application.Features.ServersFeatures.Queries;
+using ChatChannelService.Application.Features.ServerFeatures;
+using ChatChannelService.Application.Features.ServerFeatures.Commands;
+using ChatChannelService.Application.Features.ServerFeatures.Queries;
 using ChatChannelService.Web.Mappings;
 using ChatChannelService.Web.Models.Servers.Requests;
 using ChatChannelService.Web.Models.Servers.Responses;

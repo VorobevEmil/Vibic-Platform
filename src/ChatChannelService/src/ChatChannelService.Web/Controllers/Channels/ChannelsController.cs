@@ -1,4 +1,3 @@
-using ChatChannelService.Application.Features.ChannelFeatures;
 using ChatChannelService.Application.Features.ChannelFeatures.Commands;
 using ChatChannelService.Application.Features.ChannelFeatures.Common;
 using ChatChannelService.Application.Features.ChannelFeatures.Queries;
@@ -9,7 +8,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Vibic.Shared.Core.Controllers;
 
-namespace ChatChannelService.Web.Controllers;
+namespace ChatChannelService.Web.Controllers.Channels;
 
 [Route("/channels")]
 public class ChannelsController(IMediator mediator) : AuthenticateControllerBase

@@ -6,7 +6,7 @@ using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.Core.Interfaces;
 
-namespace ChatChannelService.Application.Features.ServersFeatures.Commands;
+namespace ChatChannelService.Application.Features.ServerFeatures.Commands;
 
 public record DeleteServerCommand(Guid Id) : IRequest;
 
