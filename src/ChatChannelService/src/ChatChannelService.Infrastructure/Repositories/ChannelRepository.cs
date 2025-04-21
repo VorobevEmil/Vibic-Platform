@@ -51,6 +51,6 @@ public class ChannelRepository : IChannelRepository
         return await _dbContext.Channels
             .Include(x => x.ChannelMembers)
             .AnyAsync(c => c.Type == ChannelType.Direct && c.ChannelMembers
-                .Any(cm => cm.ChatUserId == userId || cm.ChatUserId == memberUserId), cancellationToken);
+                .All(cm => cm.ChatUserId == userId || cm.ChatUserId == memberUserId), cancellationToken);
     }
 }
