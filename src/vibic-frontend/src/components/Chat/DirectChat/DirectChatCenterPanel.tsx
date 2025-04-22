@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Camera, Phone, Settings } from 'lucide-react';
+import { Phone, Settings, Video } from 'lucide-react';
 import useDirectChannel from '../../../hooks/chat/useDirectChannel';
 import useSignalRChannel from '../../../hooks/chat/useSignalRChannel';
 import { useChatMessages } from '../../../hooks/chat/useChatMessages';
@@ -57,7 +57,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     }
   };
 
-  const handleStartCall = () => {
+  const handleStartCall = (startWithCam : boolean) => {
     if (!peerUser || !selfUser) return;
 
     setCallRequest({
@@ -68,6 +68,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
       initiatorAvatarUrl: selfUser.avatarUrl,
       channelId,
       isInitiator: true,
+      isCamOn: startWithCam,
     });
 
     setIsCalling(true);
@@ -106,8 +107,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
           )}
         </div>
         <div className="flex gap-4 text-gray-300">
-          <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={handleStartCall} />
-          <Camera className="hover:text-white cursor-pointer w-5 h-5" onClick={handleStartCall} />
+          <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall(false)} />
+          <Video className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall(true)} />
           <Settings className="hover:text-white cursor-pointer w-5 h-5" />
         </div>
       </div>

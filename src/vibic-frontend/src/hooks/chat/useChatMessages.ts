@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { messagesApi } from '../../api/messagesApi';
 import MessageType from '../../types/MessageType';
 

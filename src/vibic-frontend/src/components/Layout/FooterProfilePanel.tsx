@@ -5,7 +5,7 @@ import { useMedia } from '../../context/MediaContext';
 
 export default function FooterProfilePanel() {
   const user = useAuthContext();
-  const { isMicOn, isHeadphonesOn, toggleMic, toggleHeadphones } = useMedia();
+  const { isMicOn, isHeadphonesOn, setIsMicOn, setIsHeadphonesOn } = useMedia();
   
 
   if (!user) {
@@ -49,7 +49,7 @@ export default function FooterProfilePanel() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={toggleMic}>
+        <button onClick={() => setIsMicOn(prev => !prev)}>
           {isMicOn ? (
             <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
           ) : (
@@ -57,7 +57,7 @@ export default function FooterProfilePanel() {
           )}
         </button>
 
-        <button onClick={toggleHeadphones}>
+        <button onClick={() => setIsHeadphonesOn(prev => !prev)}>
           {isHeadphonesOn ? (
             <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
           ) : (

@@ -1,10 +1,10 @@
-import React, { createContext, useState, useCallback, useContext } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 interface MediaContextType {
   isMicOn: boolean;
   isHeadphonesOn: boolean;
-  toggleMic: () => void;
-  toggleHeadphones: () => void;
+  setIsMicOn: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsHeadphonesOn: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MediaContext = createContext<MediaContextType | null>(null);
@@ -21,11 +21,9 @@ export const MediaProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isMicOn, setIsMicOn] = useState(true);
   const [isHeadphonesOn, setIsHeadphonesOn] = useState(true);
 
-  const toggleMic = useCallback(() => setIsMicOn((prev) => !prev), []);
-  const toggleHeadphones = useCallback(() => setIsHeadphonesOn((prev) => !prev), []);
 
   return (
-    <MediaContext.Provider value={{ isMicOn, isHeadphonesOn, toggleMic, toggleHeadphones }}>
+    <MediaContext.Provider value={{ isMicOn, isHeadphonesOn, setIsMicOn, setIsHeadphonesOn }}>
       {children}
     </MediaContext.Provider>
   );

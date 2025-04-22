@@ -6,4 +6,5 @@ public record CallUserRequest(
     string PeerAvatarUrl, 
     string InitiatorUsername, 
     string InitiatorAvatarUrl, 
-    string ChannelId);
+    string ChannelId,
+    bool IsCamOn);

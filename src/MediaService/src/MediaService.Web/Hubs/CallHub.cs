@@ -35,7 +35,8 @@ public class CallHub : Hub
                 request.PeerAvatarUrl,
                 request.InitiatorUsername,
                 request.InitiatorAvatarUrl,
-                request.ChannelId
+                request.ChannelId,
+                request.IsCamOn
             });
         }
         else

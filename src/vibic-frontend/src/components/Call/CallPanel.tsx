@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { Video, VideoOff, Mic, MicOff, PhoneOff } from 'lucide-react';
-import { callHubConnection } from '../../services/signalRClient';
-import CallRequestType from '../../types/CallRequestType';
-import { rtcConfiguration } from '../../utils/webrtcConfig';
+import { Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
+import CallRequestType from '../../types/CallRequestType';
+import useCallConnection from '../../hooks/call/useCallConnection';
 import { useMedia } from '../../context/MediaContext';
 
 interface CallPanelProps {
@@ -12,185 +10,32 @@ interface CallPanelProps {
 }
 
 export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
-  const peerConnection = useRef<RTCPeerConnection | null>(null);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  const [isCamOn, setIsCamOn] = useState(false);
-  const [remoteStreamStarted, setRemoteStreamStarted] = useState(false);
-  const [isRemoteCamOn, setIsRemoteCamOn] = useState(false);
-  const [isRemoteMicOn, setIsRemoteMicOn] = useState(true);
-
   const selfUser = useAuthContext();
-  const { isMicOn, toggleMic } = useMedia();
+
+  const {
+    localVideoRef,
+    remoteVideoRef,
+    isCamOn,
+    isMicOn,
+    isRemoteCamOn,
+    isRemoteMicOn,
+    remoteStreamStarted,
+    toggleCam,
+    closeCall,
+  } = useCallConnection({
+    callRequest,
+    onClose
+  });
+
+  const { setIsMicOn } = useMedia();
+
+  const remoteUsername = callRequest.isInitiator
+    ? callRequest.peerUsername
+    : callRequest.initiatorUsername;
 
   const remoteAvatarUrl = callRequest.isInitiator
     ? callRequest.peerAvatarUrl
     : callRequest.initiatorAvatarUrl;
-
-  const setupPeerConnection = (remoteUserId: string) => {
-    peerConnection.current = new RTCPeerConnection(rtcConfiguration);
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => {
-        peerConnection.current?.addTrack(track, streamRef.current!);
-      });
-      streamRef.current.getAudioTracks().forEach((track) => (track.enabled = isMicOn));
-      streamRef.current.getVideoTracks().forEach((track) => (track.enabled = isCamOn));
-    }
-
-    peerConnection.current.ontrack = (event) => {
-      const remoteStream = remoteVideoRef.current?.srcObject as MediaStream | null;
-      if (remoteVideoRef.current) {
-        if (!remoteStream) {
-          remoteVideoRef.current.srcObject = new MediaStream();
-        }
-        const updatedStream = remoteVideoRef.current.srcObject as MediaStream;
-        updatedStream.addTrack(event.track);
-        setRemoteStreamStarted(true);
-      }
-    };
-
-    peerConnection.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        callHubConnection.invoke('SendIceCandidate', {
-          toUserId: remoteUserId,
-          candidate: event.candidate,
-        });
-      }
-    };
-  };
-
-  const startCall = async () => {
-    if (!streamRef.current) return;
-
-    setupPeerConnection(callRequest.peerUserId);
-
-    const offer = await peerConnection.current!.createOffer();
-    await peerConnection.current!.setLocalDescription(offer);
-
-    await callHubConnection.invoke('SendOffer', {
-      toUserId: callRequest.peerUserId,
-      offer,
-    });
-
-    callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, isCamOn);
-
-    callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, isMicOn);
-  };
-
-  const closeCall = (byUser: boolean) => {
-    if (byUser) {
-      callHubConnection.invoke('CancelCall', callRequest.peerUserId, remoteStreamStarted);
-    }
-
-    peerConnection.current?.getSenders().forEach((sender) => peerConnection.current?.removeTrack(sender));
-    peerConnection.current?.close();
-    peerConnection.current = null;
-
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-
-    onClose();
-  };
-
-  useEffect(() => {
-    const start = async () => {
-      const userStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      streamRef.current = userStream;
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = userStream;
-      }
-
-      if (callHubConnection.state === 'Disconnected') {
-        await callHubConnection.start();
-      }
-
-      const handlers = {
-        CallRejected: () => closeCall(false),
-        CallAccepted: () => startCall(),
-        CancelAcceptedCall: () => closeCall(false),
-        PeerCameraStatusChanged: (isCam: boolean) => setIsRemoteCamOn(isCam),
-        PeerMicStatusChanged: (isMic: boolean) => setIsRemoteMicOn(isMic), // Новый обработчик
-
-        ReceiveOffer: async (fromUserId: string, offer: RTCSessionDescriptionInit) => {
-          setupPeerConnection(fromUserId);
-
-          const pc = peerConnection.current;
-          if (!pc || pc.signalingState !== 'stable') {
-            console.warn('⚠️ Пропущен setRemoteDescription. Текущее состояние:', pc?.signalingState);
-            return;
-          }
-
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-
-          await callHubConnection.invoke('SendAnswer', {
-            toUserId: fromUserId,
-            answer,
-          });
-        },
-        ReceiveAnswer: async (answer: RTCSessionDescriptionInit) => {
-          const pc = peerConnection.current;
-          if (!pc || pc.signalingState !== 'have-local-offer') {
-            console.warn('⚠️ Пропущен setRemoteDescription. Текущее состояние:', pc?.signalingState);
-            return;
-          }
-
-          await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        },
-        ReceiveIceCandidate: async (candidate: RTCIceCandidateInit) => {
-          if (peerConnection.current) {
-            await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-          }
-        },
-      };
-
-      for (const [key, handler] of Object.entries(handlers)) {
-        callHubConnection.off(key);
-        callHubConnection.on(key, handler as any);
-      }
-
-      if (callRequest.isInitiator) {
-        await callHubConnection.invoke('CallUser', callRequest);
-      } else {
-        await callHubConnection.invoke('AcceptCall', callRequest.peerUserId, callRequest.channelId);
-
-        callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, isCamOn);
-
-        callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, isMicOn);
-      }
-    };
-
-    start();
-
-    return () => {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      peerConnection.current?.close();
-      peerConnection.current = null;
-    };
-  }, []);
-
-  const toggleMicTrack = () => {
-    const newMicState = !isMicOn;
-    streamRef.current?.getAudioTracks().forEach((track) => (track.enabled = newMicState));
-    toggleMic();
-
-    callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, newMicState);
-  };
-
-  const toggleCam = () => {
-    streamRef.current?.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
-    setIsCamOn((prev) => {
-      const newCamState = !prev;
-      callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, newCamState);
-
-      return newCamState;
-    });
-  };
 
   return (
     <div className="w-full h-1/2 bg-black text-white flex flex-col justify-center items-center relative px-4">
@@ -224,7 +69,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
         {/* Remote user */}
         <div className="w-[320px] h-[240px] relative rounded-lg border-2 border-green-500 shadow-lg bg-[#1e1f22]">
           <div className="absolute top-1 left-1 z-10 text-xs text-white flex gap-2 items-center">
-            <span className="font-bold">{callRequest.isInitiator ? callRequest.peerUsername : callRequest.initiatorUsername}</span>
+            <span className="font-bold">{remoteUsername}</span>
             <Mic className={`w-4 h-4 ${isRemoteMicOn ? 'text-green-400' : 'text-red-500'}`} />
             <Video className={`w-4 h-4 ${isRemoteCamOn ? 'text-green-400' : 'text-red-500'}`} />
           </div>
@@ -260,8 +105,9 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
         </div>
       </div>
 
+      {/* Controls */}
       <div className="mt-6 flex gap-4">
-        <button onClick={toggleMicTrack} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
+        <button onClick={() => setIsMicOn((prev) => !prev)} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
           {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
         </button>
         <button onClick={toggleCam} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
