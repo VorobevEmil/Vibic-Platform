@@ -12,6 +12,18 @@ namespace ChatChannelService.Web.Hubs;
 [Authorize]
 public class ChatHub(IMediator mediator) : Hub
 {
+    public override Task OnConnectedAsync()
+    {
+        Console.WriteLine($"🔌 Connected: {Context.ConnectionId}");
+        return base.OnConnectedAsync();
+    }
+
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        Console.WriteLine($"❌ Disconnected: {Context.ConnectionId}");
+        return base.OnDisconnectedAsync(exception);
+    }
+    
     // Пользователь присоединяется к определённому каналу
     public async Task JoinChannel(string channelId)
     {
@@ -45,19 +57,6 @@ public class ChatHub(IMediator mediator) : Hub
     public async Task SendTypingStatus(string channelId, string username)
     {
         await Clients.Group($"chat:{channelId}").SendAsync("UserTyping", channelId, username);
-    }
-
-
-    public override Task OnConnectedAsync()
-    {
-        Console.WriteLine($"🔌 Connected: {Context.ConnectionId}");
-        return base.OnConnectedAsync();
-    }
-
-    public override Task OnDisconnectedAsync(Exception? exception)
-    {
-        Console.WriteLine($"❌ Disconnected: {Context.ConnectionId}");
-        return base.OnDisconnectedAsync(exception);
     }
 }
 

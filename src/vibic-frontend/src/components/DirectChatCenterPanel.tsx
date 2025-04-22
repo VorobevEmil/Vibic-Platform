@@ -54,6 +54,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
         setIsCalling(true);
     };
 
+
+
     const handleSend = async () => {
         if (!inputValue.trim() || !connected || !selfUser) return;
 
@@ -76,6 +78,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     };
 
     const initializeMessages = async () => {
+        setMessages([]);
+        typingUsername
         const response = await messagesApi.getMessagesByChannelId(channelId);
         if (response.status === 200) {
             const data = response.data;
@@ -92,15 +96,30 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     const loadMoreMessages = async () => {
         if (!hasMore || isLoadingMore) return;
 
+        const scrollEl = scrollContainerRef.current;
+        if (!scrollEl) return;
+
         setIsLoadingMore(true);
+
+        const prevScrollHeight = scrollEl.scrollHeight;
+        const prevScrollTop = scrollEl.scrollTop;
 
         const response = await messagesApi.getMessagesByChannelId(channelId, cursor);
         if (response.status === 200) {
             const data = response.data;
 
-            setMessages(prev => [...data.items, ...prev]); // вставляем в начало
+            setMessages(prev => {
+                return [...data.items, ...prev];
+            });
+
             setCursor(data.cursor);
             setHasMore(data.hasMore);
+
+            setTimeout(() => {
+                const newScrollHeight = scrollEl.scrollHeight;
+                const scrollDiff = newScrollHeight - prevScrollHeight;
+                scrollEl.scrollTop = prevScrollTop + scrollDiff;
+            }, 10);
         }
 
         setIsLoadingMore(false);
@@ -108,7 +127,11 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
 
     useEffect(() => {
         initializeMessages();
-    }, []);
+        setInputValue('');
+        setCursor(undefined);
+        setHasMore(true);
+        setIsLoadingMore(false);
+    }, [channelId]);
 
     useEffect(() => {
         const scrollEl = scrollContainerRef.current;
@@ -122,7 +145,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
 
         scrollEl.addEventListener('scroll', handleScroll);
         return () => scrollEl.removeEventListener('scroll', handleScroll);
-    }, [cursor, hasMore, isLoadingMore]);
+    }, [channelId, cursor, hasMore, isLoadingMore]);
 
     useEffect(() => {
         if (!peerUser || !selfUser) return;
@@ -138,7 +161,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
         };
 
         setCallRequest(updateCallRequest);
-    }, [selfUser, peerUser]);
+    }, [selfUser, peerUser, channelId]);
 
     useEffect(() => {
         if (state && state.isIncomingCall && state.callData) {

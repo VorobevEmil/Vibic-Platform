@@ -37,6 +37,6 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
             command.AvatarUrl,
             command.Bio);
         
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
