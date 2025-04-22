@@ -1,8 +1,12 @@
-import { Settings, Mic, Headphones } from 'lucide-react';
-import { useAuthContext } from '../context/AuthContext';
+import { Settings, Mic, MicOff, Headphones, HeadphoneOff } from 'lucide-react';
+import { useAuthContext } from '../../context/AuthContext';
+import { useMedia } from '../../context/MediaContext';
+
 
 export default function FooterProfilePanel() {
   const user = useAuthContext();
+  const { isMicOn, isHeadphonesOn, toggleMic, toggleHeadphones } = useMedia();
+  
 
   if (!user) {
     return (
@@ -45,8 +49,22 @@ export default function FooterProfilePanel() {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
-        <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
+        <button onClick={toggleMic}>
+          {isMicOn ? (
+            <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
+          ) : (
+            <MicOff className="w-5 h-5 text-gray-400 hover:text-white" />
+          )}
+        </button>
+
+        <button onClick={toggleHeadphones}>
+          {isHeadphonesOn ? (
+            <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
+          ) : (
+            <HeadphoneOff className="w-5 h-5 text-gray-400 hover:text-white" />
+          )}
+        </button>
+
         <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout';
-import { useSignIn } from '../hooks/useSignIn';
+import AuthLayout from '../components/Layout/AuthLayout';
+import { useSignIn } from '../hooks/auth/useSignIn';
 
 function SignInPage() {
   const {

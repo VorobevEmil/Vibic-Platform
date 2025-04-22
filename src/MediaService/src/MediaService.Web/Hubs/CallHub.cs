@@ -22,6 +22,7 @@ public class CallHub : Hub
 
         return base.OnDisconnectedAsync(exception);
     }
+
     public async Task CallUser(CallUserRequest request)
     {
         string? targetConnectionId = CallConnectionRegistry.GetConnectionId(request.PeerUserId);
@@ -46,7 +47,7 @@ public class CallHub : Hub
     public async Task AcceptCall(string peerUserId, string channelId)
     {
         string receiverId = Context.UserIdentifier!;
-        
+
         // Добавить подключение в группу вызова
         string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
         if (peerUserConnection is null)
@@ -54,7 +55,8 @@ public class CallHub : Hub
             return;
         }
 
-        Console.WriteLine($"✅ Пользователь {receiverId} принял звонок от пользователя {peerUserId} (канал: {channelId})");
+        Console.WriteLine(
+            $"✅ Пользователь {receiverId} принял звонок от пользователя {peerUserId} (канал: {channelId})");
 
         await Clients.Client(peerUserConnection).SendAsync("CallAccepted", receiverId, channelId);
     }
@@ -73,7 +75,7 @@ public class CallHub : Hub
     public async Task CancelCall(string peerUserId, bool isAcceptedCall)
     {
         string method = isAcceptedCall ? "CancelAcceptedCall" : "CancelIncomingCall";
-        
+
         string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
         if (peerUserConnection is null)
         {
@@ -83,17 +85,22 @@ public class CallHub : Hub
         await Clients.Client(peerUserConnection).SendAsync(method);
     }
 
-    public async Task NotifyCameraStatusChanged(NotifyCameraStatusChangedRequest request)
+    public async Task NotifyCameraStatusChanged(string toUserId, bool isMicOn)
     {
-        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(request.ToUserId);
+        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(toUserId);
         if (peerUserConnection is null)
         {
             return;
         }
-        
-        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", request.IsCameraOn);
+
+        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", isMicOn);
     }
-    
+
+    public async Task NotifyMicStatusChanged(string toUserId, bool isMicOn)
+    {
+        await Clients.User(toUserId).SendAsync("PeerMicStatusChanged", isMicOn);
+    }
+
     public async Task SendOffer(SendOfferRequest request)
     {
         string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;

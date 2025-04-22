@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import FooterProfilePanel from './FooterProfilePanel';
+import FooterProfilePanel from '../../Layout/FooterProfilePanel';
 import { X } from 'lucide-react';
-import { channelsApi } from '../api/channelsApi';
-import SearchUserOverlay from './SearchUserOverlay/SearchUserOverlay';
-import { useAuthContext } from '../context/AuthContext';
-import DirectChannelType from '../types/DirectChannelType';
+import { channelsApi } from '../../../api/channelsApi';
+import SearchUserOverlay from '../../SearchUserOverlay/SearchUserOverlay';
+import { useAuthContext } from '../../../context/AuthContext';
+import DirectChannelType from '../../../types/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
 
 

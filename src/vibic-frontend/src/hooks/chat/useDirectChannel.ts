@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { channelsApi } from '../api/channelsApi';
-import { userProfilesApi } from '../api/userProfilesApi';
-import UserProfileType from '../types/UserProfileType';
+import { channelsApi } from '../../api/channelsApi';
+import { userProfilesApi } from '../../api/userProfilesApi';
+import UserProfileType from '../../types/UserProfileType';
 
 export default function useDirectChannel(channelId: string, localUserId?: string) {
   const [peerUser, setPeerUser] = useState<UserProfileType | null>(null);

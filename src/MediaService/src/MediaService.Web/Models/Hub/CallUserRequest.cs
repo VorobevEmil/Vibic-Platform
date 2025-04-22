@@ -6,5 +6,4 @@ public record CallUserRequest(
     string PeerAvatarUrl, 
     string InitiatorUsername, 
     string InitiatorAvatarUrl, 
-    string ChannelId, 
-    bool? IsInitiator);
+    string ChannelId);

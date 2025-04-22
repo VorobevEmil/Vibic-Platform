@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { chatHubConnection } from '../services/signalRClient';
-import MessageType from '../types/MessageType';
+import { chatHubConnection } from '../../services/signalRClient';
+import MessageType from '../../types/MessageType';
 
 export default function useSignalRChannel(
     channelId: string,
@@ -36,7 +36,7 @@ export default function useSignalRChannel(
                         setTypingUsername(username);
 
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                        typingTimeoutRef.current = setTimeout(() => setTypingUsername(null), 1000);
+                        typingTimeoutRef.current = setTimeout(() => setTypingUsername(null), 500);
                     }
                 });
 

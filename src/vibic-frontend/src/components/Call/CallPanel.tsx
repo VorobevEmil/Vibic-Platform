@@ -4,6 +4,7 @@ import { callHubConnection } from '../../services/signalRClient';
 import CallRequestType from '../../types/CallRequestType';
 import { rtcConfiguration } from '../../utils/webrtcConfig';
 import { useAuthContext } from '../../context/AuthContext';
+import { useMedia } from '../../context/MediaContext';
 
 interface CallPanelProps {
   onClose: () => void;
@@ -16,11 +17,13 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [isMicOn, setIsMicOn] = useState(true);
-  const [isCamOn, setIsCamOn] = useState(true);
+  const [isCamOn, setIsCamOn] = useState(false);
   const [remoteStreamStarted, setRemoteStreamStarted] = useState(false);
-  const [isRemoteCamOn, setIsRemoteCamOn] = useState(true);
+  const [isRemoteCamOn, setIsRemoteCamOn] = useState(false);
+  const [isRemoteMicOn, setIsRemoteMicOn] = useState(true);
+
   const selfUser = useAuthContext();
+  const { isMicOn, toggleMic } = useMedia();
 
   const remoteAvatarUrl = callRequest.isInitiator
     ? callRequest.peerAvatarUrl
@@ -33,6 +36,8 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
       streamRef.current.getTracks().forEach((track) => {
         peerConnection.current?.addTrack(track, streamRef.current!);
       });
+      streamRef.current.getAudioTracks().forEach((track) => (track.enabled = isMicOn));
+      streamRef.current.getVideoTracks().forEach((track) => (track.enabled = isCamOn));
     }
 
     peerConnection.current.ontrack = (event) => {
@@ -69,6 +74,10 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
       toUserId: callRequest.peerUserId,
       offer,
     });
+
+    callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, isCamOn);
+
+    callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, isMicOn);
   };
 
   const closeCall = (byUser: boolean) => {
@@ -104,6 +113,8 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
         CallAccepted: () => startCall(),
         CancelAcceptedCall: () => closeCall(false),
         PeerCameraStatusChanged: (isCam: boolean) => setIsRemoteCamOn(isCam),
+        PeerMicStatusChanged: (isMic: boolean) => setIsRemoteMicOn(isMic), // Новый обработчик
+
         ReceiveOffer: async (fromUserId: string, offer: RTCSessionDescriptionInit) => {
           setupPeerConnection(fromUserId);
 
@@ -139,16 +150,18 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
       };
 
       for (const [key, handler] of Object.entries(handlers)) {
-        callHubConnection.off(key); 
+        callHubConnection.off(key);
         callHubConnection.on(key, handler as any);
       }
 
       if (callRequest.isInitiator) {
         await callHubConnection.invoke('CallUser', callRequest);
-      }
-
-      else if (callRequest.isInitiator === false) {
+      } else {
         await callHubConnection.invoke('AcceptCall', callRequest.peerUserId, callRequest.channelId);
+
+        callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, isCamOn);
+
+        callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, isMicOn);
       }
     };
 
@@ -161,19 +174,20 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
     };
   }, []);
 
-  const toggleMic = () => {
-    streamRef.current?.getAudioTracks().forEach((track) => (track.enabled = !track.enabled));
-    setIsMicOn((prev) => !prev);
+  const toggleMicTrack = () => {
+    const newMicState = !isMicOn;
+    streamRef.current?.getAudioTracks().forEach((track) => (track.enabled = newMicState));
+    toggleMic();
+
+    callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, newMicState);
   };
 
   const toggleCam = () => {
     streamRef.current?.getVideoTracks().forEach((track) => (track.enabled = !track.enabled));
     setIsCamOn((prev) => {
       const newCamState = !prev;
-      callHubConnection.invoke('NotifyCameraStatusChanged', {
-        toUserId: callRequest.peerUserId,
-        isCameraOn: newCamState,
-      });
+      callHubConnection.invoke('NotifyCameraStatusChanged', callRequest.peerUserId, newCamState);
+
       return newCamState;
     });
   };
@@ -183,7 +197,6 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
       <div className="flex flex-row gap-4 justify-center items-center">
         {/* Local user */}
         <div className="w-[320px] h-[240px] relative rounded-lg border-2 border-white shadow-lg bg-[#1e1f22]">
-          {/* Username and Status */}
           <div className="absolute top-1 left-1 z-10 text-xs text-white flex gap-2 items-center">
             <span className="font-bold">{selfUser?.username || 'Вы'}</span>
             <Mic className={`w-4 h-4 ${isMicOn ? 'text-green-400' : 'text-red-500'}`} />
@@ -210,10 +223,9 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
 
         {/* Remote user */}
         <div className="w-[320px] h-[240px] relative rounded-lg border-2 border-green-500 shadow-lg bg-[#1e1f22]">
-          {/* Username and Status */}
           <div className="absolute top-1 left-1 z-10 text-xs text-white flex gap-2 items-center">
             <span className="font-bold">{callRequest.isInitiator ? callRequest.peerUsername : callRequest.initiatorUsername}</span>
-            <Mic className={`w-4 h-4 ${isRemoteCamOn ? 'text-green-400' : 'text-red-500'}`} />
+            <Mic className={`w-4 h-4 ${isRemoteMicOn ? 'text-green-400' : 'text-red-500'}`} />
             <Video className={`w-4 h-4 ${isRemoteCamOn ? 'text-green-400' : 'text-red-500'}`} />
           </div>
 
@@ -249,7 +261,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
       </div>
 
       <div className="mt-6 flex gap-4">
-        <button onClick={toggleMic} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
+        <button onClick={toggleMicTrack} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
           {isMicOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
         </button>
         <button onClick={toggleCam} className="p-3 bg-gray-700 rounded-full hover:bg-gray-600">
