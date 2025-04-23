@@ -30,6 +30,11 @@ public class ServerRepository : IServerRepository
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
     }
 
+    public async Task CreateAsync(Server server, CancellationToken cancellationToken = default)
+    {
+        await _dbContext.Servers.AddAsync(server, cancellationToken);
+    }
+
     public void Delete(Server server)
     {
         _dbContext.Servers.Remove(server);

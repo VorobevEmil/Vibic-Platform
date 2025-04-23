@@ -24,5 +24,8 @@ public class ServerConfiguration : IEntityTypeConfiguration<Server>
         builder.HasMany(s => s.ServerMembers)
             .WithOne(sm => sm.Server)
             .HasForeignKey(s => s.ServerId);
+
+        builder.HasOne(s => s.Owner)
+            .WithMany();
     }
 }

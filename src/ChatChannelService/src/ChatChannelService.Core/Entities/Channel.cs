@@ -18,13 +18,14 @@ public class Channel : BaseEntity, IUpdatable
         };
     }
 
-    public static Channel CreateServerChannel(string name,  Guid serverId)
+    public static Channel CreateServerChannel(string name,  Server server)
     {
         return new Channel
         {
             Name = name,
             Type = ChannelType.Server,
-            ServerId = serverId
+            Server = server,
+            ServerId = server.Id
         };
     }
 

@@ -10,7 +10,9 @@ public static class ServerMappingExtensions
         return new ServerResponse
         {
             Id = dto.Id,
+            IconUrl = dto.IconUrl,
             Name = dto.Name,
+            ChannelId = dto.ChannelId
         };
     }
 }

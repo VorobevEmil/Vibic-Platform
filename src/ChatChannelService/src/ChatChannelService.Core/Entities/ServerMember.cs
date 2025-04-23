@@ -4,11 +4,13 @@ namespace ChatChannelService.Core.Entities;
 
 public class ServerMember : BaseEntity
 {
-    public ServerMember(Guid chatUserId, Guid serverId, string displayName)
+    public ServerMember(ChatUser chatUser, Server server)
     {
-        ChatUserId = chatUserId;
-        ServerId = serverId;
-        DisplayName = displayName;
+        ChatUser = chatUser;
+        Server = server;
+        ChatUserId = chatUser.Id;
+        ServerId = server.Id;
+        DisplayName = chatUser.Username;
     }
     
     private ServerMember() { }

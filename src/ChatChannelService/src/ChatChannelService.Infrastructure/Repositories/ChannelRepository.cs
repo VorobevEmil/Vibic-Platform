@@ -20,10 +20,20 @@ public class ChannelRepository : IChannelRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Channels
-            .Include(x => x.ChannelMembers)
-            .ThenInclude(x => x.ChatUser)
             .Where(x => x.Type == ChannelType.Direct &&
                         x.ChannelMembers.Any(y => y.ChatUserId == userId))
+            .Select(channel => new
+            {
+                Channel = channel,
+                LastMessageDate = channel.Messages
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Select(m => m.CreatedAt)
+                    .FirstOrDefault()
+            })
+            .OrderByDescending(x => x.LastMessageDate)
+            .Select(x => x.Channel)
+            .Include(x => x.ChannelMembers)
+            .ThenInclude(x => x.ChatUser)
             .ToListAsync(cancellationToken);
     }
 
@@ -38,6 +48,15 @@ public class ChannelRepository : IChannelRepository
                     x.Id == channelId &&
                     x.ChannelMembers.Any(y => y.ChatUserId == userId),
                 cancellationToken);
+    }
+
+    public async Task<Channel> GetFirstChannelOfServerAsync(
+        Guid serverId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Channels
+            .OrderBy(x => x.Id)
+            .FirstAsync(x => x.ServerId == serverId && x.Type == ChannelType.Server, cancellationToken);
     }
 
     public async Task CreateAsync(Channel channel, CancellationToken cancellationToken)

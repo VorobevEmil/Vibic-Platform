@@ -7,6 +7,7 @@ public class ChannelMember
     public ChannelMember(Channel channel, ChatUser chatUser)
     {
         Channel = channel;
+        ChannelId = channel.Id;
         ChatUser = chatUser;
         ChatUserId = chatUser.Id;
     }
