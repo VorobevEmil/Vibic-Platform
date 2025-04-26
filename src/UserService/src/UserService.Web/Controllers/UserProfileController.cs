@@ -23,6 +23,18 @@ public class UserProfileController : AuthenticateControllerBase
         _mediator = mediator;
     }
 
+    [HttpGet("avatars/{userId}/{fileName}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAvatar(Guid userId, string fileName)
+    {
+        GetAvatarQuery query = new(userId, fileName);
+        Stream fileStream = await _mediator.Send(query);
+        
+        fileStream.Position = 0;
+
+        return File(fileStream, "image/webp");
+    }
+
     [HttpGet("me")]
     public async Task<IActionResult> GetMyProfile()
     {
@@ -65,6 +77,15 @@ public class UserProfileController : AuthenticateControllerBase
 
         await _mediator.Send(command);
 
+        return Ok();
+    }
+
+    [HttpPatch("avatar")]
+    public async Task<IActionResult> UpdateUserAvatar(IFormFile? file)
+    {
+        UpdateUserAvatarCommand command = new(file);
+        await _mediator.Send(command);
+        
         return Ok();
     }
 

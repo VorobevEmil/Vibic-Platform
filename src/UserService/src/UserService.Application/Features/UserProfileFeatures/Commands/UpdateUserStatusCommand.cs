@@ -30,8 +30,7 @@ public class UpdateUserStatusHandler : IRequestHandler<UpdateUserStatusCommand>
     public async Task Handle(UpdateUserStatusCommand request, CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        UserProfile userProfile = await _repository.GetByIdAsync(userId)
-                                  ?? throw new NotFoundException("User profile not found");
+        UserProfile userProfile = await _repository.GetByIdAsync(userId, cancellationToken);
 
         userProfile.UpdateStatus(request.UserStatus);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

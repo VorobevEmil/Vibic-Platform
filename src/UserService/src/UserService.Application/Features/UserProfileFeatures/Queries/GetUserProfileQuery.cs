@@ -19,8 +19,7 @@ public class GetUserProfileHandler : IRequestHandler<GetUserProfileQuery, UserPr
 
     public async Task<UserProfileDto> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
     {
-        UserProfile userProfile = await _repository.GetByIdAsync(request.Id)
-                                  ?? throw new NotFoundException("User profile not found");
+        UserProfile userProfile = await _repository.GetByIdAsync(request.Id, cancellationToken);
 
         return userProfile.MapToDto();
     }

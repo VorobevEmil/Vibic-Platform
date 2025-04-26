@@ -53,7 +53,7 @@ export default function DirectChannelListSidebar() {
                             <div
                                 key={channel.id}
                                 className="group flex items-center justify-between gap-2 p-2 hover:bg-[#3c3e45] rounded-lg cursor-pointer"
-                                onClick={() => navigate(`/channels/${channel.id}`)}
+                                onClick={() => navigate(`/channels/@me/${channel.id}`)}
                             >
                                 <div className="flex items-center gap-2">
                                     <img src={channelMember.avatarUrl}

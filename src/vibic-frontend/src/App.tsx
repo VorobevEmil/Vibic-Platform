@@ -5,13 +5,15 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ChannelPage from './pages/DirectChannelPage';
 import PrivateRoute from './pages/PrivateRoute';
+import ServerPage from './pages/ServerPage';
 
 function App() {
   return (
     <Routes>
       <Route element={<PrivateRoute />}>
         <Route path="/channels/@me" element={<HomePage />} />
-        <Route path="/channels/:id" element={<ChannelPage />} />
+        <Route path="/channels/@me/:id" element={<ChannelPage />} />
+        <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
       </Route>
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/sign-up" element={<SignUpPage />} />

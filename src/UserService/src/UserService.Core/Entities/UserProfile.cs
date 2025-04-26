@@ -32,4 +32,9 @@ public class UserProfile : BaseEntity
     {
         Status = status;
     }
+
+    public void UpdateAvatarUrl(string url)
+    {
+        AvatarUrl = url;
+    }
 }

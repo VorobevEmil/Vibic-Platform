@@ -41,7 +41,7 @@ export default function CallListener() {
             };
 
 
-            navigate(`/channels/${incomingCall.channelId}`, {
+            navigate(`/channels/@me/${incomingCall.channelId}`, {
                 state: {
                     isIncomingCall: true,
                     callData

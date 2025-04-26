@@ -27,5 +27,9 @@
         <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
       </Reference>
     </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Services\" />
+    </ItemGroup>
 
 </Project>

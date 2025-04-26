@@ -15,7 +15,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUserProfileRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
-
+    
     public UpdateUserProfileHandler(
         IHttpContextAccessor httpContextAccessor,
         IUserProfileRepository repository,
@@ -29,8 +29,7 @@ public class UpdateUserProfileHandler : IRequestHandler<UpdateUserProfileCommand
     public async Task Handle(UpdateUserProfileCommand command, CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        UserProfile userProfile = await _repository.GetByIdAsync(userId)
-                                  ?? throw new NotFoundException("User profile not found");
+        UserProfile userProfile = await _repository.GetByIdAsync(userId, cancellationToken);
 
         userProfile.UpdateProfile(
             command.Username,

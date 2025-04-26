@@ -24,4 +24,9 @@ public class ChatUser : BaseEntity, IUpdatable, ISoftDeletable
     public DateTime? UpdatedAt { get; private init; }
     public bool IsDeleted { get; private init; }
     public DateTime? DeletedAt { get; private init; }
+
+    public void UpdateAvatarUrl(string avatarUrl)
+    {
+        AvatarUrl = avatarUrl;
+    }
 }
