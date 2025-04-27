@@ -15,7 +15,7 @@ public static class ChannelMappingExtensions
                 .ConvertAll(cm => new ChannelMemberResponse
                 {
                     UserId = cm.UserId,
-                    Username = cm.Username,
+                    DisplayName = cm.DisplayName,
                     AvatarUrl = cm.AvatarUrl
                 })
         };

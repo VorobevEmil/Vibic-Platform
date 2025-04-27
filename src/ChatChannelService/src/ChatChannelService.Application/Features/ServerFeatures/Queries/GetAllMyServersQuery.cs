@@ -1,3 +1,4 @@
+using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
@@ -6,9 +7,9 @@ using Vibic.Shared.Core.Extensions;
 
 namespace ChatChannelService.Application.Features.ServerFeatures.Queries;
 
-public record GetAllMyServersQuery : IRequest<List<ServerDto>>;
+public record GetAllMyServersQuery : IRequest<List<ServerSummaryDto>>;
 
-public class GetAllMyServersHandler : IRequestHandler<GetAllMyServersQuery, List<ServerDto>>
+public class GetAllMyServersHandler : IRequestHandler<GetAllMyServersQuery, List<ServerSummaryDto>>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IServerRepository _serverRepository;
@@ -24,26 +25,22 @@ public class GetAllMyServersHandler : IRequestHandler<GetAllMyServersQuery, List
         _channelRepository = channelRepository;
     }
 
-    public async Task<List<ServerDto>> Handle(GetAllMyServersQuery request, CancellationToken cancellationToken)
+    public async Task<List<ServerSummaryDto>> Handle(GetAllMyServersQuery request, CancellationToken cancellationToken)
     {
         HttpContext httpContext = _httpContextAccessor.HttpContext!;
         Guid userId = httpContext.User.GetUserId();
 
         List<Server> servers = await _serverRepository.GetServersByUserIdAsync(userId, cancellationToken);
 
-        List<ServerDto> serversDto = new();
+        List<ServerSummaryDto> serverSummariesDto = new();
         foreach (Server server in servers)
         {
             Channel channel = await _channelRepository.GetFirstChannelOfServerAsync(server.Id, cancellationToken);
-            ServerDto serverDto = new(
-                server.Id,
-                server.IconUrl,
-                server.Name,
-                channel.Id);
-            
-            serversDto.Add(serverDto);
+            ServerSummaryDto serverSummaryDto = server.MapToServerSummaryDto(channel);
+
+            serverSummariesDto.Add(serverSummaryDto);
         }
 
-        return serversDto;
+        return serverSummariesDto;
     }
 }

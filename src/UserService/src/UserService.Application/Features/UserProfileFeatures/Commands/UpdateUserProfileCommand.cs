@@ -2,9 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
-using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace UserService.Application.Features.UserProfileFeatures.Commands;
 

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.Core.Entities;
-using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 
 namespace UserService.Infrastructure.Data;
 

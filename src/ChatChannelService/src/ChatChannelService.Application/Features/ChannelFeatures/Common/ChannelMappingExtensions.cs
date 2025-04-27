@@ -16,7 +16,7 @@ public static class ChannelMappingExtensions
     {
         return new ChannelMemberDto(
             channelMember.ChatUser.Id,
-            channelMember.ChatUser.Username,
+            channelMember.ChatUser.DisplayName,
             channelMember.ChatUser.AvatarUrl);
     }
 }

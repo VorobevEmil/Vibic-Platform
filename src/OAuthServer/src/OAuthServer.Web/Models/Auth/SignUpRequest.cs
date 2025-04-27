@@ -4,6 +4,7 @@ namespace OAuthServer.Web.Models.Auth;
 
 public class SignUpRequest
 {
+    public required string DisplayName { get; init; }
     public required string Username { get; init; }
     [EmailAddress]
     public required string Email { get; init; }

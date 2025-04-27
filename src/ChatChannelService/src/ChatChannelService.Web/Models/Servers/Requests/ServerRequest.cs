@@ -5,5 +5,5 @@ namespace ChatChannelService.Web.Models.Servers.Requests;
 public class ServerRequest
 {
     [Required]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; init; } = string.Empty;
 }

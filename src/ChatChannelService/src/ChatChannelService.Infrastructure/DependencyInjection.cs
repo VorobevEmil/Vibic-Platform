@@ -2,7 +2,7 @@ using ChatChannelService.Application.Repositories;
 using ChatChannelService.Infrastructure.Data;
 using ChatChannelService.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 
 namespace ChatChannelService.Infrastructure;
 

@@ -1,7 +1,7 @@
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.ChatUserFeatures.Commands;
 
@@ -22,11 +22,8 @@ public class UpdateUserAvatarHandler : IRequestHandler<UpdateUserAvatarCommand>
     
     public async Task Handle(UpdateUserAvatarCommand request, CancellationToken cancellationToken)
     {
-        ChatUser? chatUser = await _chatUserRepository
+        ChatUser chatUser = await _chatUserRepository
             .GetByIdAsync(request.UserId, cancellationToken);
-        
-        if (chatUser == null)
-            return;
         
         chatUser.UpdateAvatarUrl(request.AvatarUrl);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

@@ -56,7 +56,10 @@ public class ChannelRepository : IChannelRepository
     {
         return await _dbContext.Channels
             .OrderBy(x => x.Id)
-            .FirstAsync(x => x.ServerId == serverId && x.Type == ChannelType.Server, cancellationToken);
+            .FirstAsync(x =>
+                x.ServerId == serverId &&
+                x.Type == ChannelType.Server &&
+                !x.IsPrivate, cancellationToken);
     }
 
     public async Task CreateAsync(Channel channel, CancellationToken cancellationToken)

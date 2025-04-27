@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using MediatR;
 using UserService.Application.Interfaces;
 

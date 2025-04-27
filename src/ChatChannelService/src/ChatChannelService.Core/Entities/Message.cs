@@ -1,5 +1,5 @@
-using Vibic.Shared.Core.Entities;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Entities;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Core.Entities;
 

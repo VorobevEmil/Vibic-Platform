@@ -2,9 +2,9 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
-namespace Vibic.Shared.Core;
+namespace Vibic.Shared.EF;
 
 public abstract class SharedDbContext : DbContext
 {

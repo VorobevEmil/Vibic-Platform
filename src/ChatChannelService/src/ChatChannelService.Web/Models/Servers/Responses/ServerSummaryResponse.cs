@@ -1,6 +1,6 @@
 namespace ChatChannelService.Web.Models.Servers.Responses;
 
-public class ServerResponse
+public class ServerSummaryResponse
 {
     public required Guid Id { get; init; }
     public string? IconUrl { get; init; }

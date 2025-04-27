@@ -20,7 +20,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
   const navigate = useNavigate();
   const state = location.state as { isIncomingCall?: boolean; callData?: CallRequestType; } | null;
 
-  const selfUser = useAuthContext();
+  const { selfUser } = useAuthContext();
   const [inputValue, setInputValue] = useState('');
   const [isCalling, setIsCalling] = useState(false);
   const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
@@ -57,7 +57,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
     }
   };
 
-  const handleStartCall = (startWithCam : boolean) => {
+  const handleStartCall = (startWithCam: boolean) => {
     if (!peerUser || !selfUser) return;
 
     setCallRequest({

@@ -8,6 +8,7 @@ public static class UserProfileDtoMapper
     {
         return new UserProfileDto(
             userProfile.Id,
+            userProfile.DisplayName,
             userProfile.Username,
             userProfile.AvatarUrl,
             userProfile.Bio,

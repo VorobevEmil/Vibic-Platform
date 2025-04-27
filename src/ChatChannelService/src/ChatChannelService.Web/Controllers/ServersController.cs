@@ -1,5 +1,6 @@
 using ChatChannelService.Application.Features.ServerFeatures;
 using ChatChannelService.Application.Features.ServerFeatures.Commands;
+using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Features.ServerFeatures.Queries;
 using ChatChannelService.Web.Mappings;
 using ChatChannelService.Web.Models.Servers.Requests;
@@ -14,28 +15,42 @@ namespace ChatChannelService.Web.Controllers;
 public class ServersController(IMediator mediator) : AuthenticateControllerBase
 {
     [HttpGet("mine")]
-    [ProducesResponseType(typeof(List<ServerResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ServerSummaryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllMyServers()
     {
         GetAllMyServersQuery query = new();
-        List<ServerDto> servers = await mediator.Send(query);
+        List<ServerSummaryDto> servers = await mediator.Send(query);
 
-        List<ServerResponse> responses = servers.ConvertAll(s => s.MapToResponse());
+        List<ServerSummaryResponse> responses = servers.ConvertAll(s => s.MapToResponse());
 
         return Ok(responses);
     }
 
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(ServerFullResponse), StatusCodes.Status201Created)]
+
+    public async Task<IActionResult> GetServerById(Guid id)
+    {
+        GetServerQuery query = new(id);
+
+        ServerFullDto serverFull = await mediator.Send(query);
+
+        ServerFullResponse response = serverFull.MapToResponse();
+
+        return Ok(response);
+    }
+
     [HttpPost]
-    [ProducesResponseType(typeof(ServerResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ServerSummaryResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateServer(ServerRequest request)
     {
         CreateServerCommand command = new(request.Name);
 
-        ServerDto server = await mediator.Send(command);
-        
-        ServerResponse response = server.MapToResponse();
+        ServerSummaryDto serverSummary = await mediator.Send(command);
 
-        return Created(string.Empty, response);
+        ServerSummaryResponse summaryResponse = serverSummary.MapToResponse();
+
+        return Created(string.Empty, summaryResponse);
     }
 
     [HttpDelete("{id}")]

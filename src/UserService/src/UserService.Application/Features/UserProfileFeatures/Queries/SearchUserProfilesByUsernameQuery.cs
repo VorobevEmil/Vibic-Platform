@@ -27,7 +27,7 @@ public class SearchUserProfilesByUsernameHandler :
         CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        List<UserProfile> users = await _userProfileRepository.GetAllByUsernameAsync(request.Username, userId);
+        List<UserProfile> users = await _userProfileRepository.GetAllByUsernameAsync(request.Username, userId, cancellationToken);
 
         return users.ConvertAll(x => x.MapToDto());
     }

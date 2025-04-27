@@ -8,7 +8,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.EntityFrameworkCore.Models;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace OAuthServer.Application.Features.Settings.ApplicationFeatures.Commands;
 
@@ -77,9 +77,9 @@ public class CreateApplicationHandler : IRequestHandler<CreateApplicationCommand
             await _openIddictApplicationManager.CreateAsync(descriptor, cancellationToken);
 
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        User user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException("User not found");
+        User user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         await _userProviderRepository.CreateAsync(new UserProvider(user, application));
-        await _unitOfWork.SaveChangesAsync();
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return application.MapToDTO(false);
     }

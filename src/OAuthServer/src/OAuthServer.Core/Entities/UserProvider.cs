@@ -1,5 +1,5 @@
 using OpenIddict.EntityFrameworkCore.Models;
-using Vibic.Shared.Core.Entities;
+using Vibic.Shared.EF.Entities;
 
 namespace OAuthServer.Core.Entities;
 

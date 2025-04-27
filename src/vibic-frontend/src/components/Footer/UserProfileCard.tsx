@@ -11,7 +11,7 @@ interface Props {
 export default function UserProfileCard({ onClose }: Props) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const user = useAuthContext();
+    const { selfUser: user, updateSelfUser } = useAuthContext();
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -37,8 +37,8 @@ export default function UserProfileCard({ onClose }: Props) {
                     className="w-14 h-14 rounded-full border-2 border-white cursor-pointer hover:brightness-110"
                 />
                 <div>
-                    <div className="font-bold">{user?.username}</div>
-                    <div className="text-xs text-gray-400">{"test"}</div>
+                    <div className="font-bold">{user?.displayName}</div>
+                    <div className="text-xs text-gray-400">{user?.username}</div>
                     <div className="text-xs text-gray-500">Моя учетная запись Vibic</div>
                 </div>
             </div>
@@ -63,13 +63,25 @@ export default function UserProfileCard({ onClose }: Props) {
                 <AvatarUploadModal
                     currentAvatar={user!.avatarUrl}
                     onClose={() => setIsModalOpen(false)}
-                    onSave={(file) => {
-                        console.log('📤 Загружаем файл:', file);
-                        userProfilesApi.updateAvatar(file);
-                        // например, вызывать uploadAvatar(file)
+                    onSave={async (file) => {
+                        if (!file) return;
+
+                        try {
+                            const response = await userProfilesApi.updateAvatar(file);
+                            if (response.status === 200) {
+                                updateSelfUser({
+                                    ...user!,
+                                    avatarUrl: response.data.url, // Обновляем только аватарку
+                                });
+                                setIsModalOpen(false);
+                            }
+                        } catch (error) {
+                            console.error('Ошибка при обновлении аватара:', error);
+                        }
                     }}
                 />
             )}
+
         </div>
     );
 }

@@ -1,4 +1,4 @@
-namespace Vibic.Shared.Core.Interfaces;
+namespace Vibic.Shared.EF.Interfaces;
 
 public interface IUnitOfWork
 {

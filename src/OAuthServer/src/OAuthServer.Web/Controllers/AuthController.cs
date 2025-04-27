@@ -33,7 +33,7 @@ public class AuthController(IMediator mediator) : ControllerBase
     [HttpPost("sign-up")]
     public async Task<IActionResult> SignUp(SignUpRequest request)
     {
-        SignUpCommand command = new(request.Username, request.Email, request.Password);
+        SignUpCommand command = new( request.DisplayName, request.Username, request.Email, request.Password);
 
         await mediator.Send(command);
 

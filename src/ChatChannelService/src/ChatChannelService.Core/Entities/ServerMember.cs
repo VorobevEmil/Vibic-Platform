@@ -1,4 +1,4 @@
-using Vibic.Shared.Core.Entities;
+using Vibic.Shared.EF.Entities;
 
 namespace ChatChannelService.Core.Entities;
 
@@ -10,7 +10,7 @@ public class ServerMember : BaseEntity
         Server = server;
         ChatUserId = chatUser.Id;
         ServerId = server.Id;
-        DisplayName = chatUser.Username;
+        DisplayName = chatUser.DisplayName;
     }
     
     private ServerMember() { }

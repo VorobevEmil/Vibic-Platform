@@ -21,13 +21,4 @@
       <ProjectReference Include="..\UserService.Infrastructure\UserService.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Reference Include="Vibic.Shared.Core">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
-      </Reference>
-      <Reference Include="Vibic.Shared.Messaging">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
 </Project>

@@ -1,12 +1,8 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using OAuthServer.Application.Repositories;
 using OAuthServer.Infrastructure.Data;
 using OAuthServer.Infrastructure.Data.Repositories;
-using Vibic.Shared.Core;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF;
 
 namespace OAuthServer.Infrastructure;
 

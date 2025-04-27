@@ -10,8 +10,18 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
     public void Configure(EntityTypeBuilder<UserProfile> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Username).IsRequired();
-        builder.Property(x => x.Email).IsRequired();
+        builder.Property(x => x.DisplayName)
+            .HasMaxLength(100)
+            .IsRequired();
+        
+        builder.Property(x => x.Username)
+            .HasMaxLength(100)
+            .IsRequired();
+        
+        builder.Property(x => x.Email)
+            .HasMaxLength(100)
+            .IsRequired();
+        
         builder.Property(x => x.Status).HasDefaultValue(UserStatus.Offline);
     }
 }

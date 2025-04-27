@@ -2,11 +2,19 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { userProfilesApi } from '../api/userProfilesApi';
 import UserProfileType from '../types/UserProfileType';
 
+interface AuthContextType {
+  selfUser: UserProfileType | null;
+  updateSelfUser: (user: UserProfileType) => void;
+}
 
-const AuthContext = createContext<UserProfileType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function useAuthContext() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -24,8 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadUser();
   }, []);
 
+  const updateSelfUser = (updatedUser: UserProfileType) => {
+    setSelfUser(updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={selfUser}>
+    <AuthContext.Provider value={{ selfUser, updateSelfUser }}>
       {children}
     </AuthContext.Provider>
   );

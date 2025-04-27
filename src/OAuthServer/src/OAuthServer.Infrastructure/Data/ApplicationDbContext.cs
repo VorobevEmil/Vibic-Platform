@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OAuthServer.Core.Entities;
 using OpenIddict.EntityFrameworkCore.Models;
 using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 
 namespace OAuthServer.Infrastructure.Data;
 

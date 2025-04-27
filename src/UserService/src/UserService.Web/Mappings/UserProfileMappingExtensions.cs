@@ -16,6 +16,7 @@ public static class UserProfileMappingExtensions
         return new UserProfileResponse()
         {
             Id = dto.Id,
+            DisplayName = dto.DisplayName,
             Username = dto.Username,
             AvatarUrl = dto.AvatarUrl,
             Bio = dto.Bio,

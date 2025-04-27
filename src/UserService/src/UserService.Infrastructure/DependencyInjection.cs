@@ -5,7 +5,7 @@ using UserService.Infrastructure.Constants;
 using UserService.Infrastructure.Data;
 using UserService.Infrastructure.FileStorage;
 using UserService.Infrastructure.Repositories;
-using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 
 namespace UserService.Infrastructure;
 

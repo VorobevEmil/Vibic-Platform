@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateServerModal from '../Server/CreateServerModal';
-import { ServerRequest, ServerResponse } from '../../types/ServerType';
+import { ServerRequest, ServerSummaryResponse } from '../../types/ServerType';
 import { serversApi } from '../../api/serversApi';
 
 
 export default function ServerSidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [servers, setServers] = useState<ServerResponse[]>([]);
+    const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
 
     const CreateServer = async (name: string, iconFile: File | null) => {
         const serverRequest: ServerRequest =

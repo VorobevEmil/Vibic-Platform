@@ -11,22 +11,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
-      <PackageReference Include="MediatR" Version="12.5.0" />
+        <PackageReference Include="Vibic.Shared.Messaging" Version="9.0.1"/>
+        <PackageReference Include="Vibic.Shared.Core" Version="9.0.0"/>
+        <PackageReference Include="MediatR" Version="12.5.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Vibic.Shared.Core">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
-      </Reference>
-      <Reference Include="Vibic.Shared.Messaging">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
-      </Reference>
+        <ProjectReference Include="..\ChatChannelService.Core\ChatChannelService.Core.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ChatChannelService.Core\ChatChannelService.Core.csproj" />
-    </ItemGroup>
-
-
+    
 </Project>

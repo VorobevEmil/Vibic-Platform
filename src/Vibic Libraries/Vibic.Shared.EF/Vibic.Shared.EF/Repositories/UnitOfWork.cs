@@ -1,7 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
-namespace Vibic.Shared.Core.Repositories;
+namespace Vibic.Shared.EF.Repositories;
 
 public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : SharedDbContext
 {

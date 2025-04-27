@@ -8,12 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="OpenIddict.EntityFrameworkCore.Models" Version="6.2.0" />
+      <PackageReference Include="Vibic.Shared.EF" Version="9.0.0" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Vibic.Shared.Core">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
+    
 </Project>

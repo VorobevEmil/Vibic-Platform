@@ -1,16 +1,17 @@
+using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.ServerFeatures.Commands;
 
-public record CreateServerCommand(string Name) : IRequest<ServerDto>;
+public record CreateServerCommand(string Name) : IRequest<ServerSummaryDto>;
 
-public class CreateServerHandler : IRequestHandler<CreateServerCommand, ServerDto>
+public class CreateServerHandler : IRequestHandler<CreateServerCommand, ServerSummaryDto>
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IServerRepository _serverRepository;
@@ -31,26 +32,22 @@ public class CreateServerHandler : IRequestHandler<CreateServerCommand, ServerDt
         _chatUserRepository = chatUserRepository;
         _unitOfWork = unitOfWork;
     }
-    
-    public async Task<ServerDto> Handle(CreateServerCommand request, CancellationToken cancellationToken)
+
+    public async Task<ServerSummaryDto> Handle(CreateServerCommand request, CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        ChatUser? chatUser = await _chatUserRepository.GetByIdAsync(userId, cancellationToken);
-        if (chatUser == null)
-        {
-            throw new NotFoundException("Chat user not found");
-        }
-        
+        ChatUser chatUser = await _chatUserRepository.GetByIdAsync(userId, cancellationToken);
+
         Server server = new(request.Name, chatUser);
-        Channel channel = Channel.CreateServerChannel("general", server);
-        ChannelMember channelMember = new(channel, chatUser);
-        channel.ChannelMembers.Add(channelMember);
-        ServerMember serverMember = new (chatUser, server);
+        Channel channel = Channel.CreateServerChannel("general", server, false);
+        // ChannelMember channelMember = new(channel, chatUser);
+        // channel.ChannelMembers.Add(channelMember);
+        ServerMember serverMember = new(chatUser, server);
         server.Channels.Add(channel);
         server.ServerMembers.Add(serverMember);
         await _serverRepository.CreateAsync(server, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        
-        return new ServerDto(server.Id, server.IconUrl, server.Name, channel.Id);
+
+        return server.MapToServerSummaryDto(channel);
     }
 }

@@ -7,25 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Remove="ClientApp\build\**" />
-    </ItemGroup>
-
-    <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-        <Exec Command="npm install" WorkingDirectory="ClientApp" />
-            <Exec Command="npm run build" WorkingDirectory="ClientApp" />
-    </Target>
-
-    <ItemGroup>
-        <Content Include="ClientApp\build\**" CopyToPublishDirectory="PreserveNewest" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\OAuthServer.Application\OAuthServer.Application.csproj" />
       <ProjectReference Include="..\OAuthServer.Infrastructure\OAuthServer.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="MassTransit.RabbitMQ" Version="8.4.0" />
       <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
       <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.4" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.4">
@@ -34,15 +20,6 @@
       </PackageReference>
       <PackageReference Include="OpenIddict.AspNetCore" Version="6.2.0" />
       <PackageReference Include="Scalar.AspNetCore" Version="2.1.13" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="Vibic.Shared.Core">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Core\Vibic.Shared.Core\bin\Debug\net9.0\Vibic.Shared.Core.dll</HintPath>
-      </Reference>
-      <Reference Include="Vibic.Shared.Messaging">
-        <HintPath>..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\bin\Debug\net9.0\Vibic.Shared.Messaging.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>

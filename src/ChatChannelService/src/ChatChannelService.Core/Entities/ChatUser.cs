@@ -1,5 +1,5 @@
-using Vibic.Shared.Core.Entities;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Entities;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Core.Entities;
 
@@ -9,13 +9,15 @@ public class ChatUser : BaseEntity, IUpdatable, ISoftDeletable
     {
     }
 
-    public ChatUser(Guid id, string username, string avatarUrl)
+    public ChatUser(Guid id, string displayName, string username, string avatarUrl)
     {
         Id = id;
+        DisplayName = displayName;
         Username = username;
         AvatarUrl = avatarUrl;
     }
 
+    public string DisplayName { get; private set; } = string.Empty;
     public string Username { get; private set; } = string.Empty;
     public string AvatarUrl { get; private set; } = string.Empty;
     public List<ServerMember> ServerMembers { get; private init; } = new();

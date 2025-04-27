@@ -11,7 +11,7 @@ import { useMedia } from '../../context/MediaContext';
 import UserProfileCard from '../Footer/UserProfileCard';
 
 export default function FooterProfilePanel() {
-  const user = useAuthContext();
+  const { selfUser: user } = useAuthContext();
   const { isMicOn, isHeadphonesOn, setIsMicOn, setIsHeadphonesOn } = useMedia();
   const [showProfile, setShowProfile] = useState(false);
 
@@ -51,7 +51,7 @@ export default function FooterProfilePanel() {
           alt={user.username}
         />
         <div>
-          <div className="font-semibold">{user.username}</div>
+          <div className="font-semibold">{user.displayName}</div>
           <div className={`text-xs ${statusColorMap[user.userStatus]}`}>
             {statusTextMap[user.userStatus] || 'Неизвестно'}
           </div>

@@ -10,7 +10,7 @@ interface CallPanelProps {
 }
 
 export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
-  const selfUser = useAuthContext();
+  const { selfUser } = useAuthContext();
 
   const {
     localVideoRef,

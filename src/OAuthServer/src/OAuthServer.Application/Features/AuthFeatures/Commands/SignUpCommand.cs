@@ -3,12 +3,12 @@ using MediatR;
 using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
 using Vibic.Shared.Core.Exceptions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace OAuthServer.Application.Features.AuthFeatures.Commands;
 
-public record SignUpCommand(string Username, string Email, string Password) : IRequest;
+public record SignUpCommand(string DisplayName, string Username, string Email, string Password) : IRequest;
 
 public class SignUpHandler : IRequestHandler<SignUpCommand>
 {
@@ -42,6 +42,7 @@ public class SignUpHandler : IRequestHandler<SignUpCommand>
 
         await _bus.Publish(new CreateUserProfileEvent(
             user.Id,
+            command.DisplayName,
             user.Username,
             user.Email
         ), cancellationToken);

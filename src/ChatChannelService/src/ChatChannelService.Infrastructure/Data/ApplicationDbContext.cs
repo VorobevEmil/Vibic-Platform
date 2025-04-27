@@ -1,6 +1,6 @@
 using ChatChannelService.Core.Entities;
 using Microsoft.EntityFrameworkCore;
-using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 
 namespace ChatChannelService.Infrastructure.Data;
 

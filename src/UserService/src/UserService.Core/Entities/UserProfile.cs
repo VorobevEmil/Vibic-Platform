@@ -1,10 +1,11 @@
 using UserService.Core.Enums;
-using Vibic.Shared.Core.Entities;
+using Vibic.Shared.EF.Entities;
 
 namespace UserService.Core.Entities;
 
 public class UserProfile : BaseEntity
 {
+    public string DisplayName { get; set; } = string.Empty;
     public string Username { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
     public string? AvatarUrl { get; private set; }
@@ -13,9 +14,10 @@ public class UserProfile : BaseEntity
 
     private UserProfile() {}
 
-    public UserProfile(Guid id, string username, string email, string? avatarUrl)
+    public UserProfile(Guid id, string displayName, string username, string email, string? avatarUrl)
     {
         Id = id;
+        DisplayName = displayName;
         Username = username;
         Email = email;
         AvatarUrl = avatarUrl;

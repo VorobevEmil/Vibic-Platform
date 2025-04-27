@@ -10,7 +10,7 @@ public class CreateUserProfileConsumer(IMediator mediator) : IConsumer<CreateUse
     public Task Consume(ConsumeContext<CreateUserProfileEvent> context)
     {
         CreateUserProfileEvent message = context.Message;
-        CreateUserProfileCommand command = new(message.UserId, message.Username, message.Email);
+        CreateUserProfileCommand command = new(message.UserId, message.DisplayName, message.Username, message.Email);
 
         return mediator.Send(command);
     }

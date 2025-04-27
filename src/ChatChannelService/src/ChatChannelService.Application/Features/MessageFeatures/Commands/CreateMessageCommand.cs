@@ -3,7 +3,7 @@ using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
 using Vibic.Shared.Core.Exceptions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.MessageFeatures.Commands;
 
@@ -38,11 +38,7 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
             throw new NotFoundException("Channel doesn't exist");
         }
 
-        ChatUser? senderUser = await _chatUserRepository.GetByIdAsync(request.UserId, cancellationToken);
-        if (senderUser is null)
-        {
-            throw new NotFoundException("User not found");
-        }
+        ChatUser senderUser = await _chatUserRepository.GetByIdAsync(request.UserId, cancellationToken);
 
         Message message = new(channel, senderUser, request.Content);
 

@@ -5,7 +5,7 @@ using UserService.Application.Interfaces;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace UserService.Application.Features.UserProfileFeatures.Commands;

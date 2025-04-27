@@ -4,7 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.ServerFeatures.Commands;
 
@@ -30,12 +30,8 @@ public class DeleteServerHandler : IRequestHandler<DeleteServerCommand>
     {
         HttpContext httpContext = _httpContextAccessor.HttpContext!;
 
-        Server? server = await _serverRepository.GetServerByIdAsync(request.Id, cancellationToken);
+        Server server = await _serverRepository.GetServerByIdAsync(request.Id, cancellationToken);
 
-        if (server is null)
-        {
-            throw new NotFoundException($"Server with id {request.Id} not found");
-        }
 
         if (server.OwnerId != httpContext.User.GetUserId())
         {

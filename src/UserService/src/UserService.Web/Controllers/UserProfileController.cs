@@ -29,7 +29,7 @@ public class UserProfileController : AuthenticateControllerBase
     {
         GetAvatarQuery query = new(userId, fileName);
         Stream fileStream = await _mediator.Send(query);
-        
+
         fileStream.Position = 0;
 
         return File(fileStream, "image/webp");
@@ -84,9 +84,10 @@ public class UserProfileController : AuthenticateControllerBase
     public async Task<IActionResult> UpdateUserAvatar(IFormFile? file)
     {
         UpdateUserAvatarCommand command = new(file);
-        await _mediator.Send(command);
-        
-        return Ok();
+        string url = await _mediator.Send(command);
+        AvatarResponse response = new(url);
+
+        return Ok(response);
     }
 
     [HttpPatch]

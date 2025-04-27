@@ -1,18 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
 using Vibic.Shared.Core.ExceptionHandlers;
-using Vibic.Shared.Core.Interfaces;
-using Vibic.Shared.Core.Repositories;
 
 namespace Vibic.Shared.Core;
 
@@ -56,25 +50,9 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddApplicationDbContext<TDbContext>(this IServiceCollection services)
-        where TDbContext : SharedDbContext
-    {
-        IConfiguration configuration = services.BuildServiceProvider().GetService<IConfiguration>()!;
-        string? databaseConnection = configuration.GetConnectionString("Postgres");
-        NpgsqlDataSource dataSourceBuilder = new NpgsqlDataSourceBuilder(databaseConnection)
-            .EnableDynamicJson()
-            .Build();
-
-        services.AddDbContext<TDbContext>(options =>
-            options.UseNpgsql(dataSourceBuilder,
-                opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
-
-        services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
-
-        return services;
-    }
-
-    public static AuthenticationBuilder AddVibicAuthentication(this IServiceCollection services, JwtBearerEvents? events = null)
+    public static AuthenticationBuilder AddVibicAuthentication(
+        this IServiceCollection services,
+        JwtBearerEvents? events = null)
     {
         SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
 
@@ -82,7 +60,7 @@ public static class DependencyInjection
             .AddJwtBearer(options =>
             {
                 options.Events = events!;
-                
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = false,

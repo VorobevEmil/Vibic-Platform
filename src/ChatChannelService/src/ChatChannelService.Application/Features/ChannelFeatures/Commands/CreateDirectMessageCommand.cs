@@ -5,7 +5,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
-using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.ChannelFeatures.Commands;
 
@@ -34,19 +34,11 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
         CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
-        List<ChatUser?> chatUsers =
+        List<ChatUser> chatUsers =
         [
             await _chatUserRepository.GetByIdAsync(request.UserId, cancellationToken),
             await _chatUserRepository.GetByIdAsync(userId, cancellationToken)
         ];
-
-        foreach (ChatUser? chatUser in chatUsers)
-        {
-            if (chatUser == null)
-            {
-                throw new NotFoundException("Chat user not found");
-            }
-        }
 
         if (await _channelRepository.DoesDirectChannelWithUsersExistAsync(userId, request.UserId, cancellationToken))
         {

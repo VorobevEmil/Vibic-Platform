@@ -1,4 +1,4 @@
-namespace Vibic.Shared.Core.Entities;
+namespace Vibic.Shared.EF.Entities;
 
 public abstract class BaseEntity
 {

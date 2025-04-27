@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 
 export default function DirectChannelListSidebar() {
-    const user = useAuthContext();
+    const { selfUser: user } = useAuthContext();
     const [channels, setChannels] = useState<DirectChannelType[]>([]);
     const navigate = useNavigate();
 
