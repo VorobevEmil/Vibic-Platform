@@ -1,10 +1,12 @@
+using ChatChannelService.Application.Helpers.Extensions;
 using ChatChannelService.Core.Entities;
+using Microsoft.Extensions.Configuration;
 
 namespace ChatChannelService.Application.Features.MessageFeatures.Common;
 
 public static class MessageMappingExtensions
 {
-    public static MessageDto MapToDto(this Message message)
+    public static MessageDto MapToDto(this Message message, IConfiguration configuration)
     {
         return new MessageDto(
             message.Id,
@@ -12,7 +14,7 @@ public static class MessageMappingExtensions
             message.Content,
             message.Sender.Id,
             message.Sender.Username,
-            message.Sender.AvatarUrl,
+            configuration.BuildUserAvatarUrl(message.Sender.AvatarUrl),
             message.CreatedAt);
     }
 }

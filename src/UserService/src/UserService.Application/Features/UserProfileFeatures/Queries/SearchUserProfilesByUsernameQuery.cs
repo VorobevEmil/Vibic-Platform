@@ -26,9 +26,11 @@ public class SearchUserProfilesByUsernameHandler :
     public async Task<List<UserProfileDto>> Handle(SearchUserProfilesByUsernameQuery request,
         CancellationToken cancellationToken)
     {
-        Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
+        HttpContext httpContext = _httpContextAccessor.HttpContext!;
+
+        Guid userId = httpContext.User.GetUserId();
         List<UserProfile> users = await _userProfileRepository.GetAllByUsernameAsync(request.Username, userId, cancellationToken);
 
-        return users.ConvertAll(x => x.MapToDto());
+        return users.ConvertAll(x => x.MapToDto(httpContext.Request));
     }
 }

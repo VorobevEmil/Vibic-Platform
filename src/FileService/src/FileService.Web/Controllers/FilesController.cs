@@ -22,8 +22,8 @@ public class FilesController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> UploadAvatar(Guid userId, [FromForm] IFormFile file)
     {
         UploadFileCommand command = new(userId, "avatars", file);
-        string url = await mediator.Send(command);
+        string uniqueFileName = await mediator.Send(command);
 
-        return Created(string.Empty, url);
+        return Created(string.Empty, uniqueFileName);
     }
 }

@@ -1,7 +1,9 @@
 using Scalar.AspNetCore;
 using UserService.Application;
 using UserService.Infrastructure;
+using UserService.Infrastructure.Data;
 using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 using Vibic.Shared.Messaging;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -21,20 +23,21 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 }
 WebApplication app = builder.Build();
 {
+    app.ApplyMigration<ApplicationDbContext>();
 
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
-       
+
     app.UseCors(p => p
         .SetIsOriginAllowed(_ => true)
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
 
-    
+
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();

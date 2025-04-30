@@ -61,12 +61,18 @@ public class FileStorageService : IFileStorageService
             .WithObjectSize(fileStream.Length)
             .WithContentType(contentType));
 
-        return $"{bucketName}/{uniqueFileName}";
+        return uniqueFileName;
     }
 
     public async Task DeleteFolderAsync(string bucketName, string folderPrefix)
     {
-        List<string> objectNames = new List<string>();
+        bool found = await _minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketName));
+        if (!found)
+        {
+            return;
+        }
+        
+        List<string> objectNames = new();
 
         ListObjectsArgs? listArgs = new ListObjectsArgs()
             .WithBucket(bucketName)

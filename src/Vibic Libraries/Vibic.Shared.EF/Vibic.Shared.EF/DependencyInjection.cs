@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,5 +26,15 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
 
         return services;
+    }
+
+    public static WebApplication ApplyMigration<TDbContext>(this WebApplication app) where TDbContext : SharedDbContext
+    {
+        using AsyncServiceScope scope = app.Services.CreateAsyncScope();
+        IServiceProvider serviceProvider = scope.ServiceProvider;
+        TDbContext db = serviceProvider.GetRequiredService<TDbContext>();
+        db.Database.Migrate();
+
+        return app;
     }
 }

@@ -1,9 +1,11 @@
 using ChatChannelService.Application;
 using ChatChannelService.Infrastructure;
+using ChatChannelService.Infrastructure.Data;
 using ChatChannelService.Web.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Scalar.AspNetCore;
 using Vibic.Shared.Core;
+using Vibic.Shared.EF;
 using Vibic.Shared.Messaging;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -11,7 +13,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services
         .AddApplication()
         .AddInfrastructure();
-
+    
     builder.Services.AddExceptionHandlers();
     builder.Services.AddVibicAuthentication(new JwtBearerEvents()
     {
@@ -35,6 +37,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 }
 WebApplication app = builder.Build();
 {
+    app.ApplyMigration<ApplicationDbContext>();
+    
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();

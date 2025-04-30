@@ -1,6 +1,7 @@
 using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using UserService.Application.Helpers;
 using UserService.Application.Interfaces;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
@@ -55,19 +56,22 @@ public class UpdateUserAvatarHandler : IRequestHandler<UpdateUserAvatarCommand, 
             throw new ArgumentException("Only images can be uploaded (JPEG, PNG, WEBP, GIF).");
         }
 
-        Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
+        HttpContext httpContext = _httpContextAccessor.HttpContext!;
+        Guid userId = httpContext.User.GetUserId();
         UserProfile userProfile = await _userProfileRepository.GetByIdAsync(userId, cancellationToken);
 
         await using Stream stream = request.FormFile.OpenReadStream();
         string fileName = request.FormFile.FileName;
 
         string avatarPath = await _fileStorageClient.UploadAvatarAsync(userId, stream, fileName);
-
-        string avatarUrl = $"https://localhost:7155/user-profiles/{avatarPath}";
+        
+        string avatarUrl = $"/user-profiles/avatar/{avatarPath}";
 
         userProfile.UpdateAvatarUrl(avatarUrl);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _bus.Publish(new UpdateUserAvatarEvent(userId, avatarUrl), cancellationToken);
+
+        avatarUrl = httpContext.Request.GetAbsoluteUrl(avatarUrl);
 
         return avatarUrl;
     }

@@ -4,7 +4,7 @@ import { http } from './httpClient';
 
 export const messagesApi = {
   getMessagesByChannelId: (channelId: string, cursor?: string) => {
-    const url = new URL(`https://localhost:7138/channels/${channelId}/messages`);
+    const url = new URL(`http://localhost:7138/channels/${channelId}/messages`);
 
     if (cursor) {
       url.searchParams.append('cursor', cursor);

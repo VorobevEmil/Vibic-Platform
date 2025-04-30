@@ -3,9 +3,9 @@ import { http } from './httpClient';
 
 export const serversApi = {
   getServerById: (id: string) =>
-    http.get(`https://localhost:7138/servers/${id}`),
+    http.get(`http://localhost:7138/servers/${id}`),
   getMyServers: () =>
-    http.get<ServerSummaryResponse[]>('https://localhost:7138/servers/mine'),
+    http.get<ServerSummaryResponse[]>('http://localhost:7138/servers/mine'),
   createServer: (request: ServerRequest) =>
-    http.post<ServerSummaryResponse>('https://localhost:7138/servers', request)
+    http.post<ServerSummaryResponse>('http://localhost:7138/servers', request)
 };

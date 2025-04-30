@@ -4,6 +4,7 @@ import { useSignUp } from '../hooks/auth/useSignUp';
 
 function SignUpPage() {
   const {
+    displayName, setDisplayName,
     username, setUsername,
     email, setEmail,
     password, setPassword,
@@ -24,16 +25,6 @@ function SignUpPage() {
       }
     >
       <form className="space-y-4" onSubmit={handleRegister}>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
-          <input
-            type="text"
-            className="input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
@@ -42,6 +33,28 @@ function SignUpPage() {
             className="input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
+          <input
+            type="text"
+            className="input"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+          <input
+            type="text"
+            className="input"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
         </div>

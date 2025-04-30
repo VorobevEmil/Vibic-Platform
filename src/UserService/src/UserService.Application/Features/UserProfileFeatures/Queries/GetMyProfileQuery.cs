@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using UserService.Application.Features.UserProfileFeatures.Common;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
-using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 
 namespace UserService.Application.Features.UserProfileFeatures.Queries;
@@ -26,9 +25,10 @@ public class GetMyProfileHandler : IRequestHandler<GetMyProfileQuery, UserProfil
 
     public async Task<UserProfileDto> Handle(GetMyProfileQuery request, CancellationToken cancellationToken)
     {
-        Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
+        HttpContext httpContext = _httpContextAccessor.HttpContext!;
+        Guid userId = httpContext.User.GetUserId();
         UserProfile userProfile = await _repository.GetByIdAsync(userId, cancellationToken);
 
-        return userProfile.MapToDto();
+        return userProfile.MapToDto(httpContext.Request);
     }
 }

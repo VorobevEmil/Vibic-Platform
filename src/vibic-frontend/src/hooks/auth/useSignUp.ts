@@ -4,6 +4,7 @@ import { authApi } from '../../api/authApi';
 
 export function useSignUp() {
   const navigate = useNavigate();
+  const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,7 +13,7 @@ export function useSignUp() {
     e.preventDefault();
 
     try {
-      await authApi.signUp({ username, email, password });
+      await authApi.signUp({ displayName, username, email, password });
 
       alert('Account created! 🎉');
       navigate('/sign-in');
@@ -24,6 +25,7 @@ export function useSignUp() {
   };
 
   return {
+    displayName, setDisplayName,
     username, setUsername,
     email, setEmail,
     password, setPassword,

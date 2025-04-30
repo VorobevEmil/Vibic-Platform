@@ -2,6 +2,7 @@ using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.EF.Interfaces;
 
@@ -11,17 +12,20 @@ public record CreateMessageCommand(Guid ChannelId, Guid UserId, string Content) 
 
 public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, MessageDto>
 {
+    private readonly IConfiguration _configuration;
     private readonly IChannelRepository _channelRepository;
     private readonly IChatUserRepository _chatUserRepository;
     private readonly IMessageRepository _messageRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateMessageHandler(
+        IConfiguration configuration,
         IChannelRepository channelRepository,
         IChatUserRepository chatUserRepository,
         IMessageRepository messageRepository,
         IUnitOfWork unitOfWork)
     {
+        _configuration = configuration;
         _channelRepository = channelRepository;
         _chatUserRepository = chatUserRepository;
         _messageRepository = messageRepository;
@@ -45,7 +49,7 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
         await _messageRepository.CreateAsync(message, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        MessageDto messageDto = message.MapToDto();
+        MessageDto messageDto = message.MapToDto(_configuration);
 
         return messageDto;
     }

@@ -3,6 +3,7 @@ using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.EF.Interfaces;
@@ -13,17 +14,20 @@ public record CreateDirectMessageCommand(Guid UserId) : IRequest<DirectChannelDt
 
 public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCommand, DirectChannelDto?>
 {
+    private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChatUserRepository _chatUserRepository;
     private readonly IChannelRepository _channelRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateDirectMessageHandler(
+        IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
         IChatUserRepository chatUserRepository,
         IChannelRepository channelRepository,
         IUnitOfWork unitOfWork)
     {
+        _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
         _chatUserRepository = chatUserRepository;
         _channelRepository = channelRepository;
@@ -58,6 +62,6 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return channel.MapToDirectChannelDto();
+        return channel.MapToDirectChannelDto(_configuration);
     }
 }

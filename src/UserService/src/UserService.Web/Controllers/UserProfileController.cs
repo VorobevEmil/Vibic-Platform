@@ -23,7 +23,7 @@ public class UserProfileController : AuthenticateControllerBase
         _mediator = mediator;
     }
 
-    [HttpGet("avatars/{userId}/{fileName}")]
+    [HttpGet("avatar/{userId}/{fileName}")]
     [AllowAnonymous]
     public async Task<IActionResult> GetAvatar(Guid userId, string fileName)
     {

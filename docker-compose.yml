@@ -1,0 +1,132 @@
+networks:
+  default:
+    name: my_network
+
+services:
+
+  apigateway:
+    image: apigateway
+    build:
+      context: ./src/ApiGateway
+      dockerfile: Dockerfile
+    ports:
+      - "7157:7157"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  chatchannelservice:
+    image: chatchannelservice
+    build:
+      context: ./src/ChatChannelService
+      dockerfile: Dockerfile
+    ports:
+      - "7138:7138"
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - ./configs/appsettings.chatchannelservice.json:/app/appsettings.json:ro
+
+  fileservice:
+    image: fileservice
+    build:
+      context: ./src/FileService
+      dockerfile: Dockerfile
+    ports:
+      - "7205:7205"
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - ./configs/appsettings.fileservice.json:/app/appsettings.json:ro
+
+  mediaservice:
+    image: mediaservice
+    build:
+      context: ./src/MediaService
+      dockerfile: Dockerfile
+    ports:
+      - "7139:7139"
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  oauthserver:
+    image: oauthserver
+    build:
+      context: ./src/OAuthServer
+      dockerfile: Dockerfile
+    ports:
+      - "7154:7154"
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - ./configs/appsettings.oauthserver.json:/app/appsettings.json:ro
+
+  userservice:
+    image: userservice
+    build:
+      context: ./src/UserService
+      dockerfile: Dockerfile
+    ports:
+      - "7155:7155"
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - ./configs/appsettings.userservice.json:/app/appsettings.json:ro
+
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_PASSWORD:-rabbitmq}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_USERNAME:-rabbitmq}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    volumes:
+      - './volumes/rabbitmq_data:/bitnami/rabbitmq/mnesia'
+
+  # redis:
+  #   image: redis:latest
+  #   restart: always
+  #   container_name: redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - ./volumes/redis_data:/data
+  #   environment:
+  #     - REDIS_PASSWORD=${REDIS_PASS:-123456}
+
+  postgres:
+    image: postgres:13-bullseye
+    restart: always
+    container_name: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-postgres}
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASS:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/pgsql_data:/var/lib/postgresql/data
+    command: [ "postgres", "-c", "log_statement=all" ]
+
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000" # API (S3-compatible)
+      - "9001:9001" # Web UI (console)
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS:-admin12345}
+    volumes:
+      - ./volumes/minio_data:/data
+    command: server /data --console-address ":9001"

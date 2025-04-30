@@ -35,7 +35,7 @@ export default function SearchUserOverlay({ channels, onUpdateChannel, isOpen, o
       const channel = await resolveOrCreateChannel(userId, channels);
       if (channel) {
         onUpdateChannel(channel);
-        navigate(`/channels/${channel.id}`);
+        navigate(`/channels/@me/${channel.id}`);
       }
     } catch (error) {
       console.error('Ошибка создания канала:', error);

@@ -18,6 +18,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ChatChannelService.Core\ChatChannelService.Core.csproj"/>
+        <ProjectReference Include="..\ChatChannelService.Shared\ChatChannelService.Shared.csproj" />
     </ItemGroup>
     
 </Project>

@@ -23,7 +23,7 @@ public class UploadFileCommandHandler : IRequestHandler<UploadFileCommand, strin
         string contentType = request.File.ContentType;
         Guid userId = request.UserId;
         await _fileStorage.DeleteFolderAsync(bucket, userId.ToString());
-        string url = await _fileStorage.UploadAsync(stream, userId, fileName, contentType, bucket);
-        return url;
+        string uniqueFileName = await _fileStorage.UploadAsync(stream, userId, fileName, contentType, bucket);
+        return uniqueFileName;
     }
 }

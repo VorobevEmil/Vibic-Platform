@@ -52,8 +52,8 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
   };
 
   const handleTyping = () => {
-    if (chatHubConnection.state === 'Connected' && selfUser?.username) {
-      chatHubConnection.invoke('SendTypingStatus', channelId, selfUser.username);
+    if (chatHubConnection.state === 'Connected' && selfUser?.displayName) {
+      chatHubConnection.invoke('SendTypingStatus', channelId, selfUser.displayName);
     }
   };
 
@@ -102,7 +102,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
           {peerUser && (
             <>
               <img src={peerUser.avatarUrl} className="w-8 h-8 rounded-full" />
-              <span className="font-bold text-white text-lg">{peerUser.username}</span>
+              <span className="font-bold text-white text-lg">{peerUser.displayName}</span>
             </>
           )}
         </div>
@@ -131,7 +131,7 @@ export default function DirectChatCenterPanel({ channelId }: Props) {
         setInputValue={setInputValue}
         handleSend={handleSend}
         handleTyping={handleTyping}
-        placeholder={peerUser ? `Написать @${peerUser.username}` : 'Загрузка...'}
+        placeholder={peerUser ? `Написать @${peerUser.displayName}` : 'Загрузка...'}
       />
     </div>
   );

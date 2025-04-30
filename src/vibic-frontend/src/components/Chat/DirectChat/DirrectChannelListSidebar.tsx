@@ -58,14 +58,14 @@ export default function DirectChannelListSidebar() {
                                 <div className="flex items-center gap-2">
                                     <img src={channelMember.avatarUrl}
                                         className="w-8 h-8 rounded-full"
-                                        alt={channelMember.username}
+                                        alt={channelMember.displayName}
                                     />
-                                    <span className="text-sm">{channelMember.username}</span>
+                                    <span className="text-sm">{channelMember.displayName}</span>
                                 </div>
 
                                 <button
                                     className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => console.log(`Close DM with ${channelMember.username}`)}
+                                    onClick={() => console.log(`Close DM with ${channelMember.displayName}`)}
                                 >
                                     <X className="h-4" />
                                 </button>

@@ -1,6 +1,6 @@
 type ChannelMember = {
     userId: string;
-    username: string;
+    displayName: string;
     avatarUrl: string;
 };
 

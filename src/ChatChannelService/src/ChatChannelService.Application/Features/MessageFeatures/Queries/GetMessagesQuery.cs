@@ -4,6 +4,7 @@ using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 
@@ -13,15 +14,18 @@ public record GetMessagesQuery(Guid ChannelId, string? Cursor, int Limit) : IReq
 
 public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, CursorPaginatedResult<MessageDto>>
 {
+    private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChannelRepository _channelRepository;
     private readonly IMessageRepository _messageRepository;
 
     public GetMessagesHandler(
+        IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
         IChannelRepository channelRepository,
         IMessageRepository messageRepository)
     {
+        _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
         _channelRepository = channelRepository;
         _messageRepository = messageRepository;
@@ -70,7 +74,7 @@ public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, CursorPagina
         messages.Reverse();
         
         List<MessageDto> messagesDto = messages
-            .ConvertAll(m => m.MapToDto());
+            .ConvertAll(m => m.MapToDto(_configuration));
 
         string? encodeCursor = nextDate != null && nextId != null ? Cursor.Encode(nextDate.Value, nextId.Value) : null;
 
