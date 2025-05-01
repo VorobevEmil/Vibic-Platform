@@ -1,7 +1,7 @@
-import MessageType from '../../../types/MessageType';
+import MessageResponse from '../../../types/MessageType';
 
 interface Props {
-  messages: MessageType[];
+  messages: MessageResponse[];
   typingUsername: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isLoadingMore: boolean;

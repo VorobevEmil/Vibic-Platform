@@ -8,8 +8,6 @@ COPY src/FileService.Application/FileService.Application.csproj ./src/FileServic
 COPY src/FileService.Infrastructure/FileService.Infrastructure.csproj ./src/FileService.Infrastructure/
 COPY src/FileService.Web/FileService.Web.csproj ./src/FileService.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/FileService.Web/FileService.Web.csproj
 
 COPY . .

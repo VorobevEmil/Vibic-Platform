@@ -8,8 +8,6 @@ COPY src/MediaService.Core/MediaService.Core.csproj ./src/MediaService.Core/
 COPY src/MediaService.Infrastructure/MediaService.Infrastructure.csproj ./src/MediaService.Infrastructure/
 COPY src/MediaService.Web/MediaService.Web.csproj ./src/MediaService.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/MediaService.Web/MediaService.Web.csproj
 
 COPY . .

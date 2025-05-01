@@ -8,8 +8,6 @@ COPY src/OAuthServer.Core/OAuthServer.Core.csproj ./src/OAuthServer.Core/
 COPY src/OAuthServer.Infrastructure/OAuthServer.Infrastructure.csproj ./src/OAuthServer.Infrastructure/
 COPY src/OAuthServer.Web/OAuthServer.Web.csproj ./src/OAuthServer.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/OAuthServer.Web/OAuthServer.Web.csproj
 
 COPY . .

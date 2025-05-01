@@ -1,9 +1,9 @@
 import { useState, useRef } from 'react';
 import { messagesApi } from '../../api/messagesApi';
-import MessageType from '../../types/MessageType';
+import MessageResponse from '../../types/MessageType';
 
 export function useChatMessages(channelId: string) {
-  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);

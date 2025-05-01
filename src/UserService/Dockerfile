@@ -8,8 +8,6 @@ COPY src/UserService.Core/UserService.Core.csproj ./src/UserService.Core/
 COPY src/UserService.Infrastructure/UserService.Infrastructure.csproj ./src/UserService.Infrastructure/
 COPY src/UserService.Web/UserService.Web.csproj ./src/UserService.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/UserService.Web/UserService.Web.csproj
 
 COPY . .

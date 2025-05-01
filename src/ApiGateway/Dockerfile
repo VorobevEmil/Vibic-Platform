@@ -8,8 +8,6 @@ COPY ApiGateway.sln ./
 # COPY src/ApiGateway.Infrastructure/ApiGateway.Infrastructure.csproj ./src/ApiGateway.Infrastructure/
 COPY src/ApiGateway.Web/ApiGateway.Web.csproj ./src/ApiGateway.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/ApiGateway.Web/ApiGateway.Web.csproj
 
 COPY . .

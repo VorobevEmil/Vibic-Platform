@@ -1,10 +1,10 @@
 import { channelsApi } from '../api/channelsApi';
-import DirectChannelType from '../types/DirectChannelType';
+import DirectChannelResponse from '../types/DirectChannelType';
 
 export async function resolveOrCreateChannel(
   userId: string,
-  channels: DirectChannelType[],
-): Promise<DirectChannelType | null> {
+  channels: DirectChannelResponse[],
+): Promise<DirectChannelResponse | null> {
   const response = await channelsApi.createDirectChannel(userId);
 
   if (response.status === 201 && response.data) {

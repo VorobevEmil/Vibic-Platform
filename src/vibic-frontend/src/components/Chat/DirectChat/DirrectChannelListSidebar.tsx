@@ -4,13 +4,13 @@ import { X } from 'lucide-react';
 import { channelsApi } from '../../../api/channelsApi';
 import SearchUserOverlay from '../../SearchUserOverlay/SearchUserOverlay';
 import { useAuthContext } from '../../../context/AuthContext';
-import DirectChannelType from '../../../types/DirectChannelType';
+import DirectChannelResponse from '../../../types/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
 
 
 export default function DirectChannelListSidebar() {
     const { selfUser: user } = useAuthContext();
-    const [channels, setChannels] = useState<DirectChannelType[]>([]);
+    const [channels, setChannels] = useState<DirectChannelResponse[]>([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,7 +29,7 @@ export default function DirectChannelListSidebar() {
 
     const [searchOpen, setSearchOpen] = useState(false);
 
-    const onUpdateChannel = (channel: DirectChannelType) => {
+    const onUpdateChannel = (channel: DirectChannelResponse) => {
         setChannels((prevChannels) => [...prevChannels, channel]);
     }
 

@@ -1,4 +1,4 @@
-import MessageType from '../types/MessageType';
+import MessageResponse from '../types/MessageType';
 import CursorPaginatedResult from '../types/CursorPaginatedResult';
 import { http } from './httpClient';
 
@@ -10,6 +10,6 @@ export const messagesApi = {
       url.searchParams.append('cursor', cursor);
     }
 
-    return http.get<CursorPaginatedResult<MessageType>>(url.toString());
+    return http.get<CursorPaginatedResult<MessageResponse>>(url.toString());
   }
 };

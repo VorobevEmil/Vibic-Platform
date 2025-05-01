@@ -1,4 +1,4 @@
-type MessageType = {
+interface MessageResponse {
     id: string;
     channelId: string;
     content: string;
@@ -8,4 +8,4 @@ type MessageType = {
     sentAt: Date
 }
 
-export default MessageType;
+export default MessageResponse;

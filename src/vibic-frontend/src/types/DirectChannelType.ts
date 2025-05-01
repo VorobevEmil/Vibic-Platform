@@ -4,9 +4,9 @@ type ChannelMember = {
     avatarUrl: string;
 };
 
-type DirectChannelType = {
+interface DirectChannelResponse {
     id: string;
     channelMembers: ChannelMember[];
 };
 
-export default DirectChannelType;
+export default DirectChannelResponse;

@@ -8,8 +8,6 @@ COPY src/ChatChannelService.Core/ChatChannelService.Core.csproj ./src/ChatChanne
 COPY src/ChatChannelService.Infrastructure/ChatChannelService.Infrastructure.csproj ./src/ChatChannelService.Infrastructure/
 COPY src/ChatChannelService.Web/ChatChannelService.Web.csproj ./src/ChatChannelService.Web/
 
-RUN dotnet nuget add source --username VorobevEmil --store-password-in-clear-text --name github "https://nuget.pkg.github.com/VorobevEmil/index.json"
-
 RUN dotnet restore src/ChatChannelService.Web/ChatChannelService.Web.csproj
 
 COPY . .
