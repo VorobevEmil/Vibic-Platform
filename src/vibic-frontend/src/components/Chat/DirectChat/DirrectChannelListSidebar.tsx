@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import FooterProfilePanel from '../../Layout/FooterProfilePanel';
 import { X } from 'lucide-react';
 import { channelsApi } from '../../../api/channelsApi';
 import SearchUserOverlay from '../../SearchUserOverlay/SearchUserOverlay';
@@ -34,7 +33,7 @@ export default function DirectChannelListSidebar() {
     }
 
     return (
-        <div className="w-64 bg-[#2b2d31] flex flex-col justify-between">
+        <div className="h-[95%] w-64 rounded-tl-lg border-t border-l border-gray-700 flex flex-col justify-between">
             <div className="p-4">
                 <button
                     onClick={() => setSearchOpen(true)}
@@ -74,8 +73,6 @@ export default function DirectChannelListSidebar() {
                     })}
                 </div>
             </div>
-
-            <FooterProfilePanel />
 
             <SearchUserOverlay channels={channels} onUpdateChannel={onUpdateChannel} isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>

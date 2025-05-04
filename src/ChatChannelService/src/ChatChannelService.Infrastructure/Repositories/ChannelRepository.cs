@@ -1,8 +1,9 @@
+using System.Threading.Channels;
 using ChatChannelService.Application.Repositories;
-using ChatChannelService.Core.Entities;
 using ChatChannelService.Core.Enums;
 using ChatChannelService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Channel = ChatChannelService.Core.Entities.Channel;
 
 namespace ChatChannelService.Infrastructure.Repositories;
 
@@ -37,7 +38,9 @@ public class ChannelRepository : IChannelRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Channel?> GetUserDirectChannelByIdAsync(Guid userId, Guid channelId,
+    public async Task<Channel?> FindDirectChannelForUserAsync(
+        Guid userId,
+        Guid channelId,
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Channels
@@ -50,6 +53,27 @@ public class ChannelRepository : IChannelRepository
                 cancellationToken);
     }
 
+    public async Task<Channel?> FindAccessibleServerChannelForUserAsync(
+        Guid userId,
+        Guid serverId,
+        Guid channelId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Channels
+            .Include(x => x.ChannelMembers)
+            .ThenInclude(x => x.ChatUser)
+            .FirstOrDefaultAsync(x =>
+                    x.Type == ChannelType.Server &&
+                    x.Id == channelId &&
+                    x.ServerId == serverId &&
+                    x.Server!.ServerMembers.Any(sm => sm.ChatUserId == userId) &&
+                    (
+                        x.IsPublic ||
+                        x.ChannelMembers.Any(y => y.ChatUserId == userId)
+                    ),
+                cancellationToken);
+    }
+
     public async Task<Channel> GetFirstChannelOfServerAsync(
         Guid serverId,
         CancellationToken cancellationToken = default)
@@ -59,7 +83,7 @@ public class ChannelRepository : IChannelRepository
             .FirstAsync(x =>
                 x.ServerId == serverId &&
                 x.Type == ChannelType.Server &&
-                !x.IsPrivate, cancellationToken);
+                x.IsPublic, cancellationToken);
     }
 
     public async Task CreateAsync(Channel channel, CancellationToken cancellationToken)

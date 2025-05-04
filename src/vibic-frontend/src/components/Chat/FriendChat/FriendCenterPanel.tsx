@@ -6,7 +6,7 @@ export default function FriendCenterPanel() {
     ];
 
     return (
-        <div className="flex-1 bg-[#313338] p-6 flex flex-col overflow-y-auto">
+        <div className="flex-1 bg-[#313338] p-6 flex flex-col overflow-y-auto  border-t border-gray-700">
             {/* Навигация */}
             <div className="flex items-center gap-3 mb-6 min-h-8">
                 <button className="text-sm text-white bg-[#404249] px-3 py-1 rounded-lg  h-full">В сети</button>

@@ -5,6 +5,8 @@ import ServerChatCenterPanel from "../components/Server/ServerChatCenterPanel";
 import { useEffect, useState } from "react";
 import { serversApi } from "../api/serversApi";
 import { ServerFullResponse } from "../types/ServerType";
+import ChatCenterPanel from "../components/Chat/ChatCenterPanel";
+import { ChannelType } from "../types/enums/ChannelType";
 
 export default function ServerPage() {
     const { serverId, channelId } = useParams<{ serverId: string; channelId: string }>();
@@ -25,7 +27,11 @@ export default function ServerPage() {
         <AppShell>
             <ServerChannelListSidebar serverId={serverId!} channels={server?.channels ?? []} />
             {channelId ? (
-                <ServerChatCenterPanel channelId={channelId} name={currentChannel?.name ?? 'Unknown Channel'} />
+                <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId}>
+                    <div className="h-14 px-4 flex items-center border-b border-[#1e1f22]">
+                        <h1 className="text-lg font-bold text-white">#{currentChannel?.name ?? 'Unknown Channel'}</h1>
+                    </div>
+                </ChatCenterPanel>
             ) : (
                 <div className="flex-1 flex items-center justify-center text-gray-400">
                     Выберите канал

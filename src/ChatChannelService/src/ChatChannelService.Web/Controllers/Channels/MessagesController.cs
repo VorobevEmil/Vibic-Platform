@@ -1,6 +1,7 @@
 using ChatChannelService.Application.Common.Pagination;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Features.MessageFeatures.Queries;
+using ChatChannelService.Core.Enums;
 using ChatChannelService.Web.Mappings;
 using ChatChannelService.Web.Models.Messages.Responses;
 using MediatR;
@@ -19,7 +20,7 @@ public class MessagesController(IMediator mediator) : AuthenticateControllerBase
         int limit = 20,
         CancellationToken cancellationToken = default)
     {
-        GetMessagesQuery query = new(channelId, cursor, limit);
+        GetMessagesQuery query = new(ChannelType.Direct, null, channelId, cursor, limit);
 
         CursorPaginatedResult<MessageDto> result = await mediator.Send(query, cancellationToken);
 

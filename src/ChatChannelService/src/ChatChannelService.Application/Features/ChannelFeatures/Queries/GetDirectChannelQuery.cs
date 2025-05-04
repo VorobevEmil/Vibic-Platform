@@ -31,7 +31,7 @@ public class GetDirectChannelHandler : IRequestHandler<GetDirectChannelQuery, Di
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
 
-        Channel? channel = await _channelRepository.GetUserDirectChannelByIdAsync(userId, request.Id, cancellationToken);
+        Channel? channel = await _channelRepository.FindDirectChannelForUserAsync(userId, request.Id, cancellationToken);
 
         if (channel is null)
         {

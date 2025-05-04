@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
+import { SignInRequest } from '../../types/auth/SignInType';
 
 export function useSignIn() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [signInRequest, setSignInRequest] = useState<SignInRequest>({
+    email: '',
+    password: '',
+  });
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const response = await authApi.signIn({ email, password });
+      const response = await authApi.signIn(signInRequest);
 
       const token = response.data.accessToken;
       if (!token) {
@@ -30,8 +33,7 @@ export function useSignIn() {
   };
 
   return {
-    email, setEmail,
-    password, setPassword,
+    signInRequest, setSignInRequest,
     handleSignIn
   };
 }

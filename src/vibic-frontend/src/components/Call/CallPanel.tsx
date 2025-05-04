@@ -38,7 +38,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
     : callRequest.initiatorAvatarUrl;
 
   return (
-    <div className="w-full h-1/2 bg-black text-white flex flex-col justify-center items-center relative px-4">
+    <div className="w-full h-1/2 bg-black text-white flex flex-col justify-center items-center relative px-4 py-2">
       <div className="flex flex-row gap-4 justify-center items-center">
         {/* Local user */}
         <div className="w-[320px] h-[240px] relative rounded-lg border-2 border-white shadow-lg bg-[#1e1f22]">

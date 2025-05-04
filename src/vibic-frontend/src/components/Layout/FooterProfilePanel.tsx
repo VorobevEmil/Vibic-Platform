@@ -40,45 +40,48 @@ export default function FooterProfilePanel() {
   };
 
   return (
-    <div className="relative w-full px-3 py-2 bg-[#1e1f22] flex items-center justify-between text-sm text-white">
-      <div
-        className="w-full flex items-center gap-2 p-1 rounded-md hover:bg-[#2b2d31] cursor-pointer transition-all"
-        onClick={() => setShowProfile(true)}
-      >
-        <img
-          src={user.avatarUrl}
-          className="w-8 h-8 rounded-full"
-          alt={user.username}
-        />
-        <div>
-          <div className="font-semibold">{user.displayName}</div>
-          <div className={`text-xs ${statusColorMap[user.userStatus]}`}>
-            {statusTextMap[user.userStatus] || 'Неизвестно'}
+    <section
+      className="absolute w-[312px] left-2 bottom-2 px-3 py-2 rounded-lg border border-gray-700  bg-[#1e1f22]">
+      <div className="flex items-center justify-between text-sm text-white gap-5">
+        <div
+          className="w-full flex items-center gap-2 p-1 rounded-md hover:bg-[#2b2d31] cursor-pointer transition-all"
+          onClick={() => setShowProfile(true)}
+        >
+          <img
+            src={user.avatarUrl}
+            className="w-8 h-8 rounded-full"
+            alt={user.username}
+          />
+          <div>
+            <div className="font-semibold">{user.displayName}</div>
+            <div className={`text-xs ${statusColorMap[user.userStatus]}`}>
+              {statusTextMap[user.userStatus] || 'Неизвестно'}
+            </div>
           </div>
         </div>
+
+        <div className="flex items-center gap-3">
+          <button onClick={() => setIsMicOn((prev) => !prev)}>
+            {isMicOn ? (
+              <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
+            ) : (
+              <MicOff className="w-5 h-5 text-gray-400 hover:text-white" />
+            )}
+          </button>
+
+          <button onClick={() => setIsHeadphonesOn((prev) => !prev)}>
+            {isHeadphonesOn ? (
+              <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
+            ) : (
+              <HeadphoneOff className="w-5 h-5 text-gray-400 hover:text-white" />
+            )}
+          </button>
+
+          <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
+        </div>
+
+        {showProfile && <UserProfileCard onClose={() => setShowProfile(false)} />}
       </div>
-
-      <div className="flex items-center gap-2">
-        <button onClick={() => setIsMicOn((prev) => !prev)}>
-          {isMicOn ? (
-            <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
-          ) : (
-            <MicOff className="w-5 h-5 text-gray-400 hover:text-white" />
-          )}
-        </button>
-
-        <button onClick={() => setIsHeadphonesOn((prev) => !prev)}>
-          {isHeadphonesOn ? (
-            <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
-          ) : (
-            <HeadphoneOff className="w-5 h-5 text-gray-400 hover:text-white" />
-          )}
-        </button>
-
-        <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
-      </div>
-
-      {showProfile && <UserProfileCard onClose={() => setShowProfile(false)} />}
-    </div>
+    </section>
   );
 }

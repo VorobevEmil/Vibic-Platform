@@ -39,7 +39,7 @@ public class CreateServerHandler : IRequestHandler<CreateServerCommand, ServerSu
         ChatUser chatUser = await _chatUserRepository.GetByIdAsync(userId, cancellationToken);
 
         Server server = new(request.Name, chatUser);
-        Channel channel = Channel.CreateServerChannel("general", server, false);
+        Channel channel = Channel.CreateServerChannel("general", server, true);
         // ChannelMember channelMember = new(channel, chatUser);
         // channel.ChannelMembers.Add(channelMember);
         ServerMember serverMember = new(chatUser, server);

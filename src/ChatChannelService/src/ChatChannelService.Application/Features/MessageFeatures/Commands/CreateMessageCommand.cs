@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
+using ChatChannelService.Core.Enums;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Vibic.Shared.Core.Exceptions;
@@ -8,7 +10,13 @@ using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.MessageFeatures.Commands;
 
-public record CreateMessageCommand(Guid ChannelId, Guid UserId, string Content) : IRequest<MessageDto>;
+public record CreateMessageCommand(
+    ChannelType ChannelType,
+    Guid ChannelId,
+    Guid? ServerId,
+    Guid UserId,
+    string Content)
+    : IRequest<MessageDto>;
 
 public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, MessageDto>
 {
@@ -34,8 +42,30 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
 
     public async Task<MessageDto> Handle(CreateMessageCommand request, CancellationToken cancellationToken)
     {
-        Channel? channel = await _channelRepository
-            .GetUserDirectChannelByIdAsync(request.UserId, request.ChannelId, cancellationToken);
+        if (request is { ChannelType: ChannelType.Server, ServerId: null })
+        {
+            throw new ValidationException("Server is required for channel type 'Server'.");
+        }
+
+        Channel? channel;
+
+        switch (request.ChannelType)
+        {
+            case ChannelType.Direct:
+                channel = await _channelRepository
+                    .FindDirectChannelForUserAsync(request.UserId, request.ChannelId, cancellationToken);
+                break;
+            case ChannelType.Server:
+                channel = await _channelRepository
+                    .FindAccessibleServerChannelForUserAsync(
+                        request.UserId,
+                        request.ServerId!.Value,
+                        request.ChannelId,
+                        cancellationToken);
+                break;
+            default:
+                throw new ValidationException("Channel type is invalid.");
+        }
 
         if (channel is null)
         {

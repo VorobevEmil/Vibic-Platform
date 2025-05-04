@@ -4,10 +4,7 @@ import { useSignUp } from '../hooks/auth/useSignUp';
 
 function SignUpPage() {
   const {
-    displayName, setDisplayName,
-    username, setUsername,
-    email, setEmail,
-    password, setPassword,
+    signUpRequest, setSignUpRequest,
     handleRegister
   } = useSignUp();
 
@@ -31,8 +28,10 @@ function SignUpPage() {
           <input
             type="email"
             className="input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={signUpRequest.email}
+            onChange={(e) =>
+              setSignUpRequest(prev => ({ ...prev, email: e.target.value }))
+            }
             required
           />
         </div>
@@ -42,8 +41,10 @@ function SignUpPage() {
           <input
             type="text"
             className="input"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            value={signUpRequest.displayName}
+            onChange={(e) =>
+              setSignUpRequest(prev => ({ ...prev, displayName: e.target.value }))
+            }
             required
           />
         </div>
@@ -53,8 +54,10 @@ function SignUpPage() {
           <input
             type="text"
             className="input"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            value={signUpRequest.username}
+            onChange={(e) =>
+              setSignUpRequest(prev => ({ ...prev, username: e.target.value }))
+            }
             required
           />
         </div>
@@ -64,8 +67,10 @@ function SignUpPage() {
           <input
             type="password"
             className="input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={signUpRequest.password}
+            onChange={(e) =>
+              setSignUpRequest(prev => ({ ...prev, password: e.target.value }))
+            }
             required
           />
         </div>

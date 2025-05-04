@@ -18,7 +18,7 @@ public class Channel : BaseEntity, IUpdatable
         };
     }
 
-    public static Channel CreateServerChannel(string name,  Server server, bool isPrivate = false)
+    public static Channel CreateServerChannel(string name,  Server server, bool isPublic = true)
     {
         return new Channel
         {
@@ -26,7 +26,7 @@ public class Channel : BaseEntity, IUpdatable
             Type = ChannelType.Server,
             Server = server,
             ServerId = server.Id,
-            IsPrivate = isPrivate
+            IsPublic = isPublic
         };
     }
 
@@ -34,7 +34,7 @@ public class Channel : BaseEntity, IUpdatable
     public ChannelType Type { get; private init; }
     public Guid? ServerId { get; private init; }
     public Server? Server { get; private init; }
-    public bool IsPrivate { get; private set; }
+    public bool IsPublic { get; private set; }
 
     public List<ChannelMember> ChannelMembers { get; private init; } = new();
     public List<Message> Messages { get; private init; } = new();

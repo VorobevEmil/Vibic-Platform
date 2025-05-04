@@ -3,12 +3,18 @@ import { channelsApi } from '../../api/channelsApi';
 import { userProfilesApi } from '../../api/userProfilesApi';
 import UserProfileType from '../../types/UserProfileType';
 
-export default function useDirectChannel(channelId: string, localUserId?: string) {
+interface Props {
+  serverId?: string,
+  channelId: string,
+  localUserId?: string
+}
+
+export default function useDirectChannel({ serverId, channelId, localUserId }: Props) {
   const [peerUser, setPeerUser] = useState<UserProfileType | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      if (!localUserId) return;
+      if (!localUserId || serverId) return;
 
       const channelResponse = await channelsApi.getDirectChannelById(channelId);
       const loadedChannel = channelResponse.data;

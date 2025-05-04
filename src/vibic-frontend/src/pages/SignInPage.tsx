@@ -4,8 +4,7 @@ import { useSignIn } from '../hooks/auth/useSignIn';
 
 function SignInPage() {
   const {
-    email, setEmail,
-    password, setPassword,
+    signInRequest, setSignInRequest,
     handleSignIn
   } = useSignIn();
 
@@ -28,8 +27,10 @@ function SignInPage() {
           <input
             type="email"
             className="input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={signInRequest.email}
+            onChange={(e) =>
+              setSignInRequest(prev => ({ ...prev, email: e.target.value }))
+            }
             required
           />
         </div>
@@ -39,8 +40,10 @@ function SignInPage() {
           <input
             type="password"
             className="input"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            value={signInRequest.password}
+            onChange={(e) => 
+              setSignInRequest(prev => ({ ...prev, password: e.target.value }))
+            }
             required
           />
         </div>

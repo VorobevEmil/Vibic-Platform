@@ -11,5 +11,15 @@ export const messagesApi = {
     }
 
     return http.get<CursorPaginatedResult<MessageResponse>>(url.toString());
+  },
+  getMessagesByServerIdAndChannelId: (serverId: string, channelId: string, cursor?: string) => {
+    const url = new URL(`http://localhost:7138/servers/${serverId}/channels/${channelId}/messages`);
+
+    if (cursor) {
+      url.searchParams.append('cursor', cursor);
+    }
+
+    return http.get<CursorPaginatedResult<MessageResponse>>(url.toString());
+
   }
 };

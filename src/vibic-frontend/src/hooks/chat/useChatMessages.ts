@@ -2,7 +2,12 @@ import { useState, useRef } from 'react';
 import { messagesApi } from '../../api/messagesApi';
 import MessageResponse from '../../types/MessageType';
 
-export function useChatMessages(channelId: string) {
+interface Props {
+  serverId?: string;
+  channelId: string
+}
+
+export function useChatMessages({ serverId, channelId }: Props) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
@@ -15,7 +20,14 @@ export function useChatMessages(channelId: string) {
   };
 
   const initializeMessages = async () => {
-    const response = await messagesApi.getMessagesByChannelId(channelId);
+
+    let response = null;
+    if (serverId) {
+      response = await messagesApi.getMessagesByServerIdAndChannelId(serverId, channelId);
+    }
+    else {
+      response = await messagesApi.getMessagesByChannelId(channelId);
+    }
     if (response.status === 200) {
       setMessages(response.data.items);
       setCursor(response.data.cursor);
@@ -33,7 +45,14 @@ export function useChatMessages(channelId: string) {
     const prevScrollTop = scrollEl.scrollTop;
 
     setIsLoadingMore(true);
-    const response = await messagesApi.getMessagesByChannelId(channelId, cursor);
+    let response = null;
+    if (serverId) {
+      response = await messagesApi.getMessagesByServerIdAndChannelId(serverId!, channelId, cursor);
+    }
+    else {
+      response = await messagesApi.getMessagesByChannelId(channelId, cursor);
+    }
+
     setIsLoadingMore(false);
 
     if (response.status === 200) {

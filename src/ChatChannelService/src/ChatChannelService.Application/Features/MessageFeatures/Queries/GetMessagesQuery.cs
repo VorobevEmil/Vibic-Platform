@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using ChatChannelService.Application.Common.Pagination;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
+using ChatChannelService.Core.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +12,7 @@ using Vibic.Shared.Core.Extensions;
 
 namespace ChatChannelService.Application.Features.MessageFeatures.Queries;
 
-public record GetMessagesQuery(Guid ChannelId, string? Cursor, int Limit) : IRequest<CursorPaginatedResult<MessageDto>>;
+public record GetMessagesQuery(ChannelType ChannelType, Guid? ServerId, Guid ChannelId, string? Cursor, int Limit) : IRequest<CursorPaginatedResult<MessageDto>>;
 
 public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, CursorPaginatedResult<MessageDto>>
 {
@@ -49,10 +51,32 @@ public class GetMessagesHandler : IRequestHandler<GetMessagesQuery, CursorPagina
         }
 
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
+        
+        if (request is { ChannelType: ChannelType.Server, ServerId: null })
+        {
+            throw new ValidationException("Server is required for channel type 'Server'.");
+        }
+        
+        Channel? channel;
 
-        Channel? channel = await _channelRepository
-            .GetUserDirectChannelByIdAsync(userId, request.ChannelId, cancellationToken);
-
+        switch (request.ChannelType)
+        {
+            case ChannelType.Direct:
+                channel = await _channelRepository
+                    .FindDirectChannelForUserAsync(userId, request.ChannelId, cancellationToken);
+                break;
+            case ChannelType.Server:
+                channel = await _channelRepository
+                    .FindAccessibleServerChannelForUserAsync(
+                        userId,
+                        request.ServerId!.Value,
+                        request.ChannelId,
+                        cancellationToken);
+                break;
+            default:
+                throw new ValidationException("Channel type is invalid.");
+        }
+        
         if (channel == null)
         {
             throw new NotFoundException("Channel not found");

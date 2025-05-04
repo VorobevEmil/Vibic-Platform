@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { chatHubConnection } from '../../services/signalRClient';
 import MessageResponse from '../../types/MessageType';
+import SendMessageRequest from '../../types/signalR/sendMessageRequest';
 
 export default function useSignalRChannel(
     channelId: string,
@@ -63,7 +64,7 @@ export default function useSignalRChannel(
         };
     }, [channelId]);
 
-    const sendMessage = async (message: any) => {
+    const sendMessage = async (message: SendMessageRequest) => {
         await chatHubConnection.invoke('SendMessageToChannel', message);
     };
 

@@ -42,7 +42,7 @@ export default function ServerSidebar() {
     }, [])
 
     return (
-        <div className="w-[72px] bg-[#1e1f22] flex flex-col items-center py-4 gap-4">
+        <div className="w-[72px] flex flex-col items-center py-4 gap-4">
 
             {/* Vibic Logo button */}
             <Link

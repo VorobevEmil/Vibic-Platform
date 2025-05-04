@@ -2,6 +2,7 @@ using Scalar.AspNetCore;
 using UserService.Application;
 using UserService.Infrastructure;
 using UserService.Infrastructure.Data;
+using UserService.Web.Hubs;
 using Vibic.Shared.Core;
 using Vibic.Shared.EF;
 using Vibic.Shared.Messaging;
@@ -20,6 +21,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddRabbitMq();
+    builder.Services.AddSignalR();
 }
 WebApplication app = builder.Build();
 {
@@ -42,6 +44,8 @@ WebApplication app = builder.Build();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+    
+    app.MapHub<PresenceHub>("/hubs/presence");
 
     app.Run();
 }

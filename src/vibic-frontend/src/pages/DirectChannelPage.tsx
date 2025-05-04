@@ -1,7 +1,9 @@
 import { useParams } from 'react-router-dom';
 import AppShell from '../layout/AppShell';
-import DirectChatCenterPanel from '../components/Chat/DirectChat/DirectChatCenterPanel';
+import ChatCenterPanel from '../components/Chat/ChatCenterPanel';
 import DirectChannelListSidebar from '../components/Chat/DirectChat/DirrectChannelListSidebar';
+import CallHeaderHandler from '../components/Call/CallHeaderHandler';
+import { ChannelType } from '../types/enums/ChannelType';
 
 export default function ChannelPage() {
   const { id } = useParams();
@@ -9,7 +11,9 @@ export default function ChannelPage() {
   return (
     <AppShell>
       <DirectChannelListSidebar />
-      <DirectChatCenterPanel channelId={id!} />
+      <ChatCenterPanel channelType={ChannelType.Direct} channelId={id!}>
+        <CallHeaderHandler channelId={id!} />
+      </ChatCenterPanel>
     </AppShell>
   )
 }

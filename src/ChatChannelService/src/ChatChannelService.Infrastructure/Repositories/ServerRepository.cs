@@ -46,7 +46,7 @@ public class ServerRepository : IServerRepository
     {
         Server? server = await _dbContext.Servers
             .Include(x => x.Channels
-                .Where(c => !c.IsPrivate || c.ChannelMembers
+                .Where(c => c.IsPublic || c.ChannelMembers
                     .Any(cm => cm.ChatUserId == userId)))
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
         

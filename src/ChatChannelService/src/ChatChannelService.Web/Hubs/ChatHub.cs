@@ -1,5 +1,6 @@
 using ChatChannelService.Application.Features.MessageFeatures.Commands;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
+using ChatChannelService.Core.Enums;
 using ChatChannelService.Web.Mappings;
 using ChatChannelService.Web.Models.Messages.Responses;
 using MediatR;
@@ -41,10 +42,9 @@ public class ChatHub(IMediator mediator) : Hub
     // Отправка сообщения в канал
     public async Task SendMessageToChannel(SendMessageRequest request)
     {
-        Guid channelId = Guid.Parse(request.ChannelId);
         Guid userId = Context.User!.GetUserId();
 
-        CreateMessageCommand command = new(channelId, userId, request.Content);
+        CreateMessageCommand command = new(request.ChannelType, request.ChannelId, request.ServerId, userId, request.Content);
         
         MessageDto message = await mediator.Send(command);
         
@@ -62,6 +62,8 @@ public class ChatHub(IMediator mediator) : Hub
 
 public class SendMessageRequest
 {
-    public string ChannelId { get; set; } = null!;
+    public ChannelType ChannelType { get; set; }
+    public Guid ChannelId { get; set; }
+    public Guid? ServerId { get; set; }
     public string Content { get; set; } = null!;
 }
