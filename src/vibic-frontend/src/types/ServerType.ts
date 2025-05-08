@@ -1,4 +1,6 @@
-export interface ServerRequest  {
+import { ChannelType } from "./enums/ChannelType";
+
+export interface ServerRequest {
     name: string
 }
 
@@ -16,5 +18,6 @@ export interface ServerFullResponse extends ServerRequest {
 export interface ServerChannelResponse {
     id: string;
     name: string;
-    isPrivate: boolean;
+    channelType: ChannelType;
+    isPublic: boolean;
 }

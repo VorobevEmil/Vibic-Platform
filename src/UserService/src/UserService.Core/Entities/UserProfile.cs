@@ -5,12 +5,13 @@ namespace UserService.Core.Entities;
 
 public class UserProfile : BaseEntity
 {
-    public string DisplayName { get; set; } = string.Empty;
+    public string DisplayName { get; private set; } = string.Empty;
     public string Username { get; private set; } = string.Empty;
     public string Email { get; private set; } = string.Empty;
     public string? AvatarUrl { get; private set; }
     public string? Bio { get; private set; }
     public UserStatus Status { get; private set; }
+    public List<UserFriend> UserFriends { get; init; } = [];
 
     private UserProfile() {}
 

@@ -9,10 +9,10 @@ function createHubConnection(connectionType: SignalRConnectionType): signalR.Hub
     var hubUrl = ''; 
     switch (connectionType) {
         case SignalRConnectionType.ChatChannel:
-            hubUrl = 'http://localhost:7138/hubs/chat';
+            hubUrl = 'http://192.168.1.3:7138/hubs/chat';
             break;
         case SignalRConnectionType.Call:
-            hubUrl = 'http://localhost:7139/hubs/call';
+            hubUrl = 'http://192.168.1.3:7139/hubs/call';
             break;
         default:
             break;

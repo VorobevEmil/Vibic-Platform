@@ -10,20 +10,20 @@ public class Channel : BaseEntity, IUpdatable
     {
     }
 
-    public static Channel CreateDirectMessageChannel()
+    public static Channel CreateDirectChannel()
     {
         return new Channel
         {
-            Type = ChannelType.Direct
+            ChannelType = ChannelType.Direct
         };
     }
 
-    public static Channel CreateServerChannel(string name,  Server server, bool isPublic = true)
+    public static Channel CreateServerChannel(string name,  Server server, ChannelType channelType, bool isPublic = true)
     {
         return new Channel
         {
             Name = name,
-            Type = ChannelType.Server,
+            ChannelType = channelType,
             Server = server,
             ServerId = server.Id,
             IsPublic = isPublic
@@ -31,7 +31,7 @@ public class Channel : BaseEntity, IUpdatable
     }
 
     public string? Name { get; private set; }
-    public ChannelType Type { get; private init; }
+    public ChannelType ChannelType { get; private init; }
     public Guid? ServerId { get; private init; }
     public Server? Server { get; private init; }
     public bool IsPublic { get; private set; }

@@ -3,7 +3,7 @@ import useSearchUsers from '../../hooks/useSearchUsers'
 import SearchResultItem from './SearchResultItem';
 import { resolveOrCreateChannel } from '../../services/channelService';
 import { useNavigate } from 'react-router-dom';
-import DirectChannelResponse from '../../types/DirectChannelType';
+import DirectChannelResponse from '../../types/channels/DirectChannelType';
 
 interface Props {
   channels: DirectChannelResponse[];

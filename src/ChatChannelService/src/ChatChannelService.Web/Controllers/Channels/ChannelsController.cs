@@ -20,39 +20,39 @@ public class ChannelsController(IMediator mediator) : AuthenticateControllerBase
         
         DirectChannelDto directChannel = await mediator.Send(query);
 
-        ChannelDirectChannelResponse response = directChannel.MapToDirectMessageResponse();
+        DirectChannelResponse response = directChannel.MapToDirectMessageResponse();
         
         return Ok(response);
     }
     
     [HttpGet("direct")]
-    [ProducesResponseType(typeof(List<ChannelDirectChannelResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<DirectChannelResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMyDirectChannels()
     {
         GetMyDirectMessageQuery query = new();
 
         List<DirectChannelDto> directMessages = await mediator.Send(query);
 
-        List<ChannelDirectChannelResponse> responses = directMessages
+        List<DirectChannelResponse> responses = directMessages
             .ConvertAll(x => x.MapToDirectMessageResponse());
 
         return Ok(responses);
     }
 
     [HttpPost("direct")]
-    [ProducesResponseType(typeof(ChannelDirectChannelResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(DirectChannelResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateDirectChannel(CreateDirectChannelRequest request)
     {
-        CreateDirectMessageCommand command = new(request.UserId);
+        CreateDirectChannelCommand command = new(request.UserId);
 
-        DirectChannelDto? channelDirectMessageDto = await mediator.Send(command);
+        DirectChannelDto? directChannelDto = await mediator.Send(command);
 
-        if (channelDirectMessageDto is null)
+        if (directChannelDto is null)
         {
             return NoContent();
         }
 
-        ChannelDirectChannelResponse response = channelDirectMessageDto.MapToDirectMessageResponse();
+        DirectChannelResponse response = directChannelDto.MapToDirectMessageResponse();
 
         return Created(string.Empty, response);
     }

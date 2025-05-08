@@ -1,5 +1,5 @@
 import { channelsApi } from '../api/channelsApi';
-import DirectChannelResponse from '../types/DirectChannelType';
+import DirectChannelResponse from '../types/channels/DirectChannelType';
 
 export async function resolveOrCreateChannel(
   userId: string,

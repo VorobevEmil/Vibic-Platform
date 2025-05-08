@@ -116,6 +116,8 @@ export default function useCallConnection({
 
     useEffect(() => {
         const init = async () => {
+            console.log(navigator.mediaDevices)
+
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             streamRef.current = stream;
             if (localVideoRef.current) localVideoRef.current.srcObject = stream;

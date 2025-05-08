@@ -6,6 +6,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import ChannelPage from './pages/DirectChannelPage';
 import PrivateRoute from './pages/PrivateRoute';
 import ServerPage from './pages/ServerPage';
+import InvitePage from './pages/InvitePage';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/channels/@me" element={<HomePage />} />
         <Route path="/channels/@me/:id" element={<ChannelPage />} />
         <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
+        <Route path="/invite/:inviteCode" element={<InvitePage />} />
       </Route>
       <Route path="/sign-in" element={<SignInPage />} />
       <Route path="/sign-up" element={<SignUpPage />} />

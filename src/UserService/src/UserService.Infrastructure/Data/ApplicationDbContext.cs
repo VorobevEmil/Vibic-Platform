@@ -11,4 +11,6 @@ public class ApplicationDbContext : SharedDbContext
     }
 
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
+    public DbSet<UserFriend> UserFriends => Set<UserFriend>();
 }

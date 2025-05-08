@@ -11,31 +11,31 @@ export default function ServerSidebar() {
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
 
     const CreateServer = async (name: string, iconFile: File | null) => {
-        const serverRequest: ServerRequest =
-        {
-            name
-        }
 
-        const response = await serversApi.createServer(serverRequest);
-        if (response.status !== 201)
-        {
-            return;
-        }
+        try {
 
-        setServers(prev => [...prev, response.data]);
-    };
-
-    useEffect(() =>
-    {
-        const ReceiveMyServers =(async() =>
-        {
-            const response = await serversApi.getMyServers();
-            if (response.status !== 200)
+            const serverRequest: ServerRequest =
             {
-                return;
+                name: name
             }
 
-            setServers(response.data);
+            const response = await serversApi.createServer(serverRequest);
+
+            setServers(prev => [...prev, response.data]);
+        } catch (error) {
+            console.log('Не удалось создать сервер')
+        }
+    };
+
+    useEffect(() => {
+        const ReceiveMyServers = (async () => {
+            try {
+                const response = await serversApi.getMyServers();
+
+                setServers(response.data);
+            } catch (error) {
+                console.log('Не получилось получить список серверов', error)
+            }
         })
 
         ReceiveMyServers();

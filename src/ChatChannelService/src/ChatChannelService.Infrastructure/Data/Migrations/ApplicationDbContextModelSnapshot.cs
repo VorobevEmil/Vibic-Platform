@@ -28,6 +28,9 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<int>("ChannelType")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -40,9 +43,6 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
 
                     b.Property<Guid?>("ServerId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -104,6 +104,30 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ChatUsers");
+                });
+
+            modelBuilder.Entity("ChatChannelService.Core.Entities.Invite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("ServerId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServerId");
+
+                    b.ToTable("Invites");
                 });
 
             modelBuilder.Entity("ChatChannelService.Core.Entities.Message", b =>
@@ -292,6 +316,17 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
                     b.Navigation("ChatUser");
                 });
 
+            modelBuilder.Entity("ChatChannelService.Core.Entities.Invite", b =>
+                {
+                    b.HasOne("ChatChannelService.Core.Entities.Server", "Server")
+                        .WithMany("Invites")
+                        .HasForeignKey("ServerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Server");
+                });
+
             modelBuilder.Entity("ChatChannelService.Core.Entities.Message", b =>
                 {
                     b.HasOne("ChatChannelService.Core.Entities.Channel", "Channel")
@@ -386,6 +421,8 @@ namespace ChatChannelService.Infrastructure.Data.Migrations
             modelBuilder.Entity("ChatChannelService.Core.Entities.Server", b =>
                 {
                     b.Navigation("Channels");
+
+                    b.Navigation("Invites");
 
                     b.Navigation("ServerMembers");
 

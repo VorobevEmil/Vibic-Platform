@@ -8,14 +8,14 @@ import { chatHubConnection } from '../../services/signalRClient';
 import { useAuthContext } from '../../context/AuthContext';
 import { ChannelType } from '../../types/enums/ChannelType';
 
-interface Props {
+interface ChatCenterPanelProps {
   channelType: ChannelType;
   serverId?: string;
   channelId: string;
   children?: React.ReactNode;
 }
 
-export default function ChatCenterPanel({ channelType, serverId, channelId, children }: Props) {
+export default function ChatCenterPanel({ channelType, serverId, channelId, children }: ChatCenterPanelProps) {
   const { selfUser } = useAuthContext();
   const [inputValue, setInputValue] = useState('');
   const peerUser = useDirectChannel(

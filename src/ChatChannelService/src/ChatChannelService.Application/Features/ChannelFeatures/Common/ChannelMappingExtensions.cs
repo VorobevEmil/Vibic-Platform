@@ -1,3 +1,4 @@
+using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Helpers.Extensions;
 using ChatChannelService.Core.Entities;
 using Microsoft.Extensions.Configuration;
@@ -20,5 +21,10 @@ public static class ChannelMappingExtensions
             channelMember.ChatUser.Id,
             channelMember.ChatUser.DisplayName,
             configuration.BuildUserAvatarUrl(channelMember.ChatUser.AvatarUrl));
+    }
+
+    public static ServerChannelDto MapToServerChannelDto(this Channel channel)
+    {
+        return new ServerChannelDto(channel.Id, channel.Name!, channel.ChannelType, channel.IsPublic);
     }
 }

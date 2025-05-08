@@ -25,6 +25,8 @@ public static class DependencyInjection
     {
         services.AddScoped<IFileStorageClient, FileStorageClient>();
         services.AddScoped<IUserProfileRepository, UserProfileRepository>();
+        services.AddScoped<IFriendRequestRepository, FriendRequestRepository>();
+        services.AddScoped<IUserFriendRepository, UserFriendRepository>();
         return services;
     }
 

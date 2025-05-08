@@ -1,13 +1,13 @@
 import MessageResponse from '../../../types/MessageType';
 
-interface Props {
+interface ChatMessageProps {
   messages: MessageResponse[];
   typingUsername: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   isLoadingMore: boolean;
 }
 
-export default function ChatMessages({ messages, typingUsername, messagesEndRef, isLoadingMore }: Props) {
+export default function ChatMessages({ messages, typingUsername, messagesEndRef, isLoadingMore }: ChatMessageProps) {
   return (
     <>
       {isLoadingMore && (

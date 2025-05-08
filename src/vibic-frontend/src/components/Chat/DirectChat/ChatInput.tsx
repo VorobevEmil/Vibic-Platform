@@ -1,6 +1,6 @@
 import { Paperclip, Send, Smile } from 'lucide-react';
 
-interface Props {
+interface ChatInputProps {
     inputValue: string;
     setInputValue: (val: string) => void;
     handleSend: () => void;
@@ -8,7 +8,7 @@ interface Props {
     placeholder?: string;
 }
 
-export default function ChatInput({ inputValue, setInputValue, handleSend, handleTyping, placeholder }: Props) {
+export default function ChatInput({ inputValue, setInputValue, handleSend, handleTyping, placeholder }: ChatInputProps) {
     return (
         <div className="h-16 px-4 py-2 border-t border-[#1e1f22] flex items-center gap-3 bg-[#383a40]">
             <button><Paperclip className="w-5 h-5 text-gray-400 hover:text-white" /></button>

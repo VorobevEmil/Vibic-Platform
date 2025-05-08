@@ -21,18 +21,21 @@ export function useChatMessages({ serverId, channelId }: Props) {
 
   const initializeMessages = async () => {
 
-    let response = null;
-    if (serverId) {
-      response = await messagesApi.getMessagesByServerIdAndChannelId(serverId, channelId);
-    }
-    else {
-      response = await messagesApi.getMessagesByChannelId(channelId);
-    }
-    if (response.status === 200) {
+    try {
+
+      let response = null;
+      if (serverId) {
+        response = await messagesApi.getMessagesByServerIdAndChannelId(serverId, channelId);
+      }
+      else {
+        response = await messagesApi.getMessagesByChannelId(channelId);
+      }
       setMessages(response.data.items);
       setCursor(response.data.cursor);
       setHasMore(response.data.hasMore);
       setTimeout(scrollToBottom, 10);
+    } catch (error) {
+      console.log("Ошибка во время инициализации сообщении", error)
     }
   };
 
@@ -45,17 +48,20 @@ export function useChatMessages({ serverId, channelId }: Props) {
     const prevScrollTop = scrollEl.scrollTop;
 
     setIsLoadingMore(true);
-    let response = null;
-    if (serverId) {
-      response = await messagesApi.getMessagesByServerIdAndChannelId(serverId!, channelId, cursor);
-    }
-    else {
-      response = await messagesApi.getMessagesByChannelId(channelId, cursor);
-    }
 
-    setIsLoadingMore(false);
+    try {
 
-    if (response.status === 200) {
+
+      let response = null;
+      if (serverId) {
+        response = await messagesApi.getMessagesByServerIdAndChannelId(serverId!, channelId, cursor);
+      }
+      else {
+        response = await messagesApi.getMessagesByChannelId(channelId, cursor);
+      }
+
+      setIsLoadingMore(false);
+
       setMessages(prev => [...response.data.items, ...prev]);
       setCursor(response.data.cursor);
       setHasMore(response.data.hasMore);
@@ -63,6 +69,8 @@ export function useChatMessages({ serverId, channelId }: Props) {
       setTimeout(() => {
         scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight + prevScrollTop;
       }, 10);
+    } catch (error) {
+
     }
   };
 

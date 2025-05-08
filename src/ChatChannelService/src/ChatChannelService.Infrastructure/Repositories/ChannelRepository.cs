@@ -21,7 +21,7 @@ public class ChannelRepository : IChannelRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Channels
-            .Where(x => x.Type == ChannelType.Direct &&
+            .Where(x => x.ChannelType == ChannelType.Direct &&
                         x.ChannelMembers.Any(y => y.ChatUserId == userId))
             .Select(channel => new
             {
@@ -47,7 +47,7 @@ public class ChannelRepository : IChannelRepository
             .Include(x => x.ChannelMembers)
             .ThenInclude(x => x.ChatUser)
             .FirstOrDefaultAsync(x =>
-                    x.Type == ChannelType.Direct &&
+                    x.ChannelType == ChannelType.Direct &&
                     x.Id == channelId &&
                     x.ChannelMembers.Any(y => y.ChatUserId == userId),
                 cancellationToken);
@@ -63,7 +63,7 @@ public class ChannelRepository : IChannelRepository
             .Include(x => x.ChannelMembers)
             .ThenInclude(x => x.ChatUser)
             .FirstOrDefaultAsync(x =>
-                    x.Type == ChannelType.Server &&
+                    x.ChannelType == ChannelType.Server &&
                     x.Id == channelId &&
                     x.ServerId == serverId &&
                     x.Server!.ServerMembers.Any(sm => sm.ChatUserId == userId) &&
@@ -82,7 +82,7 @@ public class ChannelRepository : IChannelRepository
             .OrderBy(x => x.Id)
             .FirstAsync(x =>
                 x.ServerId == serverId &&
-                x.Type == ChannelType.Server &&
+                x.ChannelType == ChannelType.Server &&
                 x.IsPublic, cancellationToken);
     }
 
@@ -96,7 +96,7 @@ public class ChannelRepository : IChannelRepository
     {
         return await _dbContext.Channels
             .Include(x => x.ChannelMembers)
-            .AnyAsync(c => c.Type == ChannelType.Direct && c.ChannelMembers
+            .AnyAsync(c => c.ChannelType == ChannelType.Direct && c.ChannelMembers
                 .All(cm => cm.ChatUserId == userId || cm.ChatUserId == memberUserId), cancellationToken);
     }
 }

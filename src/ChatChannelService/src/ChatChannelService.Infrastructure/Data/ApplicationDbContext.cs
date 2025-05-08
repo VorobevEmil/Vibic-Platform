@@ -16,4 +16,5 @@ public class ApplicationDbContext : SharedDbContext
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<Server> Servers => Set<Server>();
     public DbSet<ServerMember> ServerMembers => Set<ServerMember>();
+    public DbSet<Invite> Invites { get; set; }
 }

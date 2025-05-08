@@ -25,8 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const user = await userProfilesApi.me();
         setSelfUser(user.data);
-      } catch {
+      } catch (error) {
         setSelfUser(null);
+        console.log('ошибка при получении пользователя', error)
       }
     };
     loadUser();

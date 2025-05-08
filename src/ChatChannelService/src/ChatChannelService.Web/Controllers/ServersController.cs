@@ -1,8 +1,10 @@
-using ChatChannelService.Application.Features.ServerFeatures;
+using ChatChannelService.Application.Features.InviteFeatures.Commands;
+using ChatChannelService.Application.Features.InviteFeatures.Common;
 using ChatChannelService.Application.Features.ServerFeatures.Commands;
 using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Features.ServerFeatures.Queries;
 using ChatChannelService.Web.Mappings;
+using ChatChannelService.Web.Models.Invites.Responses;
 using ChatChannelService.Web.Models.Servers.Requests;
 using ChatChannelService.Web.Models.Servers.Responses;
 using MediatR;
@@ -28,7 +30,6 @@ public class ServersController(IMediator mediator) : AuthenticateControllerBase
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ServerFullResponse), StatusCodes.Status201Created)]
-
     public async Task<IActionResult> GetServerById(Guid id)
     {
         GetServerQuery query = new(id);
@@ -62,5 +63,17 @@ public class ServersController(IMediator mediator) : AuthenticateControllerBase
         await mediator.Send(command);
 
         return NoContent();
+    }
+    
+    [HttpPost("{serverId}/invites")]
+    [ProducesResponseType(typeof(InviteResponse), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateInvite(Guid serverId)
+    {
+        CreateInviteCommand command = new(serverId);
+        InviteDto invite = await mediator.Send(command);
+
+        InviteResponse response = invite.MapToResponse();
+
+        return Created(string.Empty, response);
     }
 }

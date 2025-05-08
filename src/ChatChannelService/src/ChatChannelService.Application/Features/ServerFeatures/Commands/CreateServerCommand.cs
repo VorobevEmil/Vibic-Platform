@@ -1,9 +1,9 @@
 using ChatChannelService.Application.Features.ServerFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
+using ChatChannelService.Core.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.EF.Interfaces;
 
@@ -39,7 +39,7 @@ public class CreateServerHandler : IRequestHandler<CreateServerCommand, ServerSu
         ChatUser chatUser = await _chatUserRepository.GetByIdAsync(userId, cancellationToken);
 
         Server server = new(request.Name, chatUser);
-        Channel channel = Channel.CreateServerChannel("general", server, true);
+        Channel channel = Channel.CreateServerChannel("general", server, ChannelType.Server, true);
         // ChannelMember channelMember = new(channel, chatUser);
         // channel.ChannelMembers.Add(channelMember);
         ServerMember serverMember = new(chatUser, server);

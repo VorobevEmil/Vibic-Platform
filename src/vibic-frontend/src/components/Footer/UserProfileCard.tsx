@@ -68,13 +68,11 @@ export default function UserProfileCard({ onClose }: Props) {
 
                         try {
                             const response = await userProfilesApi.updateAvatar(file);
-                            if (response.status === 200) {
-                                updateSelfUser({
-                                    ...user!,
-                                    avatarUrl: response.data.url, // Обновляем только аватарку
-                                });
-                                setIsModalOpen(false);
-                            }
+                            updateSelfUser({
+                                ...user!,
+                                avatarUrl: response.data.url,
+                            });
+                            setIsModalOpen(false);
                         } catch (error) {
                             console.error('Ошибка при обновлении аватара:', error);
                         }

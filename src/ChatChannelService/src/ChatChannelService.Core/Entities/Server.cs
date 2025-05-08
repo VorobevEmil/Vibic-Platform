@@ -22,6 +22,7 @@ public class Server : BaseEntity, IUpdatable, ISoftDeletable
     public List<Channel> Channels { get; init; } = new();
     public List<ServerMember> ServerMembers { get; init; } = new();
     public List<ServerRole> ServerRoles { get; init; } = new();
+    public List<Invite> Invites { get; set; }
     public DateTime? UpdatedAt { get; init; }
     public bool IsDeleted { get; init; }
     public DateTime? DeletedAt { get; init; }

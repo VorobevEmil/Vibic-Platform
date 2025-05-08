@@ -17,9 +17,12 @@ export default function FooterProfilePanel() {
 
   if (!user) {
     return (
-      <div className="w-full px-3 py-2 bg-[#1e1f22] text-sm text-white opacity-50 animate-pulse">
-        Загрузка профиля...
-      </div>
+      <section
+        className="absolute w-[312px] left-2 bottom-2 px-3 py-2 rounded-lg border border-gray-700  bg-[#1e1f22]">
+        <div className="w-full px-3 py-2 bg-[#1e1f22] text-sm text-white opacity-50 animate-pulse">
+          Загрузка профиля...
+        </div>
+      </section>
     );
   }
 

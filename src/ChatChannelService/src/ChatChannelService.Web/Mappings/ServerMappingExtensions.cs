@@ -24,12 +24,7 @@ public static class ServerMappingExtensions
             Id = dto.Id,
             Name = dto.Name,
             Channels = dto.Channels
-                .ConvertAll(sc => new ServerChannelResponse
-                {
-                    Id = sc.Id,
-                    Name = sc.Name,
-                    IsPrivate = sc.IsPrivate
-                })
+                .ConvertAll(sc => sc.MapToServerChannelResponse())
         };
     }
 }

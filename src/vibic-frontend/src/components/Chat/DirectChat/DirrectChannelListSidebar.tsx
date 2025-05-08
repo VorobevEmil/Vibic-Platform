@@ -3,7 +3,7 @@ import { X } from 'lucide-react';
 import { channelsApi } from '../../../api/channelsApi';
 import SearchUserOverlay from '../../SearchUserOverlay/SearchUserOverlay';
 import { useAuthContext } from '../../../context/AuthContext';
-import DirectChannelResponse from '../../../types/DirectChannelType';
+import DirectChannelResponse from '../../../types/channels/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
 
 

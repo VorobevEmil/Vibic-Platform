@@ -4,15 +4,14 @@ using ChatChannelService.Core.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.EF.Interfaces;
 
 namespace ChatChannelService.Application.Features.ChannelFeatures.Commands;
 
-public record CreateDirectMessageCommand(Guid UserId) : IRequest<DirectChannelDto?>;
+public record CreateDirectChannelCommand(Guid UserId) : IRequest<DirectChannelDto?>;
 
-public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCommand, DirectChannelDto?>
+public class CreateDirectChannelHandler : IRequestHandler<CreateDirectChannelCommand, DirectChannelDto?>
 {
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -20,7 +19,7 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
     private readonly IChannelRepository _channelRepository;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreateDirectMessageHandler(
+    public CreateDirectChannelHandler(
         IConfiguration configuration,
         IHttpContextAccessor httpContextAccessor,
         IChatUserRepository chatUserRepository,
@@ -34,7 +33,7 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<DirectChannelDto?> Handle(CreateDirectMessageCommand request,
+    public async Task<DirectChannelDto?> Handle(CreateDirectChannelCommand request,
         CancellationToken cancellationToken)
     {
         Guid userId = _httpContextAccessor.HttpContext!.User.GetUserId();
@@ -49,7 +48,7 @@ public class CreateDirectMessageHandler : IRequestHandler<CreateDirectMessageCom
             return null;
         }
 
-        Channel channel = Channel.CreateDirectMessageChannel();
+        Channel channel = Channel.CreateDirectChannel();
 
         foreach (ChatUser? chatUser in chatUsers)
         {
