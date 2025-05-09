@@ -1,3 +1,4 @@
+using MediaService.Web.Models;
 using MediaService.Web.Models.Hub;
 using Microsoft.AspNetCore.SignalR;
 
@@ -15,12 +16,53 @@ public class CallHub : Hub
 
 
     //TODO подумать над несколькими окнами
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string userId = Context.UserIdentifier!;
         CallConnectionRegistry.Remove(userId);
 
-        return base.OnDisconnectedAsync(exception);
+        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out VoiceUser? user);
+
+        if (channelId != null && user != null)
+        {
+            await Clients.Group(channelId).SendAsync("UserLeftVoice", user.UserId);
+        }
+    }
+
+
+    public async Task JoinVoiceChannel(string channelId, string userId, string displayName)
+    {
+        VoiceUser user = new()
+        {
+            UserId = userId,
+            DisplayName = displayName
+        };
+
+        VoiceChannelManager.AddUser(Context.ConnectionId, channelId, user);
+        await Groups.AddToGroupAsync(Context.ConnectionId, channelId);
+
+        // Отправить новому участнику текущих пользователей
+        List<VoiceUser> usersInChannel = VoiceChannelManager.GetUsers(channelId);
+        await Clients.Caller.SendAsync("VoiceChannelUsers", usersInChannel);
+
+        // Уведомить остальных
+        await Clients.OthersInGroup(channelId).SendAsync("UserJoinedVoice", user);
+    }
+
+    public async Task LeaveVoiceChannel()
+    {
+        string userId = Context.UserIdentifier!;
+        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out VoiceUser? user);
+
+        if (channelId != null)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, channelId);
+
+            if (user != null)
+            {
+                await Clients.Group(channelId).SendAsync("UserLeftVoice", user.UserId);
+            }
+        }
     }
 
     public async Task CallUser(CallUserRequest request)
@@ -111,15 +153,15 @@ public class CallHub : Hub
 
     public async Task SendAnswer(SendAnswerRequest request)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
+        string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
         Console.WriteLine("Ответ получен");
-        await Clients.Client(connectionId).SendAsync("ReceiveAnswer", request.Answer);
+        await Clients.Client(connectionId).SendAsync("ReceiveAnswer", Context.UserIdentifier, request.Answer);
     }
 
     public async Task SendIceCandidate(SendIceCandidateRequest request)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
+        string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
         Console.WriteLine("Кандидаты получены");
-        await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", request.Candidate);
+        await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", Context.UserIdentifier, request.Candidate);
     }
 }

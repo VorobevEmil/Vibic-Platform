@@ -13,6 +13,7 @@ import CreateChannelModal from './CreateChannelModal';
 import { ServerChannelRequest } from '../../types/channels/ServerChannelType';
 import InviteModal from './InviteModal';
 import { ChannelType } from '../../types/enums/ChannelType';
+import { useVoice } from '../../context/VoiceContext';
 
 interface ServerChannelListSidebarProps {
     serverName: string;
@@ -29,6 +30,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
 
     const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const { joinChannel, voiceUsers, currentChannelId } = useVoice();
 
     const textChannels = channels?.filter((c) => c.channelType === ChannelType.Server);
     const voiceChannels = channels?.filter((c) => c.channelType === ChannelType.Voice);
@@ -54,8 +56,8 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
                     <UserPlus className="w-4 h-4 hover:text-white" />
                     <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
-              opacity-0 group-hover:opacity-100 transition-opacity duration-200
-              bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                        bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                         Пригласить на сервер
                     </span>
                 </div>
@@ -76,14 +78,13 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                     <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
                         <Plus className="w-4 h-4 hover:text-white" />
                         <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
-                opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                             Создать канал
                         </span>
                     </div>
                 </div>
 
-                {/* Список каналов */}
                 {textOpen && (
                     <div className="space-y-1 mt-1">
                         {textChannels.map((channel) => (
@@ -91,10 +92,9 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                                 key={channel.id}
                                 to={`/channels/${serverId}/${channel.id}`}
                                 className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors
-                    ${channelId === channel.id
+                                    ${channelId === channel.id
                                         ? 'bg-[#404249] text-white'
-                                        : 'text-gray-300 hover:bg-[#404249]'}
-                  `}
+                                        : 'text-gray-300 hover:bg-[#404249]'}`}
                             >
                                 <Hash className="w-4 h-4" />
                                 <span className="truncate">{channel.name}</span>
@@ -119,34 +119,46 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                     <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
                         <Plus className="w-4 h-4 hover:text-white" />
                         <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
-                opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                             Создать канал
                         </span>
                     </div>
                 </div>
 
-                {/* Список каналов */}
                 {voiceOpen && (
                     <div className="space-y-1 mt-1">
-                        {voiceChannels.map((channel) => (
-                            <Link
-                                key={channel.id}
-                                to={`/channels/${serverId}/${channel.id}`}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors
-                    ${channelId === channel.id
-                                        ? 'bg-[#404249] text-white'
-                                        : 'text-gray-300 hover:bg-[#404249]'}
-                  `}
-                            >
-                                <Volume2 className="w-4 h-4" />
-                                <span className="truncate">{channel.name}</span>
-                            </Link>
-                        ))}
+                        {voiceChannels.map((channel) => {
+                            const usersInChannel = voiceUsers.filter(u => currentChannelId === channel.id);
+
+                            return (
+                                <div key={channel.id}>
+                                    <div
+                                        onClick={async () => await joinChannel(channel.id)}
+                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors cursor-pointer
+                                            ${channelId === channel.id
+                                                ? 'bg-[#404249] text-white'
+                                                : 'text-gray-300 hover:bg-[#404249]'}`}
+                                    >
+                                        <Volume2 className="w-4 h-4" />
+                                        <span className="truncate">{channel.name}</span>
+                                    </div>
+
+                                    {usersInChannel.length > 0 && (
+                                        <div className="pl-8 space-y-1 text-xs text-gray-400">
+                                            {usersInChannel.map((user) => (
+                                                <div key={user.userId}>👤 {user.displayName}</div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
 
+            {/* Модалки */}
             <CreateChannelModal
                 isOpen={isCreateChannelModalOpen}
                 onClose={() => setIsCreateChannelModalOpen(false)}
@@ -158,8 +170,6 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 onClose={() => setIsInviteModalOpen(false)}
                 serverId={serverId}
             />
-
         </div>
-
     );
 }

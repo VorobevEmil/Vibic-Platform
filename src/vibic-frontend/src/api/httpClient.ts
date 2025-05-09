@@ -46,7 +46,6 @@ http.interceptors.response.use(
           console.warn(`Unhandled status code: ${response.status}`);
       }
     }
-    // Можно пробросить ошибку дальше или обработать здесь
     return Promise.reject(error);
   }
 );
