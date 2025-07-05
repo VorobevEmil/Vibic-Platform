@@ -21,5 +21,6 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 EXPOSE 7155
+ENV ASPNETCORE_URLS=http://0.0.0.0:7155
 
-ENTRYPOINT ["dotnet", "UserService.Web.dll", "--urls", "http://0.0.0.0:7155"]
+ENTRYPOINT ["dotnet", "UserService.Web.dll"]

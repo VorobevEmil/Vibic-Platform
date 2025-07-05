@@ -21,5 +21,6 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 EXPOSE 7157
+ENV ASPNETCORE_URLS=http://0.0.0.0:7157
 
-ENTRYPOINT ["dotnet", "ApiGateway.Web.dll", "--urls", "http://0.0.0.0:7157"]
+ENTRYPOINT ["dotnet", "ApiGateway.Web.dll"]

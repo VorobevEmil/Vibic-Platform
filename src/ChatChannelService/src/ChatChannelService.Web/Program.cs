@@ -15,7 +15,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         .AddInfrastructure();
     
     builder.Services.AddExceptionHandlers();
-    builder.Services.AddVibicAuthentication(new JwtBearerEvents()
+    builder.Services.AddVibicAuthentication(builder.Configuration, new JwtBearerEvents()
     {
         OnMessageReceived = context =>
         {

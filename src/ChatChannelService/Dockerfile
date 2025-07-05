@@ -21,5 +21,6 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 EXPOSE 7138
+ENV ASPNETCORE_URLS=http://0.0.0.0:7138
 
-ENTRYPOINT ["dotnet", "ChatChannelService.Web.dll", "--urls", "http://0.0.0.0:7138"]
+ENTRYPOINT ["dotnet", "ChatChannelService.Web.dll"]

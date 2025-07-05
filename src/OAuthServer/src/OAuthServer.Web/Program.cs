@@ -15,7 +15,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddExceptionHandlers();
     // builder.Services.AddCookieAuthentication();
-    builder.Services.AddVibicAuthentication();
+    builder.Services.AddVibicAuthentication(builder.Configuration);
     builder.Services.AddAuthorization();
     builder.Services.AddOpenIdDictServer();
     builder.Services.AddControllersConfiguration();
