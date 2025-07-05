@@ -1,4 +1,4 @@
-import DirectChannelListSidebar from '../components/Chat/DirectChat/DirrectChannelListSidebar';
+import DirectChannelListSidebar from '../components/Chat/DirectChat/DirectChannelListSidebar';
 import FriendCenterPanel from '../components/Chat/FriendChat/FriendCenterPanel';
 import AppShell from '../layout/AppShell';
 

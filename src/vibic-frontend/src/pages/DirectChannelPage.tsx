@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import AppShell from '../layout/AppShell';
 import ChatCenterPanel from '../components/Chat/ChatCenterPanel';
-import DirectChannelListSidebar from '../components/Chat/DirectChat/DirrectChannelListSidebar';
+import DirectChannelListSidebar from '../components/Chat/DirectChat/DirectChannelListSidebar';
 import CallHeaderHandler from '../components/Call/CallHeaderHandler';
 import { ChannelType } from '../types/enums/ChannelType';
 
