@@ -4,8 +4,8 @@ import { http } from './httpClient';
 
 export const authApi = {
   signIn: (data: SignInRequest) =>
-    http.post('http://localhost:7154/auth/sign-in', data),
+    http.post('/auth/sign-in', data),
 
   signUp: (data: SignUpRequest) =>
-    http.post('http://localhost:7154/auth/sign-up', data),
+    http.post('/auth/sign-up', data),
 };
