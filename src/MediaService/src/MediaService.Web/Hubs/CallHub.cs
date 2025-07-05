@@ -128,7 +128,7 @@ public class CallHub : Hub
         await Clients.Client(peerUserConnection).SendAsync(method);
     }
 
-    public async Task NotifyCameraStatusChanged(string toUserId, bool isMicOn)
+    public async Task NotifyCameraStatusChanged(string toUserId, bool isCamOn)
     {
         string? peerUserConnection = CallConnectionRegistry.GetConnectionId(toUserId);
         if (peerUserConnection is null)
@@ -136,7 +136,7 @@ public class CallHub : Hub
             return;
         }
 
-        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", isMicOn);
+        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", isCamOn);
     }
 
     public async Task NotifyMicStatusChanged(string toUserId, bool isMicOn)
