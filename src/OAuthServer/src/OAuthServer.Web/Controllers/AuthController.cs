@@ -18,7 +18,7 @@ public class AuthController(IMediator mediator) : ControllerBase
     /// <param name="request">Модель запроса</param>
     /// <response code="200">Пользователь вошел</response>
     /// <response code="404">Пользователь не найден</response>
-    /// <response code="401">Не верные учетные данные</response>
+    /// <response code="401">Неверные учетные данные</response>
     [HttpPost("sign-in")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SignIn(SignInRequest request)
