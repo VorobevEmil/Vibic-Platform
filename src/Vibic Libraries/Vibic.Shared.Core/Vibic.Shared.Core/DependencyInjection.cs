@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Vibic.Shared.Core.ExceptionHandlers;
 
@@ -52,23 +54,33 @@ public static class DependencyInjection
 
     public static AuthenticationBuilder AddVibicAuthentication(
         this IServiceCollection services,
+        IConfiguration configuration,
         JwtBearerEvents? events = null)
     {
-        SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
+        string keyString = configuration["Authentication:Jwt:Key"] ?? string.Empty;
+        SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(keyString));
 
         return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.Events = events!;
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = false,
-                    ValidateIssuerSigningKey = false,
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["Authentication:Jwt:Issuer"],
+                    ValidateAudience = true,
+                    ValidAudience = configuration["Authentication:Jwt:Audience"],
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
                     IssuerSigningKey = key
                 };
+
+                string? authority = configuration["Authentication:Authority"];
+                if (!string.IsNullOrWhiteSpace(authority))
+                {
+                    options.Authority = authority;
+                    options.RequireHttpsMetadata = false;
+                }
             });
     }
 }

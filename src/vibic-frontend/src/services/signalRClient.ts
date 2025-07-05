@@ -7,12 +7,13 @@ enum SignalRConnectionType  {
 
 function createHubConnection(connectionType: SignalRConnectionType): signalR.HubConnection {
     var hubUrl = ''; 
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7157';
     switch (connectionType) {
         case SignalRConnectionType.ChatChannel:
-            hubUrl = 'http://localhost:7157/hubs/chat';
+            hubUrl = `${apiBaseUrl}/hubs/chat`;
             break;
         case SignalRConnectionType.Call:
-            hubUrl = 'http://localhost:7157/hubs/call';
+            hubUrl = `${apiBaseUrl}/hubs/call`;
             break;
         default:
             break;

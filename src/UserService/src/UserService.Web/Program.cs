@@ -15,7 +15,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddExceptionHandlers();
     builder.Services.AddAuthorization();
-    builder.Services.AddVibicAuthentication();
+    builder.Services.AddVibicAuthentication(builder.Configuration);
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();

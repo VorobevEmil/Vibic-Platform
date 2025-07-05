@@ -4,6 +4,7 @@ using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
 using Vibic.Shared.Core.Exceptions;
@@ -15,10 +16,12 @@ public record SignInCommand(string Email, string Password) : IRequest<string>;
 public class SignInHandler : IRequestHandler<SignInCommand, string>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IConfiguration _configuration;
 
-    public SignInHandler(IUserRepository userRepository)
+    public SignInHandler(IUserRepository userRepository, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _configuration = configuration;
     }
 
     public async Task<string> Handle(SignInCommand command, CancellationToken cancellationToken)
@@ -40,7 +43,8 @@ public class SignInHandler : IRequestHandler<SignInCommand, string>
             throw new UnauthorizedException("Account is locked");
         }
 
-        SymmetricSecurityKey key = new("super_secret_dummy_key_1234567890"u8.ToArray());
+        string keyString = _configuration["Authentication:Jwt:Key"] ?? string.Empty;
+        SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(keyString));
         SigningCredentials signingCredentials = new(key, SecurityAlgorithms.HmacSha256);
 
         List<Claim> claims =
@@ -50,7 +54,15 @@ public class SignInHandler : IRequestHandler<SignInCommand, string>
             new(ClaimTypes.Email, user.Email)
         ];
 
-        JwtSecurityToken jwt = new(claims: claims, signingCredentials: signingCredentials);
+        string issuer = _configuration["Authentication:Jwt:Issuer"];
+        string audience = _configuration["Authentication:Jwt:Audience"];
+
+        JwtSecurityToken jwt = new(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: signingCredentials);
 
 
         return new JwtSecurityTokenHandler().WriteToken(jwt);
