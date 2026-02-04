@@ -5,6 +5,8 @@
 *.userosscache
 *.sln.docstates
 appsettings*.json
+!**/appsettings.example.json
+!configs/appsettings*.json
 .DS_Store
 out
 .editorconfig

@@ -1,7 +1,9 @@
 using System.Reflection;
 using MassTransit;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Vibic.Shared.Core;
+using Vibic.Shared.Messaging.Options;
 
 namespace Vibic.Shared.Messaging;
 
@@ -9,7 +11,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddRabbitMq(this IServiceCollection services)
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetService<IConfiguration>()!;
+        services.AddOptionsWithValidateAndBind<RabbitMqOptions, RabbitMqOptionsValidator>();
+
+        using ServiceProvider sp = services.BuildServiceProvider();
+        RabbitMqOptions rabbitMqOptions = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
 
         services.AddMassTransit(x =>
         {
@@ -24,15 +29,15 @@ public static class DependencyInjection
             if (applicationAssemblyName != null)
             {
                 Assembly applicationAssembly = Assembly.Load(applicationAssemblyName);
-            
+
                 x.AddConsumers(applicationAssembly);
             }
-            
+
             x.SetKebabCaseEndpointNameFormatter();
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(configuration.GetConnectionString("RabbitMq"));
+                cfg.Host(rabbitMqOptions.RabbitMq);
                 cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
                 cfg.PrefetchCount = 1;
                 cfg.ConfigureEndpoints(context);

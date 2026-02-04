@@ -1,21 +1,33 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using System.Text;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Vibic.Shared.Core.ExceptionHandlers;
 using Vibic.Shared.Core.Interfaces;
 using Vibic.Shared.Core.Providers;
+using AuthOptions = Vibic.Shared.Core.Options.AuthenticationOptions;
+using AuthOptionsValidator = Vibic.Shared.Core.Options.AuthenticationOptionsValidator;
 
 namespace Vibic.Shared.Core;
 
 public static class DependencyInjection
 {
+    public static void AddOptionsWithValidateAndBind<TOptions, TOptionsValidator>(
+        this IServiceCollection services)
+        where TOptions : class, IAppOptions
+        where TOptionsValidator : class, IValidateOptions<TOptions>
+    {
+        services
+            .AddOptionsWithValidateOnStart<TOptions, TOptionsValidator>()
+            .BindConfiguration(TOptions.ConfigSectionName);
+    }
+
     public static IServiceCollection AddExceptionHandlers(this IServiceCollection services)
     {
         services.AddProblemDetails(o =>
@@ -56,11 +68,14 @@ public static class DependencyInjection
 
     public static AuthenticationBuilder AddVibicAuthentication(
         this IServiceCollection services,
-        IConfiguration configuration,
         JwtBearerEvents? events = null)
     {
-        string keyString = configuration["Authentication:Jwt:Key"] ?? string.Empty;
-        SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(keyString));
+        services.AddOptionsWithValidateAndBind<AuthOptions, AuthOptionsValidator>();
+
+        using ServiceProvider sp = services.BuildServiceProvider();
+        AuthOptions authOptions = sp.GetRequiredService<IOptions<AuthOptions>>().Value;
+
+        SymmetricSecurityKey key = new(Encoding.UTF8.GetBytes(authOptions.Jwt.Key));
 
         return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -73,18 +88,17 @@ public static class DependencyInjection
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = configuration["Authentication:Jwt:Issuer"],
+                    ValidIssuer = authOptions.Jwt.Issuer,
                     ValidateAudience = true,
-                    ValidAudience = configuration["Authentication:Jwt:Audience"],
+                    ValidAudience = authOptions.Jwt.Audience,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = key
                 };
 
-                string? authority = configuration["Authentication:Authority"];
-                if (!string.IsNullOrWhiteSpace(authority))
+                if (!string.IsNullOrWhiteSpace(authOptions.Authority))
                 {
-                    options.Authority = authority;
+                    options.Authority = authOptions.Authority;
                     options.RequireHttpsMetadata = false;
                 }
             });

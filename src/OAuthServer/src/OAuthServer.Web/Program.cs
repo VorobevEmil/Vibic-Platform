@@ -14,8 +14,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         .AddInfrastructure();
 
     builder.Services.AddExceptionHandlers();
-    // builder.Services.AddCookieAuthentication();
-    builder.Services.AddVibicAuthentication(builder.Configuration);
+    builder.Services.AddVibicAuthentication();
     builder.Services.AddAuthorization();
     builder.Services.AddOpenIdDictServer();
     builder.Services.AddControllersConfiguration();
@@ -28,19 +27,19 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
 {
     app.ApplyMigration<ApplicationDbContext>();
-    
+
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         app.MapScalarApiReference();
     }
-        
+
     app.UseCors(p => p
         .SetIsOriginAllowed(_ => true)
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
-    
+
     app.UseRouting();
     app.UseExceptionHandler();
     app.UseAuthentication();

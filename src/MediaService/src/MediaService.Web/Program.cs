@@ -5,7 +5,7 @@ using Vibic.Shared.Core;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 {
     builder.Services.AddExceptionHandlers();
-    builder.Services.AddVibicAuthentication(builder.Configuration, new JwtBearerEvents()
+    builder.Services.AddVibicAuthentication(new JwtBearerEvents()
     {
         OnMessageReceived = context =>
         {

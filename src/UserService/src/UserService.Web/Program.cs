@@ -11,11 +11,11 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 {
     builder.Services
         .AddApplication()
-        .AddInfrastructure();
+        .AddInfrastructure(builder.Configuration);
 
     builder.Services.AddExceptionHandlers();
     builder.Services.AddAuthorization();
-    builder.Services.AddVibicAuthentication(builder.Configuration);
+    builder.Services.AddVibicAuthentication();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
@@ -44,7 +44,7 @@ WebApplication app = builder.Build();
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
-    
+
     app.MapHub<PresenceHub>("/hubs/presence");
 
     app.Run();

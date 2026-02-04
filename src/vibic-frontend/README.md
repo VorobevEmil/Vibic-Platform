@@ -53,23 +53,38 @@ src/
 
 ## Запуск
 
+### Docker
+
+Запускается автоматически через `docker-compose up --build` из корня проекта. Доступен на http://localhost:3000.
+
+Сборка использует multi-stage: `node:22-alpine` для билда, `nginx:alpine` для раздачи статики. `VITE_API_BASE_URL` передается как build arg (по умолчанию `http://localhost:7157`).
+
+### Переменные окружения
+
+Создайте `.env.local` в корне `src/vibic-frontend`:
+
 ```bash
-# Установка зависимостей
+VITE_API_BASE_URL=http://localhost:7157
+```
+
+`VITE_API_BASE_URL` указывает на ApiGateway.
+
+### Локально
+
+```bash
 npm install
-
-# Запуск dev-сервера
 npm run dev
+```
 
-# Сборка для продакшена
+### Сборка
+
+```bash
 npm run build
-
-# Запуск линтера
-npm run lint
-
-# Предпросмотр продакшен-сборки
 npm run preview
 ```
 
-## Переменные окружения
+### Линтер
 
-Конфигурация API-эндпоинтов задается через переменные окружения Vite (файл `.env`).
+```bash
+npm run lint
+```

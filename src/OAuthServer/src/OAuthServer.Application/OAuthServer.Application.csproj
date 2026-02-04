@@ -10,7 +10,7 @@
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
         <PackageReference Include="Vibic.Shared.Messaging" Version="10.0.0"/>
-        <PackageReference Include="Vibic.Shared.Core" Version="10.0.2"/>
+        <PackageReference Include="Vibic.Shared.Core" Version="10.0.0"/>
         <PackageReference Include="MediatR" Version="14.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
         <PackageReference Include="OpenIddict.Abstractions" Version="7.2.0"/>

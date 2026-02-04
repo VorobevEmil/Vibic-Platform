@@ -15,5 +15,9 @@
       <PackageReference Include="MassTransit" Version="9.0.0" />
       <PackageReference Include="MassTransit.RabbitMQ" Version="9.0.0" />
     </ItemGroup>
-    
+
+    <ItemGroup>
+        <ProjectReference Include="../../Vibic.Shared.Core/Vibic.Shared.Core/Vibic.Shared.Core.csproj"/>
+    </ItemGroup>
+
 </Project>

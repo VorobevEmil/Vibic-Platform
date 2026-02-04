@@ -13,11 +13,11 @@ namespace UserService.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplicationDbContext<ApplicationDbContext>();
         services.AddRepositories();
-        services.AddHttpClients();
+        services.AddHttpClients(configuration);
         return services;
     }
 
@@ -30,11 +30,14 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddHttpClients(this IServiceCollection services)
+    private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-        FileServiceSettings fileService = configuration.GetSection("FileService").Get<FileServiceSettings>()!;
-        
+        FileServiceSettings? fileService = configuration.GetSection("FileService").Get<FileServiceSettings>();
+        if (fileService is null || string.IsNullOrWhiteSpace(fileService.Url))
+        {
+            throw new InvalidOperationException("Missing FileService:Url configuration.");
+        }
+
         services.AddHttpClient();
 
         services.AddHttpClient(HttpClientConstants.FileService, client =>

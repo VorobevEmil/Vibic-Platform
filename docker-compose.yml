@@ -4,6 +4,18 @@ networks:
 
 services:
 
+  frontend:
+    image: vibic-frontend
+    build:
+      context: ./src/vibic-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:7157
+    ports:
+      - "3000:80"
+    depends_on:
+      - apigateway
+
   apigateway:
     image: apigateway
     build:

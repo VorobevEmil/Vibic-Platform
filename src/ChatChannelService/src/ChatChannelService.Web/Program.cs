@@ -13,9 +13,9 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services
         .AddApplication()
         .AddInfrastructure();
-    
+
     builder.Services.AddExceptionHandlers();
-    builder.Services.AddVibicAuthentication(builder.Configuration, new JwtBearerEvents()
+    builder.Services.AddVibicAuthentication(new JwtBearerEvents()
     {
         OnMessageReceived = context =>
         {
@@ -38,7 +38,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
 {
     app.ApplyMigration<ApplicationDbContext>();
-    
+
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();
