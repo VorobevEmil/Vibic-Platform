@@ -21,6 +21,8 @@ services:
     build:
       context: ./src/ApiGateway
       dockerfile: Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
     ports:
       - "7157:7157"
     depends_on:
@@ -130,7 +132,7 @@ services:
     restart: always
     container_name: postgres
     environment:
-      POSTGRES_DB: ${DB_NAME:-postgres}
+      POSTGRES_DB: ${DB_NAME:-vibic}
       POSTGRES_USER: ${PG_USER:-postgres}
       POSTGRES_PASSWORD: ${PG_PASS:-postgres}
     ports:

@@ -25,9 +25,19 @@ public static class DependencyInjection
             .EnableDynamicJson()
             .Build();
 
+        NpgsqlConnectionStringBuilder csb = new(postgresOptions.Postgres);
+        string[] schemas = GetSchemas(csb.SearchPath);
+
         services.AddDbContext<TDbContext>(options =>
             options.UseNpgsql(dataSourceBuilder,
-                opt => opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+                opt =>
+                {
+                    opt.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    if (schemas.Length > 0)
+                    {
+                        opt.MigrationsHistoryTable("__EFMigrationsHistory", schemas[0]);
+                    }
+                }));
 
         services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
 
@@ -38,9 +48,37 @@ public static class DependencyInjection
     {
         using AsyncServiceScope scope = app.Services.CreateAsyncScope();
         IServiceProvider serviceProvider = scope.ServiceProvider;
+        PostgresOptions postgresOptions = serviceProvider.GetRequiredService<IOptions<PostgresOptions>>().Value;
+        NpgsqlConnectionStringBuilder csb = new(postgresOptions.Postgres);
+        string[] schemas = GetSchemas(csb.SearchPath);
+        if (schemas.Length > 0)
+        {
+            using NpgsqlConnection conn = new(csb.ConnectionString);
+            conn.Open();
+            foreach (string schema in schemas)
+            {
+                string safeSchema = schema.Replace("\"", "\"\"");
+                using NpgsqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = $"CREATE SCHEMA IF NOT EXISTS \"{safeSchema}\"";
+                cmd.ExecuteNonQuery();
+            }
+        }
         TDbContext db = serviceProvider.GetRequiredService<TDbContext>();
         db.Database.Migrate();
 
         return app;
+    }
+
+    private static string[] GetSchemas(string? searchPath)
+    {
+        if (string.IsNullOrWhiteSpace(searchPath))
+        {
+            return [];
+        }
+
+        return searchPath
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .ToArray();
     }
 }
