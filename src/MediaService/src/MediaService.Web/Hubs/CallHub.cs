@@ -141,26 +141,35 @@ public class CallHub : Hub
 
     public async Task NotifyMicStatusChanged(string toUserId, bool isMicOn)
     {
-        await Clients.User(toUserId).SendAsync("PeerMicStatusChanged", isMicOn);
+        string? connectionId = CallConnectionRegistry.GetConnectionId(toUserId);
+        if (connectionId is null) return;
+
+        await Clients.Client(connectionId).SendAsync("PeerMicStatusChanged", isMicOn);
     }
 
     public async Task SendOffer(SendOfferRequest request)
     {
-        string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
+        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
+        if (connectionId is null) return;
+
         Console.WriteLine("Оффер получен");
         await Clients.Client(connectionId).SendAsync("ReceiveOffer", Context.UserIdentifier, request.Offer);
     }
 
     public async Task SendAnswer(SendAnswerRequest request)
     {
-        string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
+        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
+        if (connectionId is null) return;
+
         Console.WriteLine("Ответ получен");
         await Clients.Client(connectionId).SendAsync("ReceiveAnswer", Context.UserIdentifier, request.Answer);
     }
 
     public async Task SendIceCandidate(SendIceCandidateRequest request)
     {
-        string connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId)!;
+        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
+        if (connectionId is null) return;
+
         Console.WriteLine("Кандидаты получены");
         await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", Context.UserIdentifier, request.Candidate);
     }

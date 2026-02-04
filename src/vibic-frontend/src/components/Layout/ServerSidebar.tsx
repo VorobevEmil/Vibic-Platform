@@ -10,7 +10,7 @@ export default function ServerSidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
 
-    const CreateServer = async (name: string, iconFile: File | null) => {
+    const CreateServer = async (name: string, _iconFile: File | null) => {
 
         try {
 

@@ -85,9 +85,9 @@ export default function VoiceProvider({ children }: Props) {
             setVoiceUsers(users);
 
             for (const user of users) {
-                if (user.userId === selfUser?.id) continue;
+                if (!selfUser || user.userId === selfUser.id) continue;
 
-                const isInitiator = selfUser!.id > user.userId;
+                const isInitiator = selfUser.id > user.userId;
                 if (!isInitiator) continue;
 
                 const pc = createPeerConnection(user.userId);
@@ -104,12 +104,12 @@ export default function VoiceProvider({ children }: Props) {
         });
 
         callHubConnection.on('UserJoinedVoice', async (user: VoiceUser) => {
-            if (user.userId === selfUser?.id) return;
+            if (!selfUser || user.userId === selfUser.id) return;
 
             console.log(`👋 Новый пользователь: ${user.displayName}`);
             setVoiceUsers(prev => [...prev.filter(u => u.userId !== user.userId), user]);
 
-            const isInitiator = selfUser!.id > user.userId;
+            const isInitiator = selfUser.id > user.userId;
             if (!isInitiator) return;
 
             const pc = createPeerConnection(user.userId);

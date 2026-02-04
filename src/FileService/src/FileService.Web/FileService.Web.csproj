@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
@@ -12,9 +12,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
-      <PackageReference Include="Scalar.AspNetCore" Version="2.2.1" />
-      <PackageReference Include="Vibic.Shared.Core" Version="9.0.0" />
+      <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+      <PackageReference Include="Scalar.AspNetCore" Version="2.12.32" />
+      <PackageReference Include="Vibic.Shared.Core" Version="10.0.2" />
     </ItemGroup>
 
 </Project>

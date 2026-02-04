@@ -29,7 +29,12 @@ export default function CallListener() {
             });
         }
         startListening();
-    }, [callHubConnection.state]);
+
+        return () => {
+            callHubConnection.off('IncomingCall');
+            callHubConnection.off('CancelIncomingCall');
+        };
+    }, []);
 
     const handleAccept = async () => {
         if (!incomingCall) return;

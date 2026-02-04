@@ -3,7 +3,7 @@ import AppShell from "../layout/AppShell";
 import ServerChannelListSidebar from "../components/Server/ServerChannelListSidebar";
 import { useEffect, useState } from "react";
 import { serversApi } from "../api/serversApi";
-import { ServerChannelResponse, ServerFullResponse } from "../types/ServerType";
+import { ServerFullResponse } from "../types/ServerType";
 import ChatCenterPanel from "../components/Chat/ChatCenterPanel";
 import { ChannelType } from "../types/enums/ChannelType";
 
@@ -19,7 +19,7 @@ export default function ServerPage() {
 
                 setServer(response.data);
             } catch (error) {
-
+                console.error('Ошибка при загрузке сервера:', error);
             }
         };
         initializeServer();

@@ -46,13 +46,21 @@ export default function FriendCenterPanel() {
     };
 
     const acceptRequest = async (id: string) => {
-        await friendsApi.acceptRequest(id);
-        setRefresh((r) => !r);
+        try {
+            await friendsApi.acceptRequest(id);
+            setRefresh((r) => !r);
+        } catch (err) {
+            console.error('Ошибка при принятии заявки:', err);
+        }
     };
 
     const rejectRequest = async (id: string) => {
-        await friendsApi.rejectRequest(id);
-        setRefresh((r) => !r);
+        try {
+            await friendsApi.rejectRequest(id);
+            setRefresh((r) => !r);
+        } catch (err) {
+            console.error('Ошибка при отклонении заявки:', err);
+        }
     };
 
     const renderContent = () => {

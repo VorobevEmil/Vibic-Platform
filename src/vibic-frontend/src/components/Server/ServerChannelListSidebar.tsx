@@ -129,7 +129,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 {voiceOpen && (
                     <div className="space-y-1 mt-1">
                         {voiceChannels.map((channel) => {
-                            const usersInChannel = voiceUsers.filter(u => currentChannelId === channel.id);
+                            const usersInChannel = currentChannelId === channel.id ? voiceUsers : [];
 
                             return (
                                 <div key={channel.id}>

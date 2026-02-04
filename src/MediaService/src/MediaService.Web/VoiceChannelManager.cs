@@ -1,20 +1,24 @@
+using System.Collections.Concurrent;
 using MediaService.Web.Models;
 
 namespace MediaService.Web;
 
 public static class VoiceChannelManager
 {
-    private static readonly Dictionary<string, List<VoiceUser>> ChannelUsers = new();
+    private static readonly ConcurrentDictionary<string, List<VoiceUser>> ChannelUsers = new();
 
-    private static readonly Dictionary<string, string> ConnectionToChannel = new();
+    private static readonly ConcurrentDictionary<string, string> ConnectionToChannel = new();
+
+    private static readonly object Lock = new();
 
     public static void AddUser(string connectionId, string channelId, VoiceUser user)
     {
-        if (!ChannelUsers.ContainsKey(channelId))
-            ChannelUsers[channelId] = new List<VoiceUser>();
-
-        ChannelUsers[channelId].RemoveAll(u => u.UserId == user.UserId);
-        ChannelUsers[channelId].Add(user);
+        lock (Lock)
+        {
+            List<VoiceUser> users = ChannelUsers.GetOrAdd(channelId, _ => new List<VoiceUser>());
+            users.RemoveAll(u => u.UserId == user.UserId);
+            users.Add(user);
+        }
 
         ConnectionToChannel[connectionId] = channelId;
     }
@@ -24,21 +28,27 @@ public static class VoiceChannelManager
         removedUser = null;
         channelId = null;
 
-        if (ConnectionToChannel.TryGetValue(connectionId, out string? chId))
+        if (ConnectionToChannel.TryRemove(connectionId, out string? chId))
         {
             channelId = chId;
-            if (ChannelUsers.TryGetValue(chId, out List<VoiceUser>? users))
+            lock (Lock)
             {
-                removedUser = users.FirstOrDefault(u => u.UserId == userId);
-                users.RemoveAll(u => u.UserId == userId);
+                if (ChannelUsers.TryGetValue(chId, out List<VoiceUser>? users))
+                {
+                    removedUser = users.FirstOrDefault(u => u.UserId == userId);
+                    users.RemoveAll(u => u.UserId == userId);
+                }
             }
-
-            ConnectionToChannel.Remove(connectionId);
         }
     }
 
     public static List<VoiceUser> GetUsers(string channelId)
     {
-        return ChannelUsers.TryGetValue(channelId, out List<VoiceUser>? users) ? users : new List<VoiceUser>();
+        lock (Lock)
+        {
+            return ChannelUsers.TryGetValue(channelId, out List<VoiceUser>? users)
+                ? new List<VoiceUser>(users)
+                : new List<VoiceUser>();
+        }
     }
 }

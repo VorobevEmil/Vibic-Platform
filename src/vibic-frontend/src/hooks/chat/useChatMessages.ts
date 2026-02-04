@@ -70,7 +70,8 @@ export function useChatMessages({ serverId, channelId }: Props) {
         scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight + prevScrollTop;
       }, 10);
     } catch (error) {
-
+      console.error('Ошибка при загрузке сообщений:', error);
+      setIsLoadingMore(false);
     }
   };
 

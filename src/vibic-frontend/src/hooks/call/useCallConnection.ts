@@ -148,11 +148,11 @@ export default function useCallConnection({
                     });
                 },
 
-                ReceiveAnswer: async (answer: RTCSessionDescriptionInit) => {
+                ReceiveAnswer: async (_fromUserId: string, answer: RTCSessionDescriptionInit) => {
                     await peerConnection.current?.setRemoteDescription(new RTCSessionDescription(answer));
                 },
 
-                ReceiveIceCandidate: async (candidate: RTCIceCandidateInit) => {
+                ReceiveIceCandidate: async (_fromUserId: string, candidate: RTCIceCandidateInit) => {
                     if (peerConnection.current) {
                         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
                     }

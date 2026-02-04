@@ -37,7 +37,7 @@ public abstract class SharedDbContext : DbContext
     {
         IEnumerable<EntityEntry<IUpdatable>> updatableEntries = ChangeTracker
             .Entries<IUpdatable>()
-            .Where(e => e.State == EntityState.Deleted);
+            .Where(e => e.State == EntityState.Modified);
 
         foreach (EntityEntry<IUpdatable> updatedEntry in updatableEntries)
         {

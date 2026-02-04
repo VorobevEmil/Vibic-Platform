@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
@@ -9,12 +9,11 @@
     <ItemGroup>
         <ProjectReference Include="..\MediaService.Application\MediaService.Application.csproj"/>
         <ProjectReference Include="..\MediaService.Infrastructure\MediaService.Infrastructure.csproj"/>
-        <ProjectReference Include="..\MediaService.Application\MediaService.Application.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Vibic.Shared.Core" Version="9.0.0"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4"/>
+        <PackageReference Include="Vibic.Shared.Core" Version="10.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2"/>
     </ItemGroup>
 
 </Project>

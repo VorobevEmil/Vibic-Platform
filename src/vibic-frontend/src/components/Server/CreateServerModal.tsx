@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { X, UploadCloud } from 'lucide-react';
 
 interface CreateServerModalProps {
@@ -9,6 +9,17 @@ interface CreateServerModalProps {
 export default function CreateServerModal({ onClose, onCreate }: CreateServerModalProps) {
     const [serverName, setServerName] = useState('');
     const [iconFile, setIconFile] = useState<File | null>(null);
+
+    const iconPreviewUrl = useMemo(() => {
+        if (!iconFile) return null;
+        return URL.createObjectURL(iconFile);
+    }, [iconFile]);
+
+    useEffect(() => {
+        return () => {
+            if (iconPreviewUrl) URL.revokeObjectURL(iconPreviewUrl);
+        };
+    }, [iconPreviewUrl]);
 
     const handleSubmit = () => {
         if (!serverName.trim()) return;
@@ -30,8 +41,8 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
 
                 <div className="flex flex-col items-center mb-4">
                     <label htmlFor="iconUpload" className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1e1f22]">
-                        {iconFile ? (
-                            <img src={URL.createObjectURL(iconFile)} className="w-full h-full rounded-full object-cover" />
+                        {iconPreviewUrl ? (
+                            <img src={iconPreviewUrl} className="w-full h-full rounded-full object-cover" />
                         ) : (
                             <UploadCloud className="w-6 h-6 text-gray-400" />
                         )}

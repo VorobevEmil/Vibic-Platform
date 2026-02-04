@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Copy, Link2 } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import { invitesApi } from '../../api/invitesApi';
 
 interface InviteModalProps {

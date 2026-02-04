@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Vibic.Shared.Core.ExceptionHandlers;
+using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.Core.Providers;
 
 namespace Vibic.Shared.Core;
 
@@ -63,7 +65,11 @@ public static class DependencyInjection
         return services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                options.Events = events!;
+                if (events != null)
+                {
+                    options.Events = events;
+                }
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
@@ -83,4 +89,20 @@ public static class DependencyInjection
                 }
             });
     }
+
+    public static IServiceCollection AddUtcTimeProvider(this IServiceCollection services)
+    {
+        services.AddSingleton<IUtcTimeProvider, UtcTimeProvider>();
+        return services;
+    }
+
+    public static IServiceCollection AddVibicHealthChecks(
+        this IServiceCollection services,
+        Action<IHealthChecksBuilder>? configure = null)
+    {
+        IHealthChecksBuilder builder = services.AddHealthChecks();
+        configure?.Invoke(builder);
+        return services;
+    }
+
 }
