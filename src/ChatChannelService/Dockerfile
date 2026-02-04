@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
+ARG NUGET_GITHUB_TOKEN
+
 WORKDIR /src
 
 COPY ChatChannelService.sln ./
@@ -9,7 +11,9 @@ COPY src/ChatChannelService.Infrastructure/ChatChannelService.Infrastructure.csp
 COPY src/ChatChannelService.Shared/ChatChannelService.Shared.csproj ./src/ChatChannelService.Shared/
 COPY src/ChatChannelService.Web/ChatChannelService.Web.csproj ./src/ChatChannelService.Web/
 
-RUN dotnet restore src/ChatChannelService.Web/ChatChannelService.Web.csproj
+RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+    --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
+    && dotnet restore src/ChatChannelService.Web/ChatChannelService.Web.csproj
 
 COPY . .
 

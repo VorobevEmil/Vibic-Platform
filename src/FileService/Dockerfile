@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
+ARG NUGET_GITHUB_TOKEN
+
 WORKDIR /src
 
 COPY FileService.sln ./
@@ -8,7 +10,9 @@ COPY src/FileService.Application/FileService.Application.csproj ./src/FileServic
 COPY src/FileService.Infrastructure/FileService.Infrastructure.csproj ./src/FileService.Infrastructure/
 COPY src/FileService.Web/FileService.Web.csproj ./src/FileService.Web/
 
-RUN dotnet restore src/FileService.Web/FileService.Web.csproj
+RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+    --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
+    && dotnet restore src/FileService.Web/FileService.Web.csproj
 
 COPY . .
 

@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
+ARG NUGET_GITHUB_TOKEN
+
 WORKDIR /src
 
 COPY OAuthServer.sln ./
@@ -8,7 +10,9 @@ COPY src/OAuthServer.Core/OAuthServer.Core.csproj ./src/OAuthServer.Core/
 COPY src/OAuthServer.Infrastructure/OAuthServer.Infrastructure.csproj ./src/OAuthServer.Infrastructure/
 COPY src/OAuthServer.Web/OAuthServer.Web.csproj ./src/OAuthServer.Web/
 
-RUN dotnet restore src/OAuthServer.Web/OAuthServer.Web.csproj
+RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+    --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
+    && dotnet restore src/OAuthServer.Web/OAuthServer.Web.csproj
 
 COPY . .
 

@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
+ARG NUGET_GITHUB_TOKEN
+
 WORKDIR /src
 
 COPY MediaService.sln ./
@@ -8,7 +10,9 @@ COPY src/MediaService.Core/MediaService.Core.csproj ./src/MediaService.Core/
 COPY src/MediaService.Infrastructure/MediaService.Infrastructure.csproj ./src/MediaService.Infrastructure/
 COPY src/MediaService.Web/MediaService.Web.csproj ./src/MediaService.Web/
 
-RUN dotnet restore src/MediaService.Web/MediaService.Web.csproj
+RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+    --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
+    && dotnet restore src/MediaService.Web/MediaService.Web.csproj
 
 COPY . .
 

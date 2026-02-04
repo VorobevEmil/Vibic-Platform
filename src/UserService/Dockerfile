@@ -1,5 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 
+ARG NUGET_GITHUB_TOKEN
+
 WORKDIR /src
 
 COPY ./UserService.sln ./
@@ -8,7 +10,9 @@ COPY src/UserService.Core/UserService.Core.csproj ./src/UserService.Core/
 COPY src/UserService.Infrastructure/UserService.Infrastructure.csproj ./src/UserService.Infrastructure/
 COPY src/UserService.Web/UserService.Web.csproj ./src/UserService.Web/
 
-RUN dotnet restore src/UserService.Web/UserService.Web.csproj
+RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+    --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
+    && dotnet restore src/UserService.Web/UserService.Web.csproj
 
 COPY . .
 
