@@ -1,4 +1,5 @@
 import MessageResponse from '../../../types/MessageType';
+import { resolveAssetUrl } from '../../../api/httpClient';
 
 interface ChatMessageProps {
   messages: MessageResponse[];
@@ -16,7 +17,7 @@ export default function ChatMessages({ messages, typingUsername, messagesEndRef,
 
       {messages.map((msg) => (
         <div key={msg.id} className="flex items-start gap-3">
-          <img src={msg.senderAvatarUrl} className="w-8 h-8 rounded-full" />
+          <img src={resolveAssetUrl(msg.senderAvatarUrl)} className="w-8 h-8 rounded-full" />
           <div>
             <div className="text-sm font-semibold text-white">
               {msg.senderUsername}

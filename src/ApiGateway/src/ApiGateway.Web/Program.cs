@@ -14,6 +14,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 WebApplication app = builder.Build();
 {
     app.UseCors("accessPolicy");
+    app.UseWebSockets();
     await app.UseOcelot();
     app.Run();
 }

@@ -1,13 +1,21 @@
 using MediaService.Web.Models;
 using MediaService.Web.Models.Hub;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MediaService.Web.Hubs;
 
+[Authorize]
 public class CallHub : Hub
 {
     public override Task OnConnectedAsync()
     {
+        if (string.IsNullOrWhiteSpace(Context.UserIdentifier))
+        {
+            Context.Abort();
+            return Task.CompletedTask;
+        }
+
         string userId = Context.UserIdentifier!;
         CallConnectionRegistry.Register(userId, Context.ConnectionId);
 

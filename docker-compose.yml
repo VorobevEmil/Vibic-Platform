@@ -26,8 +26,10 @@ services:
     ports:
       - "7157:7157"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   chatchannelservice:
     image: chatchannelservice
@@ -39,8 +41,10 @@ services:
     ports:
       - "7138:7138"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./configs/appsettings.chatchannelservice.json:/app/appsettings.json:ro
 
@@ -54,8 +58,10 @@ services:
     ports:
       - "7205:7205"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./configs/appsettings.fileservice.json:/app/appsettings.json:ro
 
@@ -69,8 +75,10 @@ services:
     ports:
       - "7139:7139"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   oauthserver:
     image: oauthserver
@@ -82,8 +90,10 @@ services:
     ports:
       - "7154:7154"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./configs/appsettings.oauthserver.json:/app/appsettings.json:ro
 
@@ -97,8 +107,10 @@ services:
     ports:
       - "7155:7155"
     depends_on:
-      - postgres
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     volumes:
       - ./configs/appsettings.userservice.json:/app/appsettings.json:ro
 
@@ -113,6 +125,11 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-rabbitmq}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-rabbitmq}
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 2147483648
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
     volumes:
       - './volumes/rabbitmq_data:/bitnami/rabbitmq/mnesia'
 
@@ -140,6 +157,11 @@ services:
     volumes:
       - ./volumes/pgsql_data:/var/lib/postgresql/data
     command: [ "postgres", "-c", "log_statement=all" ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-postgres} -d ${DB_NAME:-vibic}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   minio:
     image: quay.io/minio/minio

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -93,7 +94,8 @@ public static class DependencyInjection
                     ValidAudience = authOptions.Jwt.Audience,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = key
+                    IssuerSigningKey = key,
+                    NameClaimType = ClaimTypes.NameIdentifier
                 };
 
                 if (!string.IsNullOrWhiteSpace(authOptions.Authority))
