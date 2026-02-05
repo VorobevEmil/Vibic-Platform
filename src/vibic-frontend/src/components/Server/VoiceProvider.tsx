@@ -11,6 +11,7 @@ interface Props {
 interface VoiceUser {
     userId: string;
     displayName: string;
+    avatarUrl?: string | null;
 }
 
 export default function VoiceProvider({ children }: Props) {
@@ -194,7 +195,7 @@ export default function VoiceProvider({ children }: Props) {
             }
         });
 
-        await callHubConnection.invoke('JoinVoiceChannel', channelId, selfUser?.id, selfUser?.displayName);
+        await callHubConnection.invoke('JoinVoiceChannel', channelId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl);
     };
 
     const leaveChannel = async () => {

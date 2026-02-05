@@ -43,9 +43,9 @@ public class ServersController(IMediator mediator) : AuthenticateControllerBase
 
     [HttpPost]
     [ProducesResponseType(typeof(ServerSummaryResponse), StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateServer(ServerRequest request)
+    public async Task<IActionResult> CreateServer([FromForm] ServerRequest request)
     {
-        CreateServerCommand command = new(request.Name);
+        CreateServerCommand command = new(request.Name, request.Icon);
 
         ServerSummaryDto serverSummary = await mediator.Send(command);
 

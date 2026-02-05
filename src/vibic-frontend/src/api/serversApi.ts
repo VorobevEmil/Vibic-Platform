@@ -1,4 +1,4 @@
-import {ServerFullResponse, ServerRequest, ServerSummaryResponse} from '../types/ServerType';
+import { ServerFullResponse, ServerSummaryResponse } from '../types/ServerType';
 import { http } from './httpClient';
 
 export const serversApi = {
@@ -6,6 +6,13 @@ export const serversApi = {
     http.get<ServerFullResponse>(`/servers/${id}`),
   getMyServers: () =>
     http.get<ServerSummaryResponse[]>('/servers/mine'),
-  createServer: (request: ServerRequest) =>
-    http.post<ServerSummaryResponse>('/servers', request)
+  createServer: (name: string, iconFile: File | null) => {
+    const formData = new FormData();
+    formData.append('name', name);
+    if (iconFile) formData.append('icon', iconFile);
+
+    return http.post<ServerSummaryResponse>('/servers', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  }
 };

@@ -26,4 +26,23 @@ public class FilesController(IMediator mediator) : ControllerBase
 
         return Created(string.Empty, uniqueFileName);
     }
+
+    [HttpGet("servers/{serverId}/{fileName}")]
+    public async Task<IActionResult> GetServerIcon(Guid serverId, string fileName)
+    {
+        GetFileQuery query = new(serverId, fileName, "servers");
+
+        Stream stream = await mediator.Send(query);
+
+        return File(stream, "image/jpeg");
+    }
+
+    [HttpPost("servers/{serverId}")]
+    public async Task<IActionResult> UploadServerIcon(Guid serverId, [FromForm] IFormFile file)
+    {
+        UploadFileCommand command = new(serverId, "servers", file);
+        string uniqueFileName = await mediator.Send(command);
+
+        return Created(string.Empty, uniqueFileName);
+    }
 }

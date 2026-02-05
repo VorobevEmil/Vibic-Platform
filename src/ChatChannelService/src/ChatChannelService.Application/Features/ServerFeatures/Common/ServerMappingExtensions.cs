@@ -6,9 +6,15 @@ public static class ServerMappingExtensions
 {
     public static ServerSummaryDto MapToServerSummaryDto(this Server server, Channel channel)
     {
+        string? iconUrl = server.IconUrl;
+        if (!string.IsNullOrWhiteSpace(iconUrl) && iconUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            iconUrl = null;
+        }
+
         return new ServerSummaryDto(
             server.Id, 
-            server.IconUrl, 
+            iconUrl, 
             server.Name, 
             channel.Id);
     }

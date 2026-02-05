@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react';
 export interface VoiceContextType {
     joinChannel: (channelId: string) => void;
     leaveChannel: () => void;
-    voiceUsers: { userId: string; displayName: string }[];
+    voiceUsers: { userId: string; displayName: string; avatarUrl?: string | null }[];
     currentChannelId: string | null;
 }
 

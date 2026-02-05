@@ -12,8 +12,8 @@ const frontBaseUrl = import.meta.env.VITE_FRONT_BASE_URL || window.location.orig
 export const resolveAssetUrl = (value?: string | null): string | undefined => {
   if (!value) return value ?? undefined;
 
-  // Absolute URLs (http/https) pass through unchanged.
-  if (/^https?:\/\//i.test(value)) return value;
+  // Absolute URLs (http/https/data) pass through unchanged.
+  if (/^(https?:|data:)/i.test(value)) return value;
 
   // Default avatars are served by the frontend.
   if (value.startsWith('/default/')) return `${frontBaseUrl}${value}`;
@@ -48,7 +48,11 @@ http.interceptors.response.use(
           break;
         case 401:
           console.warn('Unauthorized');
-          // Возможно, нужно редиректить на логин
+          if (!window.location.pathname.startsWith('/sign-in')
+              && !window.location.pathname.startsWith('/sign-up')) {
+            localStorage.removeItem('access_token');
+            window.location.href = '/sign-in';
+          }
           break;
         case 403:
           console.warn('Forbidden');

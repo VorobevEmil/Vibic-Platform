@@ -2,24 +2,19 @@ import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateServerModal from '../Server/CreateServerModal';
-import { ServerRequest, ServerSummaryResponse } from '../../types/ServerType';
+import { ServerSummaryResponse } from '../../types/ServerType';
 import { serversApi } from '../../api/serversApi';
+import { resolveAssetUrl } from '../../api/httpClient';
 
 
 export default function ServerSidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
 
-    const CreateServer = async (name: string, _iconFile: File | null) => {
+    const CreateServer = async (name: string, iconFile: File | null) => {
 
         try {
-
-            const serverRequest: ServerRequest =
-            {
-                name: name
-            }
-
-            const response = await serversApi.createServer(serverRequest);
+            const response = await serversApi.createServer(name, iconFile);
 
             setServers(prev => [...prev, response.data]);
         } catch (error) {
@@ -60,10 +55,10 @@ export default function ServerSidebar() {
                 <div key={server.id} className="group relative">
                     <Link
                         to={`/channels/${server.id}/${server.channelId}`}
-                        className="w-10 h-10 bg-indigo-500 rounded-2xl transition-all hover:rounded-3xl flex items-center justify-center"
+                        className="relative w-10 h-10 bg-indigo-500 rounded-2xl transition-all hover:rounded-3xl flex items-center justify-center overflow-hidden"
                     >
                         {server.iconUrl ? (
-                            <img src={server.iconUrl} alt={server.name} className="w-6 h-6 object-cover rounded-full" />
+                            <img src={resolveAssetUrl(server.iconUrl)} alt={server.name} className="absolute inset-0 w-full h-full object-cover object-center" />
                         ) : (
                             <span className="text-white font-bold">{server.name.charAt(0)}</span>
                         )}

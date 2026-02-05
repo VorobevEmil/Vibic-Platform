@@ -14,6 +14,7 @@ import { ServerChannelRequest } from '../../types/channels/ServerChannelType';
 import InviteModal from './InviteModal';
 import { ChannelType } from '../../types/enums/ChannelType';
 import { useVoice } from '../../context/VoiceContext';
+import { resolveAssetUrl } from '../../api/httpClient';
 
 interface ServerChannelListSidebarProps {
     serverName: string;
@@ -147,7 +148,20 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                                     {usersInChannel.length > 0 && (
                                         <div className="pl-8 space-y-1 text-xs text-gray-400">
                                             {usersInChannel.map((user) => (
-                                                <div key={user.userId}>👤 {user.displayName}</div>
+                                                <div key={user.userId} className="flex items-center gap-2">
+                                                    {user.avatarUrl ? (
+                                                        <img
+                                                            src={resolveAssetUrl(user.avatarUrl)}
+                                                            alt={user.displayName}
+                                                            className="w-4 h-4 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span className="w-4 h-4 rounded-full bg-[#3c3e45] text-[10px] flex items-center justify-center">
+                                                            {user.displayName.charAt(0)}
+                                                        </span>
+                                                    )}
+                                                    <span>{user.displayName}</span>
+                                                </div>
                                             ))}
                                         </div>
                                     )}

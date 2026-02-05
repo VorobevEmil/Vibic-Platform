@@ -31,6 +31,12 @@ public class GetServerInfoByInviteHandler : IRequestHandler<GetServerInfoByInvit
 
         Server server = invite.Server;
 
-        return new InviteInfoSummaryDto(server.Name, server.IconUrl);
+        string? iconUrl = server.IconUrl;
+        if (!string.IsNullOrWhiteSpace(iconUrl) && iconUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            iconUrl = null;
+        }
+
+        return new InviteInfoSummaryDto(server.Name, iconUrl);
     }
 }

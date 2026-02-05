@@ -1,5 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { X, UploadCloud } from 'lucide-react';
+import Cropper, { Area } from 'react-easy-crop';
+import getCroppedImg from '../../utils/cropImage';
 
 interface CreateServerModalProps {
     onClose: () => void;
@@ -9,21 +11,36 @@ interface CreateServerModalProps {
 export default function CreateServerModal({ onClose, onCreate }: CreateServerModalProps) {
     const [serverName, setServerName] = useState('');
     const [iconFile, setIconFile] = useState<File | null>(null);
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-    const iconPreviewUrl = useMemo(() => {
-        if (!iconFile) return null;
-        return URL.createObjectURL(iconFile);
-    }, [iconFile]);
+    const onCropComplete = useCallback((_: Area, area: Area) => {
+        setCroppedAreaPixels(area);
+    }, []);
 
-    useEffect(() => {
-        return () => {
-            if (iconPreviewUrl) URL.revokeObjectURL(iconPreviewUrl);
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            setImageSrc(reader.result as string);
+            setIconFile(null);
         };
-    }, [iconPreviewUrl]);
+        reader.readAsDataURL(file);
+    };
 
-    const handleSubmit = () => {
+    const handleCreate = async () => {
         if (!serverName.trim()) return;
-        onCreate(serverName, iconFile);
+        let finalIconFile = iconFile;
+        if (imageSrc && !iconFile && croppedAreaPixels) {
+            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+            finalIconFile = new File([croppedBlob], 'server-icon.jpg', { type: 'image/jpeg' });
+            setIconFile(finalIconFile);
+        }
+        onCreate(serverName, finalIconFile);
         onClose();
     };
 
@@ -40,20 +57,32 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
                 </p>
 
                 <div className="flex flex-col items-center mb-4">
-                    <label htmlFor="iconUpload" className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1e1f22]">
-                        {iconPreviewUrl ? (
-                            <img src={iconPreviewUrl} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                            <UploadCloud className="w-6 h-6 text-gray-400" />
-                        )}
-                    </label>
-                    <input
-                        type="file"
-                        id="iconUpload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => setIconFile(e.target.files?.[0] || null)}
-                    />
+                    {!imageSrc ? (
+                        <>
+                            <label htmlFor="iconUpload" className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1e1f22]">
+                                <UploadCloud className="w-6 h-6 text-gray-400" />
+                            </label>
+                            <input
+                                type="file"
+                                id="iconUpload"
+                                className="hidden"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                            />
+                        </>
+                    ) : (
+                        <div className="relative w-full h-64 bg-black">
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                aspect={1}
+                                onCropChange={setCrop}
+                                onZoomChange={setZoom}
+                                onCropComplete={onCropComplete}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <input
@@ -65,7 +94,7 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
                 />
 
                 <button
-                    onClick={handleSubmit}
+                    onClick={handleCreate}
                     className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-md transition"
                 >
                     Создать

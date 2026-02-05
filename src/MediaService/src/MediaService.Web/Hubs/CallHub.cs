@@ -38,12 +38,28 @@ public class CallHub : Hub
     }
 
 
-    public async Task JoinVoiceChannel(string channelId, string userId, string displayName)
+    public async Task JoinVoiceChannel(string channelId, string userId, string displayName, string? avatarUrl = null)
     {
+        string resolvedUserId = !string.IsNullOrWhiteSpace(userId)
+            ? userId
+            : Context.UserIdentifier ?? string.Empty;
+
+        string resolvedDisplayName = !string.IsNullOrWhiteSpace(displayName)
+            ? displayName
+            : (Context.User?.Identity?.Name ?? resolvedUserId);
+
+        if (string.IsNullOrWhiteSpace(resolvedUserId) || string.IsNullOrWhiteSpace(resolvedDisplayName))
+        {
+            Console.WriteLine("❌ JoinVoiceChannel: missing user data");
+            Context.Abort();
+            return;
+        }
+
         VoiceUser user = new()
         {
-            UserId = userId,
-            DisplayName = displayName
+            UserId = resolvedUserId,
+            DisplayName = resolvedDisplayName,
+            AvatarUrl = avatarUrl
         };
 
         VoiceChannelManager.AddUser(Context.ConnectionId, channelId, user);

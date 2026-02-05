@@ -26,4 +26,10 @@ public class Server : BaseEntity, IUpdatable, ISoftDeletable
     public DateTime? UpdatedAt { get; init; }
     public bool IsDeleted { get; init; }
     public DateTime? DeletedAt { get; init; }
+
+    public void SetIconUrl(string? iconUrl)
+    {
+        if (string.IsNullOrWhiteSpace(iconUrl)) return;
+        IconUrl = iconUrl;
+    }
 }
