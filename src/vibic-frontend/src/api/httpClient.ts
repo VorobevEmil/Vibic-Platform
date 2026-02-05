@@ -7,6 +7,21 @@ export const http = axios.create({
   withCredentials: false,
 });
 
+const frontBaseUrl = import.meta.env.VITE_FRONT_BASE_URL || window.location.origin;
+
+export const resolveAssetUrl = (value?: string | null): string | undefined => {
+  if (!value) return value ?? undefined;
+
+  // Absolute URLs (http/https) pass through unchanged.
+  if (/^https?:\/\//i.test(value)) return value;
+
+  // Default avatars are served by the frontend.
+  if (value.startsWith('/default/')) return `${frontBaseUrl}${value}`;
+
+  // Other relative paths should go через API.
+  return `${baseURL}${value}`;
+};
+
 http.interceptors.request
   .use((config) => {
     const token = localStorage.getItem('access_token');

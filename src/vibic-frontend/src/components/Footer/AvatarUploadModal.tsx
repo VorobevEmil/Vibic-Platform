@@ -4,7 +4,7 @@ import Cropper, { Area } from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
 
 interface Props {
-  currentAvatar: string;
+    currentAvatar: string | undefined;
   onClose: () => void;
   onSave: (file: File | null) => void;
 }

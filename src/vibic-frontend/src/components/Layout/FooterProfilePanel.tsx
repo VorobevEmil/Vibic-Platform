@@ -9,6 +9,7 @@ import {
 import { useAuthContext } from '../../context/AuthContext';
 import { useMedia } from '../../context/MediaContext';
 import UserProfileCard from '../Footer/UserProfileCard';
+import { resolveAssetUrl } from '../../api/httpClient';
 
 export default function FooterProfilePanel() {
   const { selfUser: user } = useAuthContext();
@@ -51,7 +52,7 @@ export default function FooterProfilePanel() {
           onClick={() => setShowProfile(true)}
         >
           <img
-            src={user.avatarUrl}
+            src={resolveAssetUrl(user.avatarUrl)}
             className="w-8 h-8 rounded-full"
             alt={user.username}
           />

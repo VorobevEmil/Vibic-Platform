@@ -5,6 +5,7 @@ import SearchUserOverlay from '../../SearchUserOverlay/SearchUserOverlay';
 import { useAuthContext } from '../../../context/AuthContext';
 import DirectChannelResponse from '../../../types/channels/DirectChannelType';
 import { useNavigate } from 'react-router-dom';
+import { resolveAssetUrl } from '../../../api/httpClient';
 
 
 export default function DirectChannelListSidebar() {
@@ -55,7 +56,7 @@ export default function DirectChannelListSidebar() {
                                 onClick={() => navigate(`/channels/@me/${channel.id}`)}
                             >
                                 <div className="flex items-center gap-2">
-                                    <img src={channelMember.avatarUrl}
+                                    <img src={resolveAssetUrl(channelMember.avatarUrl)}
                                         className="w-8 h-8 rounded-full"
                                         alt={channelMember.displayName}
                                     />

@@ -3,6 +3,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import AvatarUploadModal from './AvatarUploadModal';
 import { userProfilesApi } from '../../api/userProfilesApi';
+import { resolveAssetUrl } from '../../api/httpClient';
 
 interface Props {
     onClose: () => void;
@@ -32,7 +33,7 @@ export default function UserProfileCard({ onClose }: Props) {
 
             <div className="flex items-center gap-4">
                 <img
-                    src={user?.avatarUrl}
+                    src={resolveAssetUrl(user?.avatarUrl)}
                     onClick={() => setIsModalOpen(true)}
                     className="w-14 h-14 rounded-full border-2 border-white cursor-pointer hover:brightness-110"
                 />
@@ -61,7 +62,7 @@ export default function UserProfileCard({ onClose }: Props) {
 
             {isModalOpen && (
                 <AvatarUploadModal
-                    currentAvatar={user!.avatarUrl}
+                    currentAvatar={resolveAssetUrl(user!.avatarUrl)}
                     onClose={() => setIsModalOpen(false)}
                     onSave={async (file) => {
                         if (!file) return;

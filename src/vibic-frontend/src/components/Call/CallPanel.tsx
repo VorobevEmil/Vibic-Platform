@@ -3,6 +3,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import CallRequestType from '../../types/CallRequestType';
 import useCallConnection from '../../hooks/call/useCallConnection';
 import { useMedia } from '../../context/MediaContext';
+import { resolveAssetUrl } from '../../api/httpClient';
 
 interface CallPanelProps {
   onClose: () => void;
@@ -58,7 +59,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
           {!isCamOn && (
             <div className="absolute inset-0 flex items-center justify-center">
               <img
-                src={selfUser?.avatarUrl}
+                src={resolveAssetUrl(selfUser?.avatarUrl)}
                 alt="avatar"
                 className="w-20 h-20 rounded-full border-2 border-white"
               />
@@ -83,7 +84,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
           {!remoteStreamStarted && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1e1f22]">
               <img
-                src={remoteAvatarUrl}
+                src={resolveAssetUrl(remoteAvatarUrl)}
                 alt="user-avatar"
                 className="w-20 h-20 rounded-full border-2 border-white animate-pulse"
               />
@@ -96,7 +97,7 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
           {remoteStreamStarted && !isRemoteCamOn && (
             <div className="absolute inset-0 flex items-center justify-center">
               <img
-                src={remoteAvatarUrl}
+                src={resolveAssetUrl(remoteAvatarUrl)}
                 alt="avatar"
                 className="w-20 h-20 rounded-full border-2 border-white"
               />

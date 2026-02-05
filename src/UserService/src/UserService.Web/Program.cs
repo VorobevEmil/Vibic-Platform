@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using UserService.Application;
 using UserService.Infrastructure;
@@ -22,9 +23,18 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddRabbitMq();
     builder.Services.AddSignalR();
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor
+                                   | ForwardedHeaders.XForwardedHost
+                                   | ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
 }
 WebApplication app = builder.Build();
 {
+    app.UseForwardedHeaders();
     app.ApplyMigration<ApplicationDbContext>();
 
     if (app.Environment.IsDevelopment())

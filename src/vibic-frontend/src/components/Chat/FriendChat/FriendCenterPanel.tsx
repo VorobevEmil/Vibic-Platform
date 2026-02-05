@@ -3,6 +3,7 @@ import { friendsApi } from '../../../api/friendsApi';
 import UserProfileResponse from '../../../types/UserProfileType';
 import { useEffect, useState } from 'react';
 import { FriendRequestResponse } from '../../../types/FriendRequestType';
+import { resolveAssetUrl } from '../../../api/httpClient';
 
 
 type Tab = 'all' | 'online' | 'pending' | 'incoming' | 'add';
@@ -124,7 +125,7 @@ export default function FriendCenterPanel() {
                 {friends.map((friend) => (
                     <div key={friend.id} className="flex items-center justify-between p-3 bg-[#2b2d31] rounded-md">
                         <div className="flex items-center gap-3">
-                            <img src={friend.avatarUrl} alt={friend.displayName} className="w-10 h-10 rounded-full" />
+                            <img src={resolveAssetUrl(friend.avatarUrl)} alt={friend.displayName} className="w-10 h-10 rounded-full" />
                             <div className="text-white">{friend.displayName}</div>
                         </div>
                         <div className="flex items-center gap-2">

@@ -5,6 +5,7 @@ import useDirectChannel from "../../hooks/chat/useDirectChannel";
 import { useAuthContext } from "../../context/AuthContext";
 import { Phone, Settings, Video } from "lucide-react";
 import CallPanel from "./CallPanel";
+import { resolveAssetUrl } from "../../api/httpClient";
 
 interface Props {
     channelId: string;
@@ -29,9 +30,9 @@ export default function CallHeaderHandler({ channelId }: Props) {
         setCallRequest({
             peerUserId: peerUser.id,
             peerUsername: peerUser.username,
-            peerAvatarUrl: peerUser.avatarUrl,
+            peerAvatarUrl: resolveAssetUrl(peerUser.avatarUrl) ?? peerUser.avatarUrl,
             initiatorUsername: selfUser.username,
-            initiatorAvatarUrl: selfUser.avatarUrl,
+            initiatorAvatarUrl: resolveAssetUrl(selfUser.avatarUrl) ?? selfUser.avatarUrl,
             channelId,
             isInitiator: true,
             isCamOn: startWithCam,
@@ -54,7 +55,7 @@ export default function CallHeaderHandler({ channelId }: Props) {
                 <div className="flex items-center gap-3">
                     {peerUser && (
                         <>
-                            <img src={peerUser.avatarUrl} className="w-8 h-8 rounded-full" />
+                            <img src={resolveAssetUrl(peerUser.avatarUrl)} className="w-8 h-8 rounded-full" />
                             <span className="font-bold text-white text-lg">{peerUser.displayName}</span>
                         </>
                     )}

@@ -66,7 +66,7 @@ namespace OAuthServer.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("OAuthServer.Core.Entities.UserProvider", b =>
@@ -91,7 +91,7 @@ namespace OAuthServer.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserProvider");
+                    b.ToTable("UserProvider", (string)null);
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication", b =>
