@@ -10,6 +10,7 @@ using Vibic.Shared.EF.Repositories;
 
 namespace Vibic.Shared.EF;
 
+
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationDbContext<TDbContext>(
@@ -67,6 +68,13 @@ public static class DependencyInjection
         db.Database.Migrate();
 
         return app;
+    }
+
+    public static IServiceCollection AddOutboxRepository<TDbContext>(this IServiceCollection services)
+        where TDbContext : DbContext
+    {
+        services.AddScoped<IOutboxRepository, OutboxRepository<TDbContext>>();
+        return services;
     }
 
     private static string[] GetSchemas(string? searchPath)

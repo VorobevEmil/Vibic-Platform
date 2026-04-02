@@ -3,15 +3,22 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Vibic.Shared.Core.ExceptionHandlers;
 using Vibic.Shared.Core.Interfaces;
+using Vibic.Shared.Core.Middleware;
 using Vibic.Shared.Core.Providers;
+using Vibic.Shared.Core.Services;
+using Vibic.Shared.Core.Telemetry;
 using AuthOptions = Vibic.Shared.Core.Options.AuthenticationOptions;
 using AuthOptionsValidator = Vibic.Shared.Core.Options.AuthenticationOptionsValidator;
 
@@ -109,6 +116,54 @@ public static class DependencyInjection
     public static IServiceCollection AddUtcTimeProvider(this IServiceCollection services)
     {
         services.AddSingleton<IUtcTimeProvider, UtcTimeProvider>();
+        return services;
+    }
+
+    public static IServiceCollection AddCorrelationId(this IServiceCollection services)
+    {
+        services.AddScoped<ICorrelationIdAccessor, CorrelationIdAccessor>();
+        services.AddTransient<CorrelationIdForwardingHandler>();
+        return services;
+    }
+
+    public static IApplicationBuilder UseCorrelationId(this IApplicationBuilder app)
+    {
+        app.UseMiddleware<CorrelationIdMiddleware>();
+        return app;
+    }
+
+    public static IServiceCollection AddVibicTelemetry(this IServiceCollection services)
+    {
+        services.AddOptionsWithValidateAndBind<TelemetryOptions, TelemetryOptionsValidator>();
+
+        using ServiceProvider sp = services.BuildServiceProvider();
+        TelemetryOptions options = sp.GetRequiredService<IOptions<TelemetryOptions>>().Value;
+
+        ResourceBuilder resource = ResourceBuilder.CreateDefault().AddService(options.ServiceName);
+
+        services.AddOpenTelemetry()
+            .WithTracing(builder =>
+            {
+                builder
+                    .SetResourceBuilder(resource)
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation();
+
+                if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
+                    builder.AddOtlpExporter(o => o.Endpoint = new Uri(options.OtlpEndpoint));
+            })
+            .WithMetrics(builder =>
+            {
+                builder
+                    .SetResourceBuilder(resource)
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddRuntimeInstrumentation();
+
+                if (!string.IsNullOrWhiteSpace(options.OtlpEndpoint))
+                    builder.AddOtlpExporter(o => o.Endpoint = new Uri(options.OtlpEndpoint));
+            });
+
         return services;
     }
 

@@ -28,11 +28,13 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         }
     });
     builder.Services.AddAuthorization();
+    builder.Services.AddVibicTelemetry();
+    builder.Services.AddCorrelationId();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddRabbitMq();
+    builder.Host.AddVibicMessaging();
     builder.Services.AddSignalR();
 }
 WebApplication app = builder.Build();
@@ -51,6 +53,7 @@ WebApplication app = builder.Build();
         .AllowAnyHeader()
         .AllowCredentials());
 
+    app.UseCorrelationId();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();

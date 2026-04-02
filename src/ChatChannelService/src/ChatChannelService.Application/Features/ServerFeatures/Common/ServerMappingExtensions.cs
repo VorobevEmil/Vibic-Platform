@@ -24,7 +24,12 @@ public static class ServerMappingExtensions
         List<ServerChannelDto> serverChannels = server.Channels
             .ConvertAll(c => new ServerChannelDto(c.Id, c.Name!, c.ChannelType, c.IsPublic));
 
+        string? iconUrl = server.IconUrl;
+        if (!string.IsNullOrWhiteSpace(iconUrl) && iconUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            iconUrl = null;
+        }
 
-        return new ServerFullDto(server.Id, server.Name, serverChannels);
+        return new ServerFullDto(server.Id, server.Name, iconUrl, serverChannels);
     }
 }

@@ -1,19 +1,19 @@
-using MassTransit;
 using MediatR;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
 using Vibic.Shared.EF.Interfaces;
 using Vibic.Shared.Messaging.Contracts.Users;
+using Wolverine;
 
 namespace UserService.Application.Features.UserProfileFeatures.Commands;
 
-public sealed record CreateUserProfileCommand(Guid UserId, string DisplayName,  string Username, string Email) : IRequest;
+public sealed record CreateUserProfileCommand(Guid UserId, string DisplayName, string Username, string Email) : IRequest;
 
 public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand>
 {
     private readonly IUserProfileRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IBus _bus;
+    private readonly IMessageBus _bus;
 
     private static readonly List<string> DefaultAvatarUrls =
     [
@@ -25,7 +25,7 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
     public CreateUserProfileHandler(
         IUserProfileRepository repository,
         IUnitOfWork unitOfWork,
-        IBus bus)
+        IMessageBus bus)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
@@ -45,6 +45,6 @@ public class CreateUserProfileHandler : IRequestHandler<CreateUserProfileCommand
         await _repository.AddAsync(profile, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _bus.Publish(new CreateUserChatEvent(request.UserId, request.DisplayName, request.Username, avatarUrl), cancellationToken);
+        await _bus.PublishAsync(new CreateUserChatEvent(request.UserId, request.DisplayName, request.Username, avatarUrl));
     }
 }

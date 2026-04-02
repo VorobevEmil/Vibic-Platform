@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <Version>10.0.0</Version>
+        <Version>10.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,12 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MassTransit" Version="8.5.7" />
-        <PackageReference Include="MassTransit.RabbitMQ" Version="8.5.7" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="../../Vibic.Shared.Core/Vibic.Shared.Core/Vibic.Shared.Core.csproj"/>
+        <PackageReference Include="WolverineFx" Version="5.27.0" />
+        <PackageReference Include="WolverineFx.RabbitMQ" Version="5.27.0" />
+        <PackageReference Include="Vibic.Shared.Core" Version="10.0.1" />
+        <PackageReference Include="Vibic.Shared.EF" Version="10.0.1" />
     </ItemGroup>
 
 </Project>

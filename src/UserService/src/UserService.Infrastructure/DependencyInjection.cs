@@ -16,6 +16,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplicationDbContext<ApplicationDbContext>();
+        services.AddOutboxRepository<ApplicationDbContext>();
         services.AddRepositories();
         services.AddHttpClients(configuration);
         return services;

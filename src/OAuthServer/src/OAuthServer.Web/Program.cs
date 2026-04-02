@@ -16,12 +16,15 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddExceptionHandlers();
     builder.Services.AddVibicAuthentication();
     builder.Services.AddAuthorization();
+    builder.Services.AddVibicTelemetry();
+    builder.Services.AddCorrelationId();
     builder.Services.AddOpenIdDictServer();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddRabbitMq();
+    builder.Services.AddOutboxPublisher();
+    builder.Host.AddVibicMessaging();
     builder.Services.AddCors();
 }
 WebApplication app = builder.Build();
@@ -41,6 +44,7 @@ WebApplication app = builder.Build();
         .AllowCredentials());
 
     app.UseRouting();
+    app.UseCorrelationId();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();

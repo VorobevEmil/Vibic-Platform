@@ -17,11 +17,14 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddExceptionHandlers();
     builder.Services.AddAuthorization();
     builder.Services.AddVibicAuthentication();
+    builder.Services.AddVibicTelemetry();
+    builder.Services.AddCorrelationId();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
-    builder.Services.AddRabbitMq();
+    builder.Services.AddOutboxPublisher();
+    builder.Host.AddVibicMessaging();
     builder.Services.AddSignalR();
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
@@ -49,7 +52,7 @@ WebApplication app = builder.Build();
         .AllowAnyHeader()
         .AllowCredentials());
 
-
+    app.UseCorrelationId();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();

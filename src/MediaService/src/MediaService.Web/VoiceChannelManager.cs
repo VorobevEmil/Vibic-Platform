@@ -8,10 +8,11 @@ public static class VoiceChannelManager
     private static readonly ConcurrentDictionary<string, List<VoiceUser>> ChannelUsers = new();
 
     private static readonly ConcurrentDictionary<string, string> ConnectionToChannel = new();
+    private static readonly ConcurrentDictionary<string, string> ConnectionToServer = new();
 
     private static readonly object Lock = new();
 
-    public static void AddUser(string connectionId, string channelId, VoiceUser user)
+    public static void AddUser(string connectionId, string channelId, string serverId, VoiceUser user)
     {
         lock (Lock)
         {
@@ -21,12 +22,14 @@ public static class VoiceChannelManager
         }
 
         ConnectionToChannel[connectionId] = channelId;
+        ConnectionToServer[connectionId] = serverId;
     }
 
-    public static void RemoveUser(string connectionId, string userId, out string? channelId, out VoiceUser? removedUser)
+    public static void RemoveUser(string connectionId, string userId, out string? channelId, out string? serverId, out VoiceUser? removedUser)
     {
         removedUser = null;
         channelId = null;
+        serverId = null;
 
         if (ConnectionToChannel.TryRemove(connectionId, out string? chId))
         {
@@ -40,6 +43,11 @@ public static class VoiceChannelManager
                 }
             }
         }
+
+        if (ConnectionToServer.TryRemove(connectionId, out string? srvId))
+        {
+            serverId = srvId;
+        }
     }
 
     public static List<VoiceUser> GetUsers(string channelId)
@@ -50,5 +58,26 @@ public static class VoiceChannelManager
                 ? new List<VoiceUser>(users)
                 : new List<VoiceUser>();
         }
+    }
+
+    public static Dictionary<string, List<VoiceUser>> GetUsersForChannels(IEnumerable<string> channelIds)
+    {
+        Dictionary<string, List<VoiceUser>> result = new();
+        lock (Lock)
+        {
+            foreach (string channelId in channelIds)
+            {
+                if (ChannelUsers.TryGetValue(channelId, out List<VoiceUser>? users))
+                {
+                    result[channelId] = new List<VoiceUser>(users);
+                }
+                else
+                {
+                    result[channelId] = new List<VoiceUser>();
+                }
+            }
+        }
+
+        return result;
     }
 }

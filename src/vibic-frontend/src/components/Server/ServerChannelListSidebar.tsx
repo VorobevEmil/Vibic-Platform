@@ -31,7 +31,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
 
     const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-    const { joinChannel, voiceUsers, currentChannelId } = useVoice();
+    const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId } = useVoice();
 
     const textChannels = channels?.filter((c) => c.channelType === ChannelType.Server);
     const voiceChannels = channels?.filter((c) => c.channelType === ChannelType.Voice);
@@ -130,12 +130,13 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 {voiceOpen && (
                     <div className="space-y-1 mt-1">
                         {voiceChannels.map((channel) => {
-                            const usersInChannel = currentChannelId === channel.id ? voiceUsers : [];
+                            const usersInChannel = voiceUsersByChannel[channel.id]
+                                ?? (currentChannelId === channel.id ? voiceUsers : []);
 
                             return (
                                 <div key={channel.id}>
                                     <div
-                                        onClick={async () => await joinChannel(channel.id)}
+                                        onClick={async () => await joinChannel(channel.id, serverId)}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors cursor-pointer
                                             ${channelId === channel.id
                                                 ? 'bg-[#404249] text-white'

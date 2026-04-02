@@ -18,6 +18,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         }
     });
     builder.Services.AddAuthorization();
+    builder.Services.AddVibicTelemetry();
+    builder.Services.AddCorrelationId();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddHttpContextAccessor();
@@ -32,6 +34,7 @@ WebApplication app = builder.Build();
         .AllowAnyHeader()
         .AllowCredentials());
 
+    app.UseCorrelationId();
     app.UseExceptionHandler();
     app.UseAuthentication();
     app.UseAuthorization();

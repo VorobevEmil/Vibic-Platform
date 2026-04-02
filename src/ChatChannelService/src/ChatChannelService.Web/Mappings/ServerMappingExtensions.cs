@@ -23,6 +23,7 @@ public static class ServerMappingExtensions
         {
             Id = dto.Id,
             Name = dto.Name,
+            IconUrl = dto.IconUrl,
             Channels = dto.Channels
                 .ConvertAll(sc => sc.MapToServerChannelResponse())
         };

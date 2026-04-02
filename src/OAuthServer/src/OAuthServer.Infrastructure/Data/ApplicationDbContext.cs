@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OAuthServer.Core.Entities;
 using OpenIddict.EntityFrameworkCore.Models;
-using Vibic.Shared.Core;
 using Vibic.Shared.EF;
+using Vibic.Shared.EF.Entities;
 
 namespace OAuthServer.Infrastructure.Data;
 
@@ -24,6 +22,7 @@ public class ApplicationDbContext : SharedDbContext
     public DbSet<OpenIddictEntityFrameworkCoreToken> OpenIddictTokens => Set<OpenIddictEntityFrameworkCoreToken>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserProvider> UserProvider => Set<UserProvider>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

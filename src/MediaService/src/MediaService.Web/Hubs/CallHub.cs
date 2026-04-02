@@ -29,16 +29,35 @@ public class CallHub : Hub
         string userId = Context.UserIdentifier!;
         CallConnectionRegistry.Remove(userId);
 
-        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out VoiceUser? user);
+        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out string? serverId, out VoiceUser? user);
 
         if (channelId != null && user != null)
         {
             await Clients.Group(channelId).SendAsync("UserLeftVoice", user.UserId);
+            if (!string.IsNullOrWhiteSpace(serverId))
+            {
+                await Clients.Group($"server:{serverId}").SendAsync("VoiceChannelUserLeft", channelId, user.UserId);
+            }
         }
     }
 
 
-    public async Task JoinVoiceChannel(string channelId, string userId, string displayName, string? avatarUrl = null)
+    public async Task JoinServer(string serverId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"server:{serverId}");
+    }
+
+    public async Task LeaveServer(string serverId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"server:{serverId}");
+    }
+
+    public Dictionary<string, List<VoiceUser>> GetVoiceUsers(string[] channelIds)
+    {
+        return VoiceChannelManager.GetUsersForChannels(channelIds);
+    }
+
+    public async Task JoinVoiceChannel(string channelId, string serverId, string userId, string displayName, string? avatarUrl = null)
     {
         string resolvedUserId = !string.IsNullOrWhiteSpace(userId)
             ? userId
@@ -62,7 +81,7 @@ public class CallHub : Hub
             AvatarUrl = avatarUrl
         };
 
-        VoiceChannelManager.AddUser(Context.ConnectionId, channelId, user);
+        VoiceChannelManager.AddUser(Context.ConnectionId, channelId, serverId, user);
         await Groups.AddToGroupAsync(Context.ConnectionId, channelId);
 
         // Отправить новому участнику текущих пользователей
@@ -71,12 +90,13 @@ public class CallHub : Hub
 
         // Уведомить остальных
         await Clients.OthersInGroup(channelId).SendAsync("UserJoinedVoice", user);
+        await Clients.Group($"server:{serverId}").SendAsync("VoiceChannelUserJoined", channelId, user);
     }
 
     public async Task LeaveVoiceChannel()
     {
         string userId = Context.UserIdentifier!;
-        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out VoiceUser? user);
+        VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out string? serverId, out VoiceUser? user);
 
         if (channelId != null)
         {
@@ -85,6 +105,10 @@ public class CallHub : Hub
             if (user != null)
             {
                 await Clients.Group(channelId).SendAsync("UserLeftVoice", user.UserId);
+                if (!string.IsNullOrWhiteSpace(serverId))
+                {
+                    await Clients.Group($"server:{serverId}").SendAsync("VoiceChannelUserLeft", channelId, user.UserId);
+                }
             }
         }
     }

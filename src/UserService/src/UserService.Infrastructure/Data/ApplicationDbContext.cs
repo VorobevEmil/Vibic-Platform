@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.Core.Entities;
 using Vibic.Shared.EF;
+using Vibic.Shared.EF.Entities;
 
 namespace UserService.Infrastructure.Data;
 
@@ -13,4 +14,5 @@ public class ApplicationDbContext : SharedDbContext
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
     public DbSet<FriendRequest> FriendRequests => Set<FriendRequest>();
     public DbSet<UserFriend> UserFriends => Set<UserFriend>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 }

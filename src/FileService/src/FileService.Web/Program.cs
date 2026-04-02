@@ -10,6 +10,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
         .AddInfrastructure(builder.Configuration);
 
     builder.Services.AddExceptionHandlers();
+    builder.Services.AddVibicTelemetry();
+    builder.Services.AddCorrelationId();
     builder.Services.AddControllersConfiguration();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
@@ -22,6 +24,7 @@ WebApplication app = builder.Build();
         app.MapScalarApiReference();
     }
 
+    app.UseCorrelationId();
     app.UseExceptionHandler();
     app.MapControllers();
 

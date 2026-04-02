@@ -1,4 +1,3 @@
-using MassTransit;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using UserService.Application.Helpers;
@@ -8,6 +7,7 @@ using UserService.Core.Entities;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.EF.Interfaces;
 using Vibic.Shared.Messaging.Contracts.Users;
+using Wolverine;
 
 namespace UserService.Application.Features.UserProfileFeatures.Commands;
 
@@ -28,14 +28,14 @@ public class UpdateUserAvatarHandler : IRequestHandler<UpdateUserAvatarCommand, 
     private readonly IUserProfileRepository _userProfileRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IBus _bus;
+    private readonly IMessageBus _bus;
 
     public UpdateUserAvatarHandler(
         IFileStorageClient fileStorageClient,
         IUserProfileRepository userProfileRepository,
         IUnitOfWork unitOfWork,
         IHttpContextAccessor httpContextAccessor,
-        IBus bus)
+        IMessageBus bus)
     {
         _fileStorageClient = fileStorageClient;
         _userProfileRepository = userProfileRepository;
@@ -64,12 +64,12 @@ public class UpdateUserAvatarHandler : IRequestHandler<UpdateUserAvatarCommand, 
         string fileName = request.FormFile.FileName;
 
         string avatarPath = await _fileStorageClient.UploadAvatarAsync(userId, stream, fileName);
-        
+
         string avatarUrl = $"/user-profiles/avatar/{avatarPath}";
 
         userProfile.UpdateAvatarUrl(avatarUrl);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        await _bus.Publish(new UpdateUserAvatarEvent(userId, avatarUrl), cancellationToken);
+        await _bus.PublishAsync(new UpdateUserAvatarEvent(userId, avatarUrl));
 
         avatarUrl = httpContext.Request.GetAbsoluteUrl(avatarUrl);
 

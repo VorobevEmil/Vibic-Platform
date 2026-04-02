@@ -1,10 +1,10 @@
-using MassTransit;
 using MediatR;
 using OAuthServer.Application.Repositories;
 using OAuthServer.Core.Entities;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.EF.Interfaces;
 using Vibic.Shared.Messaging.Contracts.Users;
+using Wolverine;
 
 namespace OAuthServer.Application.Features.AuthFeatures.Commands;
 
@@ -14,12 +14,12 @@ public class SignUpHandler : IRequestHandler<SignUpCommand>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IBus _bus;
+    private readonly IMessageBus _bus;
 
     public SignUpHandler(
         IUserRepository userRepository,
         IUnitOfWork unitOfWork,
-        IBus bus)
+        IMessageBus bus)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
@@ -40,11 +40,11 @@ public class SignUpHandler : IRequestHandler<SignUpCommand>
         await _userRepository.AddAsync(user, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _bus.Publish(new CreateUserProfileEvent(
+        await _bus.PublishAsync(new CreateUserProfileEvent(
             user.Id,
             command.DisplayName,
             user.Username,
             user.Email
-        ), cancellationToken);
+        ));
     }
 }

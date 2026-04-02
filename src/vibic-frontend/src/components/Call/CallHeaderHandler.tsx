@@ -5,6 +5,7 @@ import useDirectChannel from "../../hooks/chat/useDirectChannel";
 import { useAuthContext } from "../../context/AuthContext";
 import { Phone, Settings, Video } from "lucide-react";
 import CallPanel from "./CallPanel";
+import { useCallContext } from "../../context/CallContext";
 import { resolveAssetUrl } from "../../api/httpClient";
 
 interface Props {
@@ -18,6 +19,7 @@ export default function CallHeaderHandler({ channelId }: Props) {
     const { selfUser } = useAuthContext();
     const [isCalling, setIsCalling] = useState(false);
     const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
+    const { setCallActive } = useCallContext();
     const peerUser = useDirectChannel(
         {
             channelId: channelId,
@@ -48,6 +50,10 @@ export default function CallHeaderHandler({ channelId }: Props) {
             navigate(location.pathname, { replace: true, state: {} });
         }
     }, [state]);
+
+    useEffect(() => {
+        setCallActive(isCalling);
+    }, [isCalling, setCallActive]);
 
     return (
         <div>

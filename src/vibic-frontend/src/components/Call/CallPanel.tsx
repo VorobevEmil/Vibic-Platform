@@ -4,6 +4,8 @@ import CallRequestType from '../../types/CallRequestType';
 import useCallConnection from '../../hooks/call/useCallConnection';
 import { useMedia } from '../../context/MediaContext';
 import { resolveAssetUrl } from '../../api/httpClient';
+import { useEffect } from 'react';
+import { useCallContext } from '../../context/CallContext';
 
 interface CallPanelProps {
   onClose: () => void;
@@ -11,6 +13,7 @@ interface CallPanelProps {
 }
 
 export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
+  const { registerEndCall } = useCallContext();
   const { selfUser } = useAuthContext();
 
   const {
@@ -37,6 +40,11 @@ export default function CallPanel({ onClose, callRequest }: CallPanelProps) {
   const remoteAvatarUrl = callRequest.isInitiator
     ? callRequest.peerAvatarUrl
     : callRequest.initiatorAvatarUrl;
+
+  useEffect(() => {
+    registerEndCall(() => closeCall(true));
+    return () => registerEndCall(null);
+  }, [closeCall, registerEndCall]);
 
   return (
     <div className="w-full h-1/2 bg-black text-white flex flex-col justify-center items-center relative px-4 py-2">

@@ -5,15 +5,20 @@ import {
   MicOff,
   Headphones,
   HeadphoneOff,
+  PhoneOff,
 } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import { useMedia } from '../../context/MediaContext';
 import UserProfileCard from '../Footer/UserProfileCard';
 import { resolveAssetUrl } from '../../api/httpClient';
+import { useVoice } from '../../context/VoiceContext';
+import { useCallContext } from '../../context/CallContext';
 
 export default function FooterProfilePanel() {
   const { selfUser: user } = useAuthContext();
   const { isMicOn, isHeadphonesOn, setIsMicOn, setIsHeadphonesOn } = useMedia();
+  const { currentChannelId, leaveChannel } = useVoice();
+  const { isCallActive, endCall } = useCallContext();
   const [showProfile, setShowProfile] = useState(false);
 
   if (!user) {
@@ -65,6 +70,15 @@ export default function FooterProfilePanel() {
         </div>
 
         <div className="flex items-center gap-3">
+          {(isCallActive || currentChannelId) && (
+            <button
+              onClick={() => (isCallActive ? endCall() : leaveChannel())}
+              className="p-2 bg-[#2b2d31] rounded-full hover:bg-[#404249] border border-[#3a3c42]"
+              title="Отключиться"
+            >
+              <PhoneOff className="w-5 h-5 text-gray-200" />
+            </button>
+          )}
           <button onClick={() => setIsMicOn((prev) => !prev)}>
             {isMicOn ? (
               <Mic className="w-5 h-5 text-gray-400 hover:text-white" />

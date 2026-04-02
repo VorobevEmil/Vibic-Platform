@@ -18,8 +18,34 @@ export default function VoiceProvider({ children }: Props) {
     const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
     const streamRef = useRef<MediaStream | null>(null);
     const [voiceUsers, setVoiceUsers] = useState<VoiceUser[]>([]);
+    const [voiceUsersByChannel, setVoiceUsersByChannel] = useState<Record<string, VoiceUser[]>>({});
     const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
     const { selfUser } = useAuthContext();
+    const currentServerRef = useRef<string | null>(null);
+    const voiceChannelIdsRef = useRef<string[]>([]);
+    const lastJoinKeyRef = useRef<string | null>(null);
+
+    const ensureConnected = async () => {
+        if (callHubConnection.state === 'Connected') return;
+
+        if (callHubConnection.state === 'Disconnected') {
+            await callHubConnection.start();
+            return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            const startedAt = Date.now();
+            const timer = setInterval(() => {
+                if (callHubConnection.state === 'Connected') {
+                    clearInterval(timer);
+                    resolve();
+                } else if (Date.now() - startedAt > 5000) {
+                    clearInterval(timer);
+                    reject(new Error('CallHub connection timeout'));
+                }
+            }, 100);
+        });
+    };
 
     const createPeerConnection = (remoteUserId: string): RTCPeerConnection => {
         const pc = new RTCPeerConnection(rtcConfiguration);
@@ -59,20 +85,19 @@ export default function VoiceProvider({ children }: Props) {
         return pc;
     };
 
-    const joinChannel = async (channelId: string) => {
+    const joinChannel = async (channelId: string, serverId: string) => {
         if (currentChannelId === channelId) return;
 
         await leaveChannel();
         setCurrentChannelId(channelId);
+        currentServerRef.current = serverId;
 
         if (!streamRef.current) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
         }
 
-        if (callHubConnection.state === 'Disconnected') {
-            await callHubConnection.start();
-        }
+        await ensureConnected();
 
         callHubConnection.off('VoiceChannelUsers');
         callHubConnection.off('UserJoinedVoice');
@@ -195,7 +220,42 @@ export default function VoiceProvider({ children }: Props) {
             }
         });
 
-        await callHubConnection.invoke('JoinVoiceChannel', channelId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl);
+        await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl);
+    };
+
+    const joinServer = async (serverId: string, voiceChannelIds: string[]) => {
+        const joinKey = `${serverId}|${voiceChannelIds.join(',')}`;
+        if (lastJoinKeyRef.current === joinKey) {
+            return;
+        }
+
+        try {
+            await ensureConnected();
+        } catch (err) {
+            console.error('❌ Ошибка подключения к CallHub:', err);
+            return;
+        }
+
+        currentServerRef.current = serverId;
+        voiceChannelIdsRef.current = voiceChannelIds;
+        lastJoinKeyRef.current = joinKey;
+
+        await callHubConnection.invoke('JoinServer', serverId);
+
+        if (voiceChannelIds.length > 0) {
+            const data = await callHubConnection.invoke<Record<string, VoiceUser[]>>('GetVoiceUsers', voiceChannelIds);
+            setVoiceUsersByChannel(data);
+        }
+    };
+
+    const leaveServer = async (serverId: string) => {
+        await callHubConnection.invoke('LeaveServer', serverId);
+        if (currentServerRef.current === serverId) {
+            currentServerRef.current = null;
+        }
+        voiceChannelIdsRef.current = [];
+        lastJoinKeyRef.current = null;
+        setVoiceUsersByChannel({});
     };
 
     const leaveChannel = async () => {
@@ -228,8 +288,60 @@ export default function VoiceProvider({ children }: Props) {
         };
     }, []);
 
+    useEffect(() => {
+        const handleReconnected = async () => {
+            if (!currentServerRef.current) return;
+
+            try {
+                await callHubConnection.invoke('JoinServer', currentServerRef.current);
+                if (voiceChannelIdsRef.current.length > 0) {
+                    const data = await callHubConnection.invoke<Record<string, VoiceUser[]>>(
+                        'GetVoiceUsers',
+                        voiceChannelIdsRef.current
+                    );
+                    setVoiceUsersByChannel(data);
+                }
+            } catch (err) {
+                console.error('❌ Ошибка при переподключении к CallHub:', err);
+            }
+        };
+
+        callHubConnection.onreconnected(handleReconnected);
+
+        return () => {
+            callHubConnection.off('reconnected', handleReconnected);
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleUserJoined = (channelId: string, user: VoiceUser) => {
+            setVoiceUsersByChannel((prev) => {
+                const current = prev[channelId] ?? [];
+                const next = [...current.filter(u => u.userId !== user.userId), user];
+                return { ...prev, [channelId]: next };
+            });
+        };
+
+        const handleUserLeft = (channelId: string, userId: string) => {
+            setVoiceUsersByChannel((prev) => {
+                const current = prev[channelId] ?? [];
+                return { ...prev, [channelId]: current.filter(u => u.userId !== userId) };
+            });
+        };
+
+        callHubConnection.off('VoiceChannelUserJoined');
+        callHubConnection.off('VoiceChannelUserLeft');
+        callHubConnection.on('VoiceChannelUserJoined', handleUserJoined);
+        callHubConnection.on('VoiceChannelUserLeft', handleUserLeft);
+
+        return () => {
+            callHubConnection.off('VoiceChannelUserJoined');
+            callHubConnection.off('VoiceChannelUserLeft');
+        };
+    }, []);
+
     return (
-        <VoiceContext.Provider value={{ joinChannel, leaveChannel, voiceUsers, currentChannelId }}>
+        <VoiceContext.Provider value={{ joinChannel, leaveChannel, joinServer, leaveServer, voiceUsers, voiceUsersByChannel, currentChannelId }}>
             {children}
         </VoiceContext.Provider>
     );
