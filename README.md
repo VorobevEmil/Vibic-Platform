@@ -26,22 +26,26 @@ Vibic Platform is a microservice-based communication platform with servers, dire
 
 ## Architecture
 
-```text
-vibic-frontend (React, port 3000)
-        |
-        v
-ApiGateway (Ocelot, port 7157)
-        |
-        +--------------------+-------------------+------------------------+------------------+------------------+
-        |                    |                   |                        |                  |
-        v                    v                   v                        v                  v
- OAuthServer            UserService      ChatChannelService          MediaService        FileService
-  (7154)                  (7155)               (7138)                   (7139)             (7205)
-    |                       |                     |                        |                  |
-    +----------+------------+----------+----------+------------------------+------------------+
-               |                       |                                                   |
-               v                       v                                                   v
-          PostgreSQL               RabbitMQ                                             MinIO
+```mermaid
+flowchart TD
+    Frontend["vibic-frontend<br/>React SPA<br/>port 3000"] --> Gateway["ApiGateway<br/>Ocelot<br/>port 7157"]
+
+    Gateway --> OAuth["OAuthServer<br/>port 7154"]
+    Gateway --> Users["UserService<br/>port 7155"]
+    Gateway --> Chat["ChatChannelService<br/>port 7138"]
+    Gateway --> Media["MediaService<br/>port 7139"]
+    Gateway --> Files["FileService<br/>port 7205"]
+
+    OAuth --> Postgres["PostgreSQL"]
+    Users --> Postgres
+    Chat --> Postgres
+
+    OAuth --> Rabbit["RabbitMQ"]
+    Users --> Rabbit
+    Chat --> Rabbit
+    Media --> Rabbit
+
+    Files --> Minio["MinIO"]
 ```
 
 Containerized development uses one PostgreSQL instance and separates service data with schemas (`oauth`, `users`, and `chat`). The local example configs use dedicated database names for readability.

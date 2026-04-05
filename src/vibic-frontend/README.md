@@ -30,18 +30,18 @@ The Vibic frontend is a React single-page application for authentication, direct
 
 ## Project structure
 
-```text
-src/
-├── api/          # HTTP clients for gateway-backed APIs
-├── assets/       # Static assets
-├── components/   # UI building blocks
-├── context/      # Shared React contexts
-├── hooks/        # Custom hooks for auth, chat, search, and calls
-├── layout/       # Shell layout components
-├── pages/        # Route-level pages
-├── services/     # SignalR clients and service helpers
-├── types/        # Shared TypeScript models
-└── utils/        # Small utility helpers
+```mermaid
+flowchart TD
+    Src["src/"] --> Api["api/<br/>HTTP clients for gateway-backed APIs"]
+    Src --> Assets["assets/<br/>Static assets"]
+    Src --> Components["components/<br/>UI building blocks"]
+    Src --> Context["context/<br/>Shared React contexts"]
+    Src --> Hooks["hooks/<br/>Custom hooks for auth, chat, search, and calls"]
+    Src --> Layout["layout/<br/>Shell layout components"]
+    Src --> Pages["pages/<br/>Route-level pages"]
+    Src --> Services["services/<br/>SignalR clients and service helpers"]
+    Src --> Types["types/<br/>Shared TypeScript models"]
+    Src --> Utils["utils/<br/>Small utility helpers"]
 ```
 
 ## Environment
