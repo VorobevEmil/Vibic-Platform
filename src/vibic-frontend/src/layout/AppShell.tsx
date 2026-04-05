@@ -1,6 +1,5 @@
 import ServerSidebar from '../components/Layout/ServerSidebar';
 import RightSidebar from '../components/Layout/RightSidebar';
-import { AuthProvider } from '../context/AuthContext';
 import CallListener from '../components/Call/CallListener';
 import { MediaProvider } from '../context/MediaContext';
 import FooterProfilePanel from '../components/Layout/FooterProfilePanel';
@@ -41,23 +40,19 @@ export default function AppShell({ children }: AppShellProps) {
       <HeaderBar />
 
       <div className="flex flex-1 overflow-hidden">
-        <AuthProvider>
-          <MediaProvider>
-            <CallProvider>
-              <VoiceProvider>
+        <MediaProvider>
+          <CallProvider>
+            <VoiceProvider>
+              <CallListener />
+              <ServerSidebar />
 
+              {children}
 
-                <CallListener />
-                <ServerSidebar />
-
-                {children}
-
-                <RightSidebar />
-                <FooterProfilePanel />
-              </VoiceProvider>
-            </CallProvider>
-          </MediaProvider>
-        </AuthProvider>
+              <RightSidebar />
+              <FooterProfilePanel />
+            </VoiceProvider>
+          </CallProvider>
+        </MediaProvider>
       </div>
     </div>
   );

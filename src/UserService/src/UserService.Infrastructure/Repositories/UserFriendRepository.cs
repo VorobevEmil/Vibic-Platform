@@ -26,4 +26,21 @@ public class UserFriendRepository : IUserFriendRepository
             .Include(uf => uf.Friend)
             .ToListAsync(cancellationToken: cancellationToken);
     }
+
+    public async Task<bool> RemoveFriendshipAsync(Guid userId, Guid friendId, CancellationToken cancellationToken = default)
+    {
+        List<UserFriend> friendships = await _context.UserFriends
+            .Where(uf => (uf.UserId == userId && uf.FriendId == friendId)
+                         || (uf.UserId == friendId && uf.FriendId == userId))
+            .ToListAsync(cancellationToken);
+
+        if (friendships.Count == 0)
+        {
+            return false;
+        }
+
+        _context.UserFriends.RemoveRange(friendships);
+
+        return true;
+    }
 }

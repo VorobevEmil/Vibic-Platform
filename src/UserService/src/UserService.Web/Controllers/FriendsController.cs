@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UserService.Application.Features.FriendRequestFeatures.Command;
 using UserService.Application.Features.FriendRequestFeatures.Common;
 using UserService.Application.Features.FriendRequestFeatures.Queries;
+using UserService.Application.Features.UserFriendFeatures.Commands;
 using UserService.Application.Features.UserFriendFeatures.Queries;
 using UserService.Application.Features.UserProfileFeatures.Common;
 using UserService.Web.Mappings;
@@ -46,14 +47,15 @@ public class FriendsController(IMediator mediator) : AuthenticateControllerBase
         return Ok("Friend request rejected.");
     }
 
-    // 4. Удалить друга
-    // [HttpDelete("{friendId}")]
-    // public async Task<IActionResult> RemoveFriend(Guid friendId)
-    // {
-    //     // var userId = GetUserId();
-    //     // await _friendService.RemoveFriendAsync(userId, friendId);
-    //     // return Ok("Friend removed.");
-    // }
+    [HttpDelete("{friendId}")]
+    public async Task<IActionResult> RemoveFriend(Guid friendId)
+    {
+        RemoveFriendCommand command = new(friendId);
+
+        await mediator.Send(command);
+
+        return NoContent();
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetFriends()

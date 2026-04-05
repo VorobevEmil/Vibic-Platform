@@ -2,11 +2,12 @@ import * as signalR from '@microsoft/signalr';
 
 enum SignalRConnectionType  {
     ChatChannel,
-    Call
+    Call,
+    Presence
 }
 
 function createHubConnection(connectionType: SignalRConnectionType): signalR.HubConnection {
-    var hubUrl = ''; 
+    let hubUrl = '';
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7157';
     switch (connectionType) {
         case SignalRConnectionType.ChatChannel:
@@ -14,6 +15,9 @@ function createHubConnection(connectionType: SignalRConnectionType): signalR.Hub
             break;
         case SignalRConnectionType.Call:
             hubUrl = `${apiBaseUrl}/hubs/call`;
+            break;
+        case SignalRConnectionType.Presence:
+            hubUrl = `${apiBaseUrl}/hubs/presence`;
             break;
         default:
             break;
@@ -28,5 +32,20 @@ function createHubConnection(connectionType: SignalRConnectionType): signalR.Hub
     .build();
 }
 
+async function stopHubConnection(connection: signalR.HubConnection) {
+  if (connection.state !== signalR.HubConnectionState.Disconnected) {
+    await connection.stop();
+  }
+}
+
 export const chatHubConnection = createHubConnection(SignalRConnectionType.ChatChannel);
 export const callHubConnection = createHubConnection(SignalRConnectionType.Call);
+export const presenceHubConnection = createHubConnection(SignalRConnectionType.Presence);
+
+export async function stopRealtimeConnections() {
+  await Promise.allSettled([
+    stopHubConnection(chatHubConnection),
+    stopHubConnection(callHubConnection),
+    stopHubConnection(presenceHubConnection),
+  ]);
+}

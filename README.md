@@ -1,138 +1,149 @@
 # Vibic Platform
 
-Платформа для общения с серверами, текстовыми и голосовыми каналами, видеозвонками и системой друзей. Построена на
-микросервисной архитектуре с .NET 10, React 19 и SignalR.
+Vibic Platform is a microservice-based communication platform with servers, direct messages, text channels, voice channels, and 1-to-1 audio/video calls. The repository contains the React frontend, the .NET backend services, and the shared libraries used by those services.
 
-## Архитектура
+## Stack
 
-```
-vibic-frontend (React)
-       |
-   ApiGateway (Ocelot, :7157)
-       |
-  +---------+-----------+-----------+-----------+
-  |         |           |           |           |
-OAuthServer UserService ChatChannel MediaService FileService
-  (:7154)   (:7155)     Service     (:7139)     (:7205)
-  |         |           (:7138)     |           |
-  |         |           |           |           MinIO
-  Postgres  Postgres    Postgres    |
-  RabbitMQ  RabbitMQ    RabbitMQ    |
-            FileService             |
-```
+- .NET 10 / ASP.NET Core
+- React 19 + TypeScript + Vite
+- SignalR + WebRTC
+- PostgreSQL 13
+- RabbitMQ
+- MinIO
 
-### Состав проекта
+## Repository layout
 
-| Компонент          | Путь                     | Описание                                     |
-|--------------------|--------------------------|----------------------------------------------|
-| Frontend           | `src/vibic-frontend`     | React 19 + TypeScript + Vite                 |
-| ApiGateway         | `src/ApiGateway`         | Ocelot API Gateway                           |
-| OAuthServer        | `src/OAuthServer`        | OAuth 2.0 / OpenIddict, JWT                  |
-| UserService        | `src/UserService`        | Профили, друзья, аватары                     |
-| ChatChannelService | `src/ChatChannelService` | Серверы, каналы, сообщения, чат-хаб          |
-| MediaService       | `src/MediaService`       | Звонки, SignalR-хаб                          |
-| FileService        | `src/FileService`        | Загрузка файлов, MinIO                       |
-| Vibic Libraries    | `src/Vibic Libraries`    | Общие NuGet-библиотеки (Core, EF, Messaging) |
+| Component | Path | Purpose |
+|---|---|---|
+| Frontend | `src/vibic-frontend` | React SPA for auth, chat, servers, voice, and calls |
+| ApiGateway | `src/ApiGateway` | Ocelot gateway used by the frontend |
+| OAuthServer | `src/OAuthServer` | Authentication, JWT issuance, and OpenIddict endpoints |
+| UserService | `src/UserService` | User profiles, avatars, friends, and presence hub |
+| ChatChannelService | `src/ChatChannelService` | Servers, channels, invites, messages, and chat hub |
+| MediaService | `src/MediaService` | Call signaling and voice-channel presence |
+| FileService | `src/FileService` | File upload and retrieval backed by MinIO |
+| Vibic Libraries | `src/Vibic Libraries` | Source for shared libraries published as `Vibic.Shared.*` packages |
 
-### Маршрутизация (ApiGateway)
+## Architecture
 
-| Маршрут            | Сервис                       |
-|--------------------|------------------------------|
-| `/auth/*`          | OAuthServer                  |
-| `/servers/*`       | ChatChannelService           |
-| `/user-profiles/*` | UserService                  |
-| `/files/*`         | FileService                  |
-| `/hubs/chat`       | ChatChannelService (SignalR) |
-| `/hubs/call`       | MediaService (SignalR)       |
-
-### Инфраструктурные зависимости
-
-- **PostgreSQL 13** — базы данных для OAuthServer, UserService, ChatChannelService
-- **RabbitMQ** — межсервисная коммуникация (MassTransit)
-- **MinIO** — S3-совместимое хранилище файлов
-
-## Запуск через Docker
-
-### 1. Клонировать репозиторий
-
-```bash
-git clone <repo-url>
-cd Vibic-Platform
+```text
+vibic-frontend (React, port 3000)
+        |
+        v
+ApiGateway (Ocelot, port 7157)
+        |
+        +--------------------+-------------------+------------------------+------------------+------------------+
+        |                    |                   |                        |                  |
+        v                    v                   v                        v                  v
+ OAuthServer            UserService      ChatChannelService          MediaService        FileService
+  (7154)                  (7155)               (7138)                   (7139)             (7205)
+    |                       |                     |                        |                  |
+    +----------+------------+----------+----------+------------------------+------------------+
+               |                       |                                                   |
+               v                       v                                                   v
+          PostgreSQL               RabbitMQ                                             MinIO
 ```
 
-### 2. Создать `.env` файл
+Containerized development uses one PostgreSQL instance and separates service data with schemas (`oauth`, `users`, and `chat`). The local example configs use dedicated database names for readability.
 
-Скопируйте `.env.example` в `.env` и подставьте свой GitHub Personal Access Token (нужен для скачивания приватных
-NuGet-пакетов):
+## Gateway routes
+
+ApiGateway currently proxies these routes:
+
+| Upstream route | Destination |
+|---|---|
+| `/auth/sign-in` | OAuthServer |
+| `/auth/sign-up` | OAuthServer |
+| `/servers/*` | ChatChannelService |
+| `/channels/*` | ChatChannelService |
+| `/invites/*` | ChatChannelService |
+| `/user-profiles/*` | UserService |
+| `/friends*` | UserService |
+| `/files/*` | FileService |
+| `/hubs/chat` | ChatChannelService |
+| `/hubs/call` | MediaService |
+
+Direct service endpoints that are not currently routed through ApiGateway:
+
+- OAuthServer: `/connect/*`, `/settings/applications`
+- UserService: `/hubs/presence`
+
+## Prerequisites
+
+- Docker + Docker Compose for the full containerized stack
+- .NET 10 SDK for local backend work
+- Node.js 22+ for local frontend work
+- A GitHub Personal Access Token with access to GitHub Packages
+
+Most backend services restore `Vibic.Shared.*` packages from GitHub Packages, even though the source for those libraries also lives in this repository.
+
+## Running with Docker
+
+1. Copy the environment template:
 
 ```bash
 cp .env.example .env
 ```
 
-```
-NUGET_GITHUB_TOKEN=ghp_your_token_here
+2. Set your GitHub Packages token in `.env`:
+
+```env
+NUGET_GITHUB_TOKEN=ghp_your_github_personal_access_token
 ```
 
-### 3. Запустить все сервисы
+3. Start the full stack:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
-Эта команда поднимет:
+Notes:
 
-- React-фронтенд (nginx, порт 3000)
-- 6 микросервисов (.NET)
-- PostgreSQL, RabbitMQ, MinIO
-- Все в единой Docker-сети `my_network`
+- `ApiGateway` switches to `ocelot.Docker.json` through `ASPNETCORE_ENVIRONMENT=Docker`.
+- Docker mounts service configs from `configs/` for `OAuthServer`, `UserService`, `ChatChannelService`, and `FileService`.
+- `MediaService` is started without an additional mounted config file in `docker-compose.yml`.
 
-### 4. Настройка
+### Available URLs
 
-Docker-конфиги для сервисов лежат в `configs/` и монтируются автоматически через `docker-compose.yml`:
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| ApiGateway | http://localhost:7157 |
+| OAuthServer | http://localhost:7154 |
+| UserService | http://localhost:7155 |
+| ChatChannelService | http://localhost:7138 |
+| MediaService | http://localhost:7139 |
+| FileService | http://localhost:7205 |
+| RabbitMQ UI | http://localhost:15672 |
+| MinIO Console | http://localhost:9001 |
 
-```
-configs/
-├── appsettings.chatchannelservice.json
-├── appsettings.fileservice.json
-├── appsettings.oauthserver.json
-└── appsettings.userservice.json
-```
+Default credentials:
 
-ApiGateway использует `ocelot.Docker.json` (переключается через `ASPNETCORE_ENVIRONMENT=Docker`).
+- RabbitMQ: `rabbitmq` / `rabbitmq`
+- MinIO: `admin` / `admin12345`
+- PostgreSQL: `postgres` / `postgres`
 
-MediaService не требует конфигурационного файла в Docker (JWT-конфигурация нужна только при локальном запуске).
+## Running locally
 
-Фронтенд собирается в Docker с `VITE_API_BASE_URL=http://localhost:7157` (можно переопределить через `build.args` в
-`docker-compose.yml`).
-
-### 5. Проверить работоспособность
-
-После запуска доступны:
-
-| Сервис        | URL                                        |
-|---------------|--------------------------------------------|
-| Frontend      | http://localhost:3000                      |
-| ApiGateway    | http://localhost:7157                      |
-| RabbitMQ UI   | http://localhost:15672 (rabbitmq/rabbitmq) |
-| MinIO Console | http://localhost:9001 (admin/admin12345)   |
-| PostgreSQL    | localhost:5432 (postgres/postgres)         |
-
-## Локальный запуск (без Docker)
-
-### 1. Поднять инфраструктуру
-
-Запустите PostgreSQL, RabbitMQ и MinIO локально или через Docker:
+1. Start the infrastructure services:
 
 ```bash
-docker-compose up postgres rabbitmq minio
+docker compose up postgres rabbitmq minio
 ```
 
-### 2. Настроить конфигурации
+2. Add the GitHub Packages feed used by the backend Dockerfiles:
 
-В каждом сервисе скопируйте `appsettings.example.json` в `appsettings.json` и подставьте свои значения. Примеры конфигов
-есть в README каждого сервиса.
+```bash
+dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
+  --name github \
+  --username VorobevEmil \
+  --password "<YOUR_GITHUB_PAT>" \
+  --store-password-in-clear-text
+```
 
-### 3. Запустить сервисы
+3. Create `appsettings.json` for each backend service from its `appsettings.example.json`.
+
+4. Start the backend services:
 
 ```bash
 dotnet run --project src/OAuthServer/src/OAuthServer.Web
@@ -143,7 +154,7 @@ dotnet run --project src/MediaService/src/MediaService.Web
 dotnet run --project src/ApiGateway/src/ApiGateway.Web
 ```
 
-### 4. Запустить фронтенд
+5. Start the frontend:
 
 ```bash
 cd src/vibic-frontend
@@ -151,45 +162,31 @@ npm install
 npm run dev
 ```
 
-## Порты
+The frontend uses `VITE_API_BASE_URL`, which defaults to `http://localhost:7157`.
 
-| Сервис             | Порт  |
-|--------------------|-------|
-| Frontend (Docker)  | 3000  |
-| ApiGateway         | 7157  |
-| OAuthServer        | 7154  |
-| UserService        | 7155  |
-| ChatChannelService | 7138  |
-| MediaService       | 7139  |
-| FileService        | 7205  |
-| PostgreSQL         | 5432  |
-| RabbitMQ (AMQP)    | 5672  |
-| RabbitMQ (UI)      | 15672 |
-| MinIO (API)        | 9000  |
-| MinIO (Console)    | 9001  |
+## Ports
 
-## Общие библиотеки (Vibic Libraries)
+| Service | Port |
+|---|---|
+| Frontend (Docker) | 3000 |
+| ApiGateway | 7157 |
+| OAuthServer | 7154 |
+| UserService | 7155 |
+| ChatChannelService | 7138 |
+| MediaService | 7139 |
+| FileService | 7205 |
+| PostgreSQL | 5432 |
+| RabbitMQ (AMQP) | 5672 |
+| RabbitMQ (UI) | 15672 |
+| MinIO API | 9000 |
+| MinIO Console | 9001 |
 
-Три NuGet-пакета, опубликованные в GitHub Packages:
+## Shared libraries
 
-| Пакет                    | Описание                                                         |
-|--------------------------|------------------------------------------------------------------|
-| `Vibic.Shared.Core`      | IAppOptions, JWT-аутентификация, обработка ошибок, health checks |
-| `Vibic.Shared.EF`        | DbContext, миграции, UnitOfWork, soft delete                     |
-| `Vibic.Shared.Messaging` | RabbitMQ + MassTransit, контракты событий                        |
+The repository includes the source for three shared libraries under `src/Vibic Libraries`, while the service projects currently consume the published NuGet packages:
 
-Все библиотеки используют паттерн `IAppOptions` + `AddOptionsWithValidateAndBind` для типизированной конфигурации с
-валидацией при старте.
-
-## Переменные окружения (docker-compose)
-
-| Переменная           | По умолчанию | Описание                                |
-|----------------------|--------------|-----------------------------------------|
-| `NUGET_GITHUB_TOKEN` | —            | GitHub PAT для скачивания NuGet-пакетов |
-| `PG_USER`            | postgres     | Пользователь PostgreSQL                 |
-| `PG_PASS`            | postgres     | Пароль PostgreSQL                       |
-| `DB_NAME`            | postgres     | Имя БД PostgreSQL                       |
-| `RABBITMQ_USERNAME`  | rabbitmq     | Пользователь RabbitMQ                   |
-| `RABBITMQ_PASSWORD`  | rabbitmq     | Пароль RabbitMQ                         |
-| `MINIO_USER`         | admin        | Пользователь MinIO                      |
-| `MINIO_PASS`         | admin12345   | Пароль MinIO                            |
+| Package | Purpose |
+|---|---|
+| `Vibic.Shared.Core` | Authentication helpers, options binding, exception handling, telemetry, health helpers |
+| `Vibic.Shared.EF` | Shared EF Core primitives, unit of work, and outbox support |
+| `Vibic.Shared.Messaging` | RabbitMQ / messaging setup and shared event contracts |

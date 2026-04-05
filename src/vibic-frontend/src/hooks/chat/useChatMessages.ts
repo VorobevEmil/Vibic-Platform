@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { messagesApi } from '../../api/messagesApi';
 import MessageResponse from '../../types/MessageType';
 
@@ -7,19 +7,79 @@ interface Props {
   channelId: string
 }
 
+const NEAR_BOTTOM_THRESHOLD_PX = 160;
+
 export function useChatMessages({ serverId, channelId }: Props) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [unreadMessageId, setUnreadMessageId] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesRef = useRef<MessageResponse[]>([]);
+  const isNearBottomRef = useRef(true);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const clearUnreadState = useCallback(() => {
+    setUnreadMessageId(null);
+    setUnreadCount(0);
+  }, []);
 
-  const initializeMessages = async () => {
+  const updateBottomState = useCallback(() => {
+    const scrollEl = scrollContainerRef.current;
+
+    if (!scrollEl) {
+      return;
+    }
+
+    const distanceFromBottom = scrollEl.scrollHeight - scrollEl.scrollTop - scrollEl.clientHeight;
+    const nextIsNearBottom = distanceFromBottom <= NEAR_BOTTOM_THRESHOLD_PX;
+
+    isNearBottomRef.current = nextIsNearBottom;
+    setIsNearBottom(nextIsNearBottom);
+
+    if (nextIsNearBottom) {
+      clearUnreadState();
+    }
+  }, [clearUnreadState]);
+
+  useEffect(() => {
+    const scrollEl = scrollContainerRef.current;
+
+    if (!scrollEl) {
+      return;
+    }
+
+    updateBottomState();
+
+    const handleScroll = () => {
+      updateBottomState();
+    };
+
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      scrollEl.removeEventListener('scroll', handleScroll);
+    };
+  }, [updateBottomState]);
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    requestAnimationFrame(() => {
+      updateBottomState();
+    });
+  }, [updateBottomState]);
+
+  const initializeMessages = useCallback(async () => {
+    clearUnreadState();
+    isNearBottomRef.current = true;
+    setIsNearBottom(true);
+    messagesRef.current = [];
+    setMessages([]);
+    setCursor(undefined);
+    setHasMore(true);
 
     try {
 
@@ -30,16 +90,17 @@ export function useChatMessages({ serverId, channelId }: Props) {
       else {
         response = await messagesApi.getMessagesByChannelId(channelId);
       }
+      messagesRef.current = response.data.items;
       setMessages(response.data.items);
       setCursor(response.data.cursor);
       setHasMore(response.data.hasMore);
-      setTimeout(scrollToBottom, 10);
+      setTimeout(() => scrollToBottom('auto'), 10);
     } catch (error) {
       console.log("Ошибка во время инициализации сообщении", error)
     }
-  };
+  }, [channelId, clearUnreadState, scrollToBottom, serverId]);
 
-  const loadMoreMessages = async () => {
+  const loadMoreMessages = useCallback(async () => {
     if (!hasMore || isLoadingMore) return;
     const scrollEl = scrollContainerRef.current;
     if (!scrollEl) return;
@@ -62,7 +123,9 @@ export function useChatMessages({ serverId, channelId }: Props) {
 
       setIsLoadingMore(false);
 
-      setMessages(prev => [...response.data.items, ...prev]);
+      const nextMessages = [...response.data.items, ...messagesRef.current];
+      messagesRef.current = nextMessages;
+      setMessages(nextMessages);
       setCursor(response.data.cursor);
       setHasMore(response.data.hasMore);
 
@@ -73,17 +136,42 @@ export function useChatMessages({ serverId, channelId }: Props) {
       console.error('Ошибка при загрузке сообщений:', error);
       setIsLoadingMore(false);
     }
-  };
+  }, [channelId, cursor, hasMore, isLoadingMore, serverId]);
+
+  const appendIncomingMessage = useCallback((
+    message: MessageResponse,
+    options?: { forceScroll?: boolean }
+  ) => {
+    if (messagesRef.current.some((currentMessage) => currentMessage.id === message.id)) {
+      return;
+    }
+
+    const nextMessages = [...messagesRef.current, message];
+    messagesRef.current = nextMessages;
+    setMessages(nextMessages);
+
+    if (options?.forceScroll || isNearBottomRef.current) {
+      clearUnreadState();
+      setTimeout(() => scrollToBottom('smooth'), 10);
+      return;
+    }
+
+    setUnreadMessageId((currentUnreadMessageId) => currentUnreadMessageId ?? message.id);
+    setUnreadCount((currentUnreadCount) => currentUnreadCount + 1);
+  }, [clearUnreadState, scrollToBottom]);
 
   return {
     messages,
-    setMessages,
     cursor,
     scrollContainerRef,
     messagesEndRef,
     isLoadingMore,
+    isNearBottom,
+    unreadMessageId,
+    unreadCount,
     loadMoreMessages,
     initializeMessages,
+    appendIncomingMessage,
     scrollToBottom,
   };
 }

@@ -1,90 +1,79 @@
 # Vibic Frontend
 
-Фронтенд-приложение для платформы Vibic — чат, серверы, голосовые каналы и видеозвонки.
+The Vibic frontend is a React single-page application for authentication, direct messages, servers, voice channels, and 1-to-1 calls.
 
-## Возможности
+## Features
 
-- Личные сообщения (direct messages) с поддержкой реального времени
-- Серверы с текстовыми и голосовыми каналами
-- Голосовые каналы через WebRTC (peer-to-peer аудио)
-- Видеозвонки 1-на-1 с управлением камерой и микрофоном
-- Входящий вызов с модальным окном и звуком звонка
-- Система друзей: добавление, входящие/исходящие заявки
-- Приглашения на сервер по ссылке
-- Аутентификация через OAuth 2.0 (OpenIddict)
-- Поиск пользователей
-- Курсорная пагинация сообщений с подгрузкой истории
+- Sign up and sign in flows
+- Direct-message channels with real-time updates
+- Servers with text channels and voice channels
+- 1-to-1 audio/video calls with microphone and camera controls
+- Incoming call modal with ringtone playback
+- Friend discovery and request management
+- Invite-based server joins
+- Avatar updates and user search
+- Cursor-based message history loading
 
-## Стек технологий
+## Stack
 
-| Технология | Назначение |
+| Technology | Role |
 |---|---|
-| React 19 | UI-библиотека |
-| TypeScript 5.7 | Типизация |
-| Vite 6 | Сборка и dev-сервер |
-| Tailwind CSS 3 | Стилизация |
-| React Router DOM 7 | Маршрутизация |
-| SignalR | WebSocket-подключение к бэкенду (чат, звонки) |
-| WebRTC | Peer-to-peer аудио и видео |
-| Axios | HTTP-клиент |
-| Lucide React | Иконки |
+| React 19 | UI |
+| TypeScript 5 | Typing |
+| Vite 6 | Dev server and build tool |
+| Tailwind CSS 3 | Styling |
+| React Router DOM 7 | Routing |
+| SignalR | Real-time backend communication |
+| WebRTC | Peer-to-peer audio and video |
+| Axios | HTTP client |
+| Lucide React | Icons |
 
-## Структура проекта
+## Project structure
 
-```
+```text
 src/
-├── api/              # HTTP-клиенты для бэкенд-сервисов
-├── assets/           # Статические ресурсы
-├── components/
-│   ├── Call/         # Компоненты звонков (CallListener, IncomingCallModal, медиа-контроли)
-│   ├── Chat/         # Чат (DirectChat, FriendChat, ChatCenterPanel, ChatInput)
-│   ├── Footer/       # Футер с профилем пользователя
-│   ├── Layout/       # Макет приложения (ServerSidebar, AppShell)
-│   ├── SearchUserOverlay/  # Поиск пользователей
-│   └── Server/       # Серверы (каналы, голосовые каналы, приглашения)
-├── context/          # React-контексты (Auth, Media, Voice)
-├── hooks/            # Кастомные хуки (чат, звонки, поиск)
-├── layout/           # Общий макет страниц
-├── pages/            # Страницы приложения
-├── services/         # SignalR-клиенты
-├── types/            # TypeScript-типы
-└── utils/            # Утилиты (WebRTC конфигурация)
+├── api/          # HTTP clients for gateway-backed APIs
+├── assets/       # Static assets
+├── components/   # UI building blocks
+├── context/      # Shared React contexts
+├── hooks/        # Custom hooks for auth, chat, search, and calls
+├── layout/       # Shell layout components
+├── pages/        # Route-level pages
+├── services/     # SignalR clients and service helpers
+├── types/        # Shared TypeScript models
+└── utils/        # Small utility helpers
 ```
 
-## Запуск
+## Environment
 
-### Docker
+Create `src/vibic-frontend/.env.local` when running locally:
 
-Запускается автоматически через `docker-compose up --build` из корня проекта. Доступен на http://localhost:3000.
-
-Сборка использует multi-stage: `node:22-alpine` для билда, `nginx:alpine` для раздачи статики. `VITE_API_BASE_URL` передается как build arg (по умолчанию `http://localhost:7157`).
-
-### Переменные окружения
-
-Создайте `.env.local` в корне `src/vibic-frontend`:
-
-```bash
+```env
 VITE_API_BASE_URL=http://localhost:7157
 ```
 
-`VITE_API_BASE_URL` указывает на ApiGateway.
+The app falls back to `http://localhost:7157` if the variable is not set.
 
-### Локально
+## Run
+
+Docker:
+
+- Included in `docker compose up --build`
+- Served by Nginx on http://localhost:3000
+- Built with a multi-stage image using `node:22-alpine`
+
+Local:
 
 ```bash
+cd src/vibic-frontend
 npm install
 npm run dev
 ```
 
-### Сборка
+## Build and lint
 
 ```bash
 npm run build
 npm run preview
-```
-
-### Линтер
-
-```bash
 npm run lint
 ```

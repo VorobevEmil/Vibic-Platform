@@ -1,15 +1,18 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
 using UserService.Application.Features.UserProfileFeatures.Commands;
 using UserService.Core.Enums;
 using Vibic.Shared.Core.Extensions;
 
 namespace UserService.Web.Hubs;
 
+[Authorize]
 public class PresenceHub : Hub
 {
     private readonly IMediator _mediator;
-    private static readonly Dictionary<Guid, List<string>> ConnectedUsers = new();
+    private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> ConnectedUsers = new();
 
     public PresenceHub(IMediator mediator)
     {
@@ -19,27 +22,39 @@ public class PresenceHub : Hub
     public override async Task OnConnectedAsync()
     {
         Guid userId = Context.User!.GetUserId();
+        ConcurrentDictionary<string, byte> connections = ConnectedUsers
+            .GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>());
 
-        if (!ConnectedUsers.ContainsKey(userId))
+        connections.TryAdd(Context.ConnectionId, 0);
+
+        if (connections.Count == 1)
         {
-            ConnectedUsers.Add(userId, new List<string>());
             UpdateUserStatusCommand command = new(UserStatus.Online);
-            await _mediator.Publish(command);
+            await _mediator.Send(command);
+            await Clients.All.SendAsync("UserStatusChanged", userId, (int)UserStatus.Online);
         }
 
-        ConnectedUsers[userId].Add(Context.ConnectionId);
+        await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         Guid userId = Context.User!.GetUserId();
-        ConnectedUsers[userId].Remove(Context.ConnectionId);
 
-        if (ConnectedUsers[userId].Count == 0)
+        if (ConnectedUsers.TryGetValue(userId, out ConcurrentDictionary<string, byte>? connections))
         {
-            ConnectedUsers.Remove(userId);
-            UpdateUserStatusCommand command = new(UserStatus.Offline);
-            await _mediator.Publish(command);
+            connections.TryRemove(Context.ConnectionId, out _);
+
+            if (connections.IsEmpty)
+            {
+                ConnectedUsers.TryRemove(userId, out _);
+
+                UpdateUserStatusCommand command = new(UserStatus.Offline);
+                await _mediator.Send(command);
+                await Clients.All.SendAsync("UserStatusChanged", userId, (int)UserStatus.Offline);
+            }
         }
+
+        await base.OnDisconnectedAsync(exception);
     }
 }

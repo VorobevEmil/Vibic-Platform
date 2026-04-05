@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { stopRealtimeConnections } from '../services/signalRClient';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7157';
 
@@ -48,6 +49,7 @@ http.interceptors.response.use(
           break;
         case 401:
           console.warn('Unauthorized');
+          void stopRealtimeConnections();
           if (!window.location.pathname.startsWith('/sign-in')
               && !window.location.pathname.startsWith('/sign-up')) {
             localStorage.removeItem('access_token');

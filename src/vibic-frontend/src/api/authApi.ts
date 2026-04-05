@@ -8,4 +8,7 @@ export const authApi = {
 
   signUp: (data: SignUpRequest) =>
     http.post('/auth/sign-up', data),
+
+  logout: () =>
+    http.post('/auth/logout'),
 };

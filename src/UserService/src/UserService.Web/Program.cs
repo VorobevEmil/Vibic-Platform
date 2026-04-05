@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Scalar.AspNetCore;
 using UserService.Application;
@@ -16,7 +17,18 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     builder.Services.AddExceptionHandlers();
     builder.Services.AddAuthorization();
-    builder.Services.AddVibicAuthentication();
+    builder.Services.AddVibicAuthentication(new JwtBearerEvents()
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/hubs"))
+            {
+                context.Token = context.Request.Query["access_token"];
+            }
+
+            return Task.CompletedTask;
+        }
+    });
     builder.Services.AddVibicTelemetry();
     builder.Services.AddCorrelationId();
     builder.Services.AddControllersConfiguration();

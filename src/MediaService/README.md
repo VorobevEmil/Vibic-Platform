@@ -1,25 +1,38 @@
 # MediaService
 
-Сервис голосовых и видеозвонков с SignalR-хабом для сигнализации WebRTC.
+MediaService provides the SignalR call hub used for direct calls and for tracking users inside server voice channels.
 
-## Порт
+## Port
 
 `7139`
 
-## Возможности
+## Responsibilities
 
-- SignalR-хаб `/hubs/call` для WebRTC-сигнализации
-- Аудио- и видеозвонки 1-на-1
-- JWT-авторизация (токен передается в query string для WebSocket)
-- Управление активными сессиями звонков
+- Expose `/hubs/call` for real-time call signaling
+- Handle direct 1-to-1 audio/video call flows
+- Manage WebRTC offer, answer, and ICE candidate exchange
+- Track server voice-channel membership
+- Broadcast voice-channel join and leave events
+- Validate JWT access tokens for hub connections
 
-## Зависимости
+## Hub capabilities
 
-- **OAuthServer** — для валидации JWT-токенов (одинаковые настройки `Authentication:Jwt`)
+The `CallHub` currently supports:
 
-## Конфигурация
+- direct call events such as `CallUser`, `AcceptCall`, `RejectCall`, and `CancelCall`
+- WebRTC signaling with `SendOffer`, `SendAnswer`, and `SendIceCandidate`
+- voice-channel presence with `JoinServer`, `LeaveServer`, `JoinVoiceChannel`, `LeaveVoiceChannel`, and `GetVoiceUsers`
 
-Скопируйте `appsettings.example.json` в `appsettings.json`:
+## Dependencies
+
+- JWT configuration compatible with OAuthServer
+- GitHub Packages for restoring `Vibic.Shared.*` packages during build and restore
+
+This service does not currently persist data in PostgreSQL or publish/consume RabbitMQ messages.
+
+## Configuration
+
+Copy `src/MediaService/src/MediaService.Web/appsettings.example.json` to `appsettings.json`:
 
 ```json
 {
@@ -34,17 +47,20 @@
 }
 ```
 
-| Параметр               | Описание                                       |
-|------------------------|------------------------------------------------|
-| `Authentication:Jwt:*` | Настройки JWT (должны совпадать с OAuthServer) |
+| Key | Description |
+|---|---|
+| `Authentication:Jwt:*` | JWT settings that must match OAuthServer |
+| `Authentication:Authority` | OAuth authority URL |
 
-## Запуск
+Like `ChatChannelService`, the hub reads the JWT from the `access_token` query parameter for WebSocket connections.
 
-### Docker
+## Run
 
-Запускается автоматически через `docker-compose up --build` из корня проекта.
+Docker:
 
-### Локально
+- Included in `docker compose up --build`
+
+Local:
 
 ```bash
 dotnet run --project src/MediaService/src/MediaService.Web

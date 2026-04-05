@@ -203,6 +203,42 @@
       ],
       "UpstreamPathTemplate": "/hubs/call/{everything}",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/presence/negotiate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7155
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/presence/negotiate",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/presence",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7155
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/presence",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/presence/{everything}",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7155
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/presence/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ]
 }

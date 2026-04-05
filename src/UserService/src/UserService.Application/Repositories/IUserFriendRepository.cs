@@ -6,4 +6,5 @@ public interface IUserFriendRepository
 {
     Task CreateAsync(UserFriend userFriend, CancellationToken cancellationToken = default);
     Task<List<UserFriend>> GetUserFriendsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> RemoveFriendshipAsync(Guid userId, Guid friendId, CancellationToken cancellationToken = default);
 }

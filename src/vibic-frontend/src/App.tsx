@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Outlet, Routes, Route } from 'react-router-dom';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import HomePage from './pages/HomePage';
@@ -7,17 +7,31 @@ import ChannelPage from './pages/DirectChannelPage';
 import PrivateRoute from './pages/PrivateRoute';
 import ServerPage from './pages/ServerPage';
 import InvitePage from './pages/InvitePage';
+import AppShell from './layout/AppShell';
+import { AuthProvider } from './context/AuthContext';
 import { HeaderProvider } from './context/HeaderContext';
+
+function ProtectedAppLayout() {
+  return (
+    <AuthProvider>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </AuthProvider>
+  );
+}
 
 function App() {
   return (
     <HeaderProvider>
       <Routes>
         <Route element={<PrivateRoute />}>
-          <Route path="/channels/@me" element={<HomePage />} />
-          <Route path="/channels/@me/:id" element={<ChannelPage />} />
-          <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
           <Route path="/invite/:inviteCode" element={<InvitePage />} />
+          <Route element={<ProtectedAppLayout />}>
+            <Route path="/channels/@me" element={<HomePage />} />
+            <Route path="/channels/@me/:id" element={<ChannelPage />} />
+            <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
+          </Route>
         </Route>
         <Route path="/sign-in" element={<SignInPage />} />
         <Route path="/sign-up" element={<SignUpPage />} />

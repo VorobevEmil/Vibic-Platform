@@ -1,24 +1,38 @@
 # FileService
 
-Сервис загрузки и хранения файлов в MinIO (S3-совместимое хранилище).
+FileService stores and retrieves files in MinIO. It currently handles user avatars and server icons.
 
-## Порт
+## Port
 
 `7205`
 
-## Возможности
+## Responsibilities
 
-- Загрузка файлов (аватары, вложения)
-- Получение файлов по идентификатору
-- Хранение в MinIO с S3 API
+- Upload avatar files
+- Upload server icon files
+- Return stored avatar files
+- Return stored server icon files
+- Keep file storage concerns separate from the business services
 
-## Зависимости
+## Main endpoints
 
-- **MinIO** — S3-совместимое объектное хранилище
+| Endpoint | Description |
+|---|---|
+| `GET /files/avatars/{userId}/{fileName}` | Get an avatar file |
+| `POST /files/avatars/{userId}` | Upload an avatar file |
+| `GET /files/servers/{serverId}/{fileName}` | Get a server icon |
+| `POST /files/servers/{serverId}` | Upload a server icon |
 
-## Конфигурация
+## Dependencies
 
-Скопируйте `appsettings.example.json` в `appsettings.json`:
+- MinIO for S3-compatible object storage
+- GitHub Packages for restoring `Vibic.Shared.*` packages during build and restore
+
+This service does not use a database or RabbitMQ.
+
+## Configuration
+
+Copy `src/FileService/src/FileService.Web/appsettings.example.json` to `appsettings.json`:
 
 ```json
 {
@@ -30,20 +44,20 @@
 }
 ```
 
-| Параметр          | Описание             |
-|-------------------|----------------------|
-| `Minio:Endpoint`  | Адрес MinIO API      |
-| `Minio:AccessKey` | Ключ доступа MinIO   |
-| `Minio:SecretKey` | Секретный ключ MinIO |
+| Key | Description |
+|---|---|
+| `Minio:Endpoint` | MinIO API endpoint |
+| `Minio:AccessKey` | MinIO access key |
+| `Minio:SecretKey` | MinIO secret key |
 
-## Запуск
+## Run
 
-### Docker
+Docker:
 
-Запускается автоматически через `docker-compose up --build` из корня проекта. Docker-конфиг монтируется из
-`configs/appsettings.fileservice.json`.
+- Included in `docker compose up --build`
+- Uses `configs/appsettings.fileservice.json`
 
-### Локально
+Local:
 
 ```bash
 dotnet run --project src/FileService/src/FileService.Web

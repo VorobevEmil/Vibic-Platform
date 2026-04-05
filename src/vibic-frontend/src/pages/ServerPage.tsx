@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import AppShell from "../layout/AppShell";
 import ServerChannelListSidebar from "../components/Server/ServerChannelListSidebar";
 import { useEffect, useRef, useState } from "react";
 import { serversApi } from "../api/serversApi";
@@ -89,17 +88,11 @@ export default function ServerPage() {
 
     if (!serverId) {
         return (
-            <AppShell>
-                <div className="flex-1 flex items-center justify-center text-gray-400">
-                    Сервер не найден
-                </div>
-            </AppShell>
+            <div className="flex-1 flex items-center justify-center text-gray-400">
+                Сервер не найден
+            </div>
         );
     }
 
-    return (
-        <AppShell>
-            <ServerPageContent serverId={serverId} channelId={channelId} />
-        </AppShell>
-    );
+    return <ServerPageContent serverId={serverId} channelId={channelId} />;
 }

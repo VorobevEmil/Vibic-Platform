@@ -1,17 +1,22 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { chatHubConnection } from '../../services/signalRClient';
 import MessageResponse from '../../types/MessageType';
 import SendMessageRequest from '../../types/signalR/sendMessageRequest';
 
 export default function useSignalRChannel(
     channelId: string,
-    setMessages: React.Dispatch<React.SetStateAction<MessageResponse[]>>
+    onReceiveMessage: (message: MessageResponse) => void
 ) {
     const [connected, setConnected] = useState(false);
     const [typingUsername, setTypingUsername] = useState<string | null>(null);
 
     const prevChannelIdRef = useRef<string | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const onReceiveMessageRef = useRef(onReceiveMessage);
+
+    useEffect(() => {
+        onReceiveMessageRef.current = onReceiveMessage;
+    }, [onReceiveMessage]);
 
     useEffect(() => {
         const connect = async () => {
@@ -29,7 +34,7 @@ export default function useSignalRChannel(
                 chatHubConnection.off('UserTyping');
 
                 chatHubConnection.on('ReceiveMessage', (msg: MessageResponse) => {
-                    setMessages(prev => [...prev, msg]);
+                    onReceiveMessageRef.current(msg);
                 });
 
                 chatHubConnection.on('UserTyping', (channelIdFromServer, username) => {

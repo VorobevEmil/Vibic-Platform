@@ -12,7 +12,7 @@ interface Props {
 export default function UserProfileCard({ onClose }: Props) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const { selfUser: user, updateSelfUser } = useAuthContext();
+    const { selfUser: user, updateSelfUser, logout } = useAuthContext();
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -22,7 +22,7 @@ export default function UserProfileCard({ onClose }: Props) {
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, []);
+    }, [onClose]);
 
     return (
         <div
@@ -54,7 +54,7 @@ export default function UserProfileCard({ onClose }: Props) {
             </div>
 
             <button
-                onClick={onClose}
+                onClick={() => void logout()}
                 className="text-xs text-gray-400 absolute top-2 right-3 hover:text-white"
             >
                 Выйти
