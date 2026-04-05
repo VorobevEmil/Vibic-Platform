@@ -10,9 +10,11 @@ import {
 import { useAuthContext } from '../../context/AuthContext';
 import { useMedia } from '../../context/MediaContext';
 import UserProfileCard from '../Footer/UserProfileCard';
+import UserSettingsModal from '../Footer/UserSettingsModal';
 import { resolveAssetUrl } from '../../api/httpClient';
 import { useVoice } from '../../context/VoiceContext';
 import { useCallContext } from '../../context/CallContext';
+import { getUserStatusOption } from '../../utils/userStatus';
 
 export default function FooterProfilePanel() {
   const { selfUser: user } = useAuthContext();
@@ -20,6 +22,7 @@ export default function FooterProfilePanel() {
   const { currentChannelId, leaveChannel } = useVoice();
   const { isCallActive, endCall } = useCallContext();
   const [showProfile, setShowProfile] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   if (!user) {
     return (
@@ -32,21 +35,7 @@ export default function FooterProfilePanel() {
     );
   }
 
-  const statusTextMap: Record<number, string> = {
-    1: 'В сети',
-    2: 'Нет на месте',
-    3: 'Не беспокоить',
-    4: 'Не в сети',
-    5: 'Невидимка',
-  };
-
-  const statusColorMap: Record<number, string> = {
-    1: 'text-green-500',
-    2: 'text-yellow-400',
-    3: 'text-red-500',
-    4: 'text-gray-500',
-    5: 'text-purple-400',
-  };
+  const statusOption = getUserStatusOption(user.userStatus);
 
   return (
     <section
@@ -63,8 +52,8 @@ export default function FooterProfilePanel() {
           />
           <div>
             <div className="font-semibold">{user.displayName}</div>
-            <div className={`text-xs ${statusColorMap[user.userStatus]}`}>
-              {statusTextMap[user.userStatus] || 'Неизвестно'}
+            <div className={`text-xs ${statusOption.badgeClassName}`}>
+              {statusOption.label}
             </div>
           </div>
         </div>
@@ -95,11 +84,30 @@ export default function FooterProfilePanel() {
             )}
           </button>
 
-          <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
+          <button
+            type="button"
+            onClick={() => {
+              setShowProfile(false);
+              setShowSettings(true);
+            }}
+            title="Настройки пользователя"
+          >
+            <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
+          </button>
         </div>
 
-        {showProfile && <UserProfileCard onClose={() => setShowProfile(false)} />}
+        {showProfile && (
+          <UserProfileCard
+            onClose={() => setShowProfile(false)}
+            onOpenSettings={() => {
+              setShowProfile(false);
+              setShowSettings(true);
+            }}
+          />
+        )}
       </div>
+
+      {showSettings && <UserSettingsModal onClose={() => setShowSettings(false)} />}
     </section>
   );
 }

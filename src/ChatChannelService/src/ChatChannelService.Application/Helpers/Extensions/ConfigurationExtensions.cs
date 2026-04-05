@@ -6,7 +6,6 @@ public static class ConfigurationExtensions
 {
     public static string BuildUserAvatarUrl(this IConfiguration configuration, string avatarUrl)
     {
-        avatarUrl = avatarUrl.Trim('/');
-        return $"{configuration["UserService:Url"]}/{avatarUrl}";
+        return $"/{avatarUrl.Trim('/')}";
     }
 }

@@ -4,6 +4,10 @@ import { authApi } from '../api/authApi';
 import { userProfilesApi } from '../api/userProfilesApi';
 import { presenceHubConnection, stopRealtimeConnections } from '../services/signalRClient';
 import UserProfileType from '../types/UserProfileType';
+import {
+  PREFERRED_USER_STATUS_STORAGE_KEY,
+  isValidUserStatus,
+} from '../utils/userStatus';
 
 interface AuthContextType {
   selfUser: UserProfileType | null;
@@ -78,6 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (presenceHubConnection.state === 'Disconnected') {
         await presenceHubConnection.start();
       }
+
+      const preferredStatusRaw = localStorage.getItem(PREFERRED_USER_STATUS_STORAGE_KEY);
+
+      if (!preferredStatusRaw) {
+        return;
+      }
+
+      const preferredStatus = Number(preferredStatusRaw);
+
+      if (!isValidUserStatus(preferredStatus)) {
+        localStorage.removeItem(PREFERRED_USER_STATUS_STORAGE_KEY);
+        return;
+      }
+
+      if (preferredStatus !== 1) {
+        await presenceHubConnection.invoke('UpdateStatus', preferredStatus);
+      }
     };
 
     void ensurePresenceConnection();
@@ -85,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       presenceHubConnection.off('UserStatusChanged', handleStatusChanged);
     };
-  }, [selfUser]);
+  }, [selfUser?.id]);
 
   useEffect(() => {
     return () => {

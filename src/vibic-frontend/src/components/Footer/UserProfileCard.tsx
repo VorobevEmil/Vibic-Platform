@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Settings } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import AvatarUploadModal from './AvatarUploadModal';
 import { userProfilesApi } from '../../api/userProfilesApi';
 import { resolveAssetUrl } from '../../api/httpClient';
+import { getUserStatusOption } from '../../utils/userStatus';
 
 interface Props {
     onClose: () => void;
+    onOpenSettings: () => void;
 }
 
-export default function UserProfileCard({ onClose }: Props) {
+export default function UserProfileCard({ onClose, onOpenSettings }: Props) {
     const ref = useRef<HTMLDivElement | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { selfUser: user, updateSelfUser, logout } = useAuthContext();
+    const statusOption = getUserStatusOption(user?.userStatus ?? 1);
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
@@ -45,12 +48,25 @@ export default function UserProfileCard({ onClose }: Props) {
             </div>
 
             <div className="flex items-center gap-2 text-sm mt-4">
-                <CheckCircle2 className="text-green-400 w-4 h-4" />
-                <span>Доступен</span>
+                <CheckCircle2 className={`w-4 h-4 ${statusOption.badgeClassName}`} />
+                <span>{statusOption.label}</span>
             </div>
 
-            <div className="flex items-center gap-2 text-sm mt-3 text-gray-400 cursor-pointer hover:text-white">
-                <span>✏️ Задать подпись к статусу</span>
+            <div className="mt-2 text-xs text-gray-400">
+                {user?.bio || 'Добавь био в настройках профиля, чтобы карточка стала живее.'}
+            </div>
+
+            <button
+                type="button"
+                onClick={onOpenSettings}
+                className="mt-4 inline-flex items-center gap-2 text-sm text-gray-300 transition hover:text-white"
+            >
+                <Settings className="h-4 w-4" />
+                Открыть настройки профиля
+            </button>
+
+            <div className="flex items-center gap-2 text-sm mt-3 text-gray-400">
+                <span>@{user?.username}</span>
             </div>
 
             <button

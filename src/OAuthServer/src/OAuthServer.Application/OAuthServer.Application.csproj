@@ -9,7 +9,6 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="Vibic.Shared.Messaging" Version="10.0.1"/>
         <PackageReference Include="Vibic.Shared.Core" Version="10.0.1"/>
         <PackageReference Include="MediatR" Version="14.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
@@ -19,6 +18,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj" />
+      <ProjectReference Include="..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\Vibic.Shared.Messaging.csproj" />
     </ItemGroup>
 
 </Project>

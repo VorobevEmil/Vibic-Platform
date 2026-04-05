@@ -11,7 +11,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Vibic.Shared.Messaging" Version="10.0.1"/>
         <PackageReference Include="Vibic.Shared.Core" Version="10.0.1"/>
         <PackageReference Include="MediatR" Version="14.0.0"/>
     </ItemGroup>
@@ -19,6 +18,7 @@
     <ItemGroup>
         <ProjectReference Include="..\ChatChannelService.Core\ChatChannelService.Core.csproj"/>
         <ProjectReference Include="..\ChatChannelService.Shared\ChatChannelService.Shared.csproj" />
+        <ProjectReference Include="..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\Vibic.Shared.Messaging.csproj" />
     </ItemGroup>
     
 </Project>

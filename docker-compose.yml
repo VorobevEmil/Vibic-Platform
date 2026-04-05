@@ -33,8 +33,8 @@ services:
   chatchannelservice:
     image: chatchannelservice
     build:
-      context: ./src/ChatChannelService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/ChatChannelService/Dockerfile
       args:
         NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
     ports:
@@ -78,12 +78,14 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./configs/appsettings.mediaservice.json:/app/appsettings.json:ro
 
   oauthserver:
     image: oauthserver
     build:
-      context: ./src/OAuthServer
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/OAuthServer/Dockerfile
       args:
         NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
     ports:
@@ -99,8 +101,8 @@ services:
   userservice:
     image: userservice
     build:
-      context: ./src/UserService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/UserService/Dockerfile
       args:
         NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
     ports:

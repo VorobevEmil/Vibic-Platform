@@ -57,4 +57,19 @@ public class PresenceHub : Hub
 
         await base.OnDisconnectedAsync(exception);
     }
+
+    public async Task UpdateStatus(int userStatus)
+    {
+        if (!Enum.IsDefined(typeof(UserStatus), userStatus))
+        {
+            throw new HubException("Unsupported user status.");
+        }
+
+        Guid userId = Context.User!.GetUserId();
+        UserStatus nextStatus = (UserStatus)userStatus;
+
+        UpdateUserStatusCommand command = new(nextStatus);
+        await _mediator.Send(command);
+        await Clients.All.SendAsync("UserStatusChanged", userId, userStatus);
+    }
 }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { stopRealtimeConnections } from '../services/signalRClient';
+import { notifyServerAvailability } from '../utils/serverAvailability';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7157';
 
@@ -34,6 +35,7 @@ http.interceptors.request
 
 http.interceptors.response.use(
   response => {
+    notifyServerAvailability({ available: true });
     return response;
   },
   error => {
@@ -42,7 +44,18 @@ http.interceptors.response.use(
     if (!response) {
       // Нет ответа от сервера (например, оффлайн)
       console.error('Network error:', error.message);
+      notifyServerAvailability({
+        available: false,
+        reason: navigator.onLine ? 'server_unreachable' : 'offline',
+      });
     } else {
+      if ([502, 503, 504].includes(response.status)) {
+        notifyServerAvailability({
+          available: false,
+          reason: 'server_unreachable',
+        });
+      }
+
       switch (response.status) {
         case 400:
           console.warn('Bad Request', response.data);

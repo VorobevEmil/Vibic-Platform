@@ -10,6 +10,7 @@ import InvitePage from './pages/InvitePage';
 import AppShell from './layout/AppShell';
 import { AuthProvider } from './context/AuthContext';
 import { HeaderProvider } from './context/HeaderContext';
+import ServerAvailabilityToast from './components/Layout/ServerAvailabilityToast';
 
 function ProtectedAppLayout() {
   return (
@@ -24,6 +25,7 @@ function ProtectedAppLayout() {
 function App() {
   return (
     <HeaderProvider>
+      <ServerAvailabilityToast />
       <Routes>
         <Route element={<PrivateRoute />}>
           <Route path="/invite/:inviteCode" element={<InvitePage />} />
