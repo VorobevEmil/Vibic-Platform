@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
+using UserService.Application.Repositories;
 using UserService.Application.Features.UserProfileFeatures.Commands;
 using UserService.Core.Enums;
 using Vibic.Shared.Core.Extensions;
@@ -12,11 +13,13 @@ namespace UserService.Web.Hubs;
 public class PresenceHub : Hub
 {
     private readonly IMediator _mediator;
+    private readonly IUserProfileRepository _userProfileRepository;
     private static readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> ConnectedUsers = new();
 
-    public PresenceHub(IMediator mediator)
+    public PresenceHub(IMediator mediator, IUserProfileRepository userProfileRepository)
     {
         _mediator = mediator;
+        _userProfileRepository = userProfileRepository;
     }
 
     public override async Task OnConnectedAsync()
@@ -72,4 +75,27 @@ public class PresenceHub : Hub
         await _mediator.Send(command);
         await Clients.All.SendAsync("UserStatusChanged", userId, userStatus);
     }
+
+    public async Task<List<UserStatusSnapshot>> GetUserStatuses(List<Guid> userIds)
+    {
+        List<UserStatusSnapshot> snapshots = [];
+
+        if (userIds.Count == 0)
+        {
+            return snapshots;
+        }
+
+        List<Guid> distinctUserIds = userIds
+            .Distinct()
+            .ToList();
+
+        List<UserStatusSnapshot> knownStatuses = (await _userProfileRepository.GetByIdsAsync(distinctUserIds))
+            .ConvertAll(profile => new UserStatusSnapshot(profile.Id, (int)profile.Status));
+
+        snapshots.AddRange(knownStatuses);
+
+        return snapshots;
+    }
 }
+
+public record UserStatusSnapshot(Guid UserId, int UserStatus);

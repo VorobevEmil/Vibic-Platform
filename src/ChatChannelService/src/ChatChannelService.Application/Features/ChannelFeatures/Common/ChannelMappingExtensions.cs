@@ -23,6 +23,33 @@ public static class ChannelMappingExtensions
             configuration.BuildUserAvatarUrl(channelMember.ChatUser.AvatarUrl));
     }
 
+    public static List<ServerChannelParticipantDto> MapToServerChannelParticipantDtos(
+        this Channel channel,
+        IConfiguration configuration)
+    {
+        if (channel.IsPublic)
+        {
+            return channel.Server?.ServerMembers
+                .OrderBy(serverMember => serverMember.DisplayName)
+                .Select(serverMember => new ServerChannelParticipantDto(
+                    serverMember.ChatUserId,
+                    serverMember.ChatUser.DisplayName,
+                    serverMember.ChatUser.Username,
+                    configuration.BuildUserAvatarUrl(serverMember.ChatUser.AvatarUrl)))
+                .ToList()
+                ?? [];
+        }
+
+        return channel.ChannelMembers
+            .OrderBy(channelMember => channelMember.ChatUser.DisplayName)
+            .Select(channelMember => new ServerChannelParticipantDto(
+                channelMember.ChatUserId,
+                channelMember.ChatUser.DisplayName,
+                channelMember.ChatUser.Username,
+                configuration.BuildUserAvatarUrl(channelMember.ChatUser.AvatarUrl)))
+            .ToList();
+    }
+
     public static ServerChannelDto MapToServerChannelDto(this Channel channel)
     {
         return new ServerChannelDto(channel.Id, channel.Name!, channel.ChannelType, channel.IsPublic);

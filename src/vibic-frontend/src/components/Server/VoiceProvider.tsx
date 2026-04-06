@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { VoiceContext } from '../../context/VoiceContext';
 import { callHubConnection } from '../../services/signalRClient';
 import { rtcConfiguration } from '../../utils/webrtcConfig';
@@ -24,6 +24,9 @@ export default function VoiceProvider({ children }: Props) {
     const currentServerRef = useRef<string | null>(null);
     const voiceChannelIdsRef = useRef<string[]>([]);
     const lastJoinKeyRef = useRef<string | null>(null);
+    const currentChannelIdRef = useRef<string | null>(null);
+
+    currentChannelIdRef.current = currentChannelId;
 
     const ensureConnected = async () => {
         if (callHubConnection.state === 'Connected') return;
@@ -85,8 +88,32 @@ export default function VoiceProvider({ children }: Props) {
         return pc;
     };
 
-    const joinChannel = async (channelId: string, serverId: string) => {
-        if (currentChannelId === channelId) return;
+    // leaveChannel определена первой, чтобы joinChannel могла её использовать
+    const leaveChannel = useCallback(async () => {
+        if (currentChannelIdRef.current) {
+            await callHubConnection.invoke('LeaveVoiceChannel');
+        }
+
+        setVoiceUsers([]);
+        setCurrentChannelId(null);
+
+        peersRef.current.forEach((pc, userId) => {
+            pc.close();
+            const video = document.getElementById(`video-${userId}`);
+            if (video) video.remove();
+        });
+
+        peersRef.current.clear();
+
+        const localVideo = document.getElementById('video-local');
+        if (localVideo) localVideo.remove();
+
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+    }, []); // стабильная ссылка — читает currentChannelId через ref
+
+    const joinChannel = useCallback(async (channelId: string, serverId: string) => {
+        if (currentChannelIdRef.current === channelId) return;
 
         await leaveChannel();
         setCurrentChannelId(channelId);
@@ -221,9 +248,9 @@ export default function VoiceProvider({ children }: Props) {
         });
 
         await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl);
-    };
+    }, [selfUser, leaveChannel]);
 
-    const joinServer = async (serverId: string, voiceChannelIds: string[]) => {
+    const joinServer = useCallback(async (serverId: string, voiceChannelIds: string[]) => {
         const joinKey = `${serverId}|${voiceChannelIds.join(',')}`;
         if (lastJoinKeyRef.current === joinKey) {
             return;
@@ -246,9 +273,9 @@ export default function VoiceProvider({ children }: Props) {
             const data = await callHubConnection.invoke<Record<string, VoiceUser[]>>('GetVoiceUsers', voiceChannelIds);
             setVoiceUsersByChannel(data);
         }
-    };
+    }, []);
 
-    const leaveServer = async (serverId: string) => {
+    const leaveServer = useCallback(async (serverId: string) => {
         await callHubConnection.invoke('LeaveServer', serverId);
         if (currentServerRef.current === serverId) {
             currentServerRef.current = null;
@@ -256,37 +283,14 @@ export default function VoiceProvider({ children }: Props) {
         voiceChannelIdsRef.current = [];
         lastJoinKeyRef.current = null;
         setVoiceUsersByChannel({});
-    };
-
-    const leaveChannel = async () => {
-        if (currentChannelId) {
-            await callHubConnection.invoke('LeaveVoiceChannel');
-        }
-
-        setVoiceUsers([]);
-        setCurrentChannelId(null);
-
-        peersRef.current.forEach((pc, userId) => {
-            pc.close();
-            const video = document.getElementById(`video-${userId}`);
-            if (video) video.remove();
-        });
-
-        peersRef.current.clear();
-
-        const localVideo = document.getElementById('video-local');
-        if (localVideo) localVideo.remove();
-
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
-    };
+    }, []);
 
     useEffect(() => {
         return () => {
             leaveChannel();
             callHubConnection.stop();
         };
-    }, []);
+    }, [leaveChannel]);
 
     useEffect(() => {
         const handleReconnected = async () => {
@@ -340,8 +344,18 @@ export default function VoiceProvider({ children }: Props) {
         };
     }, []);
 
+    const contextValue = useMemo(() => ({
+        joinChannel,
+        leaveChannel,
+        joinServer,
+        leaveServer,
+        voiceUsers,
+        voiceUsersByChannel,
+        currentChannelId,
+    }), [joinChannel, leaveChannel, joinServer, leaveServer, voiceUsers, voiceUsersByChannel, currentChannelId]);
+
     return (
-        <VoiceContext.Provider value={{ joinChannel, leaveChannel, joinServer, leaveServer, voiceUsers, voiceUsersByChannel, currentChannelId }}>
+        <VoiceContext.Provider value={contextValue}>
             {children}
         </VoiceContext.Provider>
     );

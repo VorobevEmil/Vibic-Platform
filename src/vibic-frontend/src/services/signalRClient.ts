@@ -42,6 +42,10 @@ export const chatHubConnection = createHubConnection(SignalRConnectionType.ChatC
 export const callHubConnection = createHubConnection(SignalRConnectionType.Call);
 export const presenceHubConnection = createHubConnection(SignalRConnectionType.Presence);
 
+export function createPresenceHubConnection(): signalR.HubConnection {
+  return createHubConnection(SignalRConnectionType.Presence);
+}
+
 export async function stopRealtimeConnections() {
   await Promise.allSettled([
     stopHubConnection(chatHubConnection),

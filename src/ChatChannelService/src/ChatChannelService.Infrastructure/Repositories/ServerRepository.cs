@@ -45,10 +45,14 @@ public class ServerRepository : IServerRepository
         CancellationToken cancellationToken = default)
     {
         Server? server = await _dbContext.Servers
+            .Include(x => x.ServerMembers)
+            .ThenInclude(sm => sm.ChatUser)
             .Include(x => x.Channels
                 .Where(c => c.IsPublic || c.ChannelMembers
                     .Any(cm => cm.ChatUserId == userId)))
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken: cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.ServerMembers.Any(sm => sm.ChatUserId == userId),
+                cancellationToken: cancellationToken);
         
         if (server == null)
         {

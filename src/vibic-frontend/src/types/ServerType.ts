@@ -14,6 +14,7 @@ export interface ServerFullResponse extends ServerRequest {
     id: string;
     iconUrl?: string | null;
     channels: ServerChannelResponse[];
+    members: ServerMemberResponse[];
 }
 
 export interface ServerChannelResponse {
@@ -21,4 +22,11 @@ export interface ServerChannelResponse {
     name: string;
     channelType: ChannelType;
     isPublic: boolean;
+}
+
+export interface ServerMemberResponse {
+    userId: string;
+    displayName: string;
+    username: string;
+    avatarUrl?: string | null;
 }

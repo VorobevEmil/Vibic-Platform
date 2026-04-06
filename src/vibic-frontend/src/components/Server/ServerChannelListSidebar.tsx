@@ -56,7 +56,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 </span>
                 <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
                     <UserPlus className="w-4 h-4 hover:text-white" />
-                    <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
+                    <span className="pointer-events-none absolute right-0 bottom-full mb-2
                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
                         bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                         Пригласить на сервер
@@ -78,7 +78,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                     </button>
                     <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
                         <Plus className="w-4 h-4 hover:text-white" />
-                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
+                        <span className="pointer-events-none absolute right-0 bottom-full mb-2
                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
                             bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                             Создать канал
@@ -119,7 +119,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                     </button>
                     <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
                         <Plus className="w-4 h-4 hover:text-white" />
-                        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2
+                        <span className="pointer-events-none absolute right-0 bottom-full mb-2
                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
                             bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                             Создать канал
@@ -147,21 +147,21 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                                     </div>
 
                                     {usersInChannel.length > 0 && (
-                                        <div className="pl-8 space-y-1 text-xs text-gray-400">
+                                        <div className="pl-4 space-y-0.5 text-xs text-gray-400">
                                             {usersInChannel.map((user) => (
-                                                <div key={user.userId} className="flex items-center gap-2">
+                                                <div key={user.userId} className="flex items-center gap-2 px-2 py-1 rounded-md transition-colors hover:bg-[#404249] hover:text-gray-200 cursor-pointer">
                                                     {user.avatarUrl ? (
                                                         <img
                                                             src={resolveAssetUrl(user.avatarUrl)}
                                                             alt={user.displayName}
-                                                            className="w-4 h-4 rounded-full object-cover"
+                                                            className="w-4 h-4 rounded-full object-cover shrink-0"
                                                         />
                                                     ) : (
-                                                        <span className="w-4 h-4 rounded-full bg-[#3c3e45] text-[10px] flex items-center justify-center">
+                                                        <span className="w-4 h-4 rounded-full bg-[#3c3e45] text-[10px] flex items-center justify-center shrink-0">
                                                             {user.displayName.charAt(0)}
                                                         </span>
                                                     )}
-                                                    <span>{user.displayName}</span>
+                                                    <span className="truncate">{user.displayName}</span>
                                                 </div>
                                             ))}
                                         </div>

@@ -5,7 +5,7 @@ import {
   MicOff,
   Headphones,
   HeadphoneOff,
-  PhoneOff,
+  Phone,
 } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import { useMedia } from '../../context/MediaContext';
@@ -26,86 +26,117 @@ export default function FooterProfilePanel() {
 
   if (!user) {
     return (
-      <section
-        className="absolute w-[312px] left-2 bottom-2 px-3 py-2 rounded-lg border border-gray-700  bg-[#1e1f22]">
-        <div className="w-full px-3 py-2 bg-[#1e1f22] text-sm text-white opacity-50 animate-pulse">
-          Загрузка профиля...
-        </div>
+      <section className="absolute bottom-2 left-2 w-[312px] rounded-xl border border-white/8 bg-[#1a1b1f] px-3 py-2.5">
+        <div className="animate-pulse text-sm text-white/40">Загрузка профиля...</div>
       </section>
     );
   }
 
   const statusOption = getUserStatusOption(user.userStatus);
+  const isInCall = isCallActive || !!currentChannelId;
 
   return (
-    <section
-      className="absolute w-[312px] left-2 bottom-2 px-3 py-2 rounded-lg border border-gray-700  bg-[#1e1f22]">
-      <div className="flex items-center justify-between text-sm text-white gap-5">
-        <div
-          className="w-full flex items-center gap-2 p-1 rounded-md hover:bg-[#2b2d31] cursor-pointer transition-all"
+    <section className="absolute bottom-2 left-2 w-[312px] overflow-hidden rounded-xl border border-white/8 bg-[#1a1b1f] shadow-xl">
+      <div className="flex items-center gap-1 px-2 py-2">
+        {/* Avatar + Info */}
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/6"
           onClick={() => setShowProfile(true)}
         >
-          <img
-            src={resolveAssetUrl(user.avatarUrl)}
-            className="w-8 h-8 rounded-full"
-            alt={user.username}
-          />
-          <div>
-            <div className="font-semibold">{user.displayName}</div>
-            <div className={`text-xs ${statusOption.badgeClassName}`}>
+          <div className="relative shrink-0">
+            <img
+              src={resolveAssetUrl(user.avatarUrl)}
+              className="h-8 w-8 rounded-full object-cover ring-1 ring-white/10"
+              alt={user.username}
+            />
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#1a1b1f] ${statusOption.badgeClassName.replace('text-', 'bg-').split(' ')[0]}`}
+            />
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-white leading-tight">
+              {user.displayName}
+            </div>
+            <div className={`text-xs leading-tight ${statusOption.badgeClassName}`}>
               {statusOption.label}
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="flex items-center gap-3">
-          {(isCallActive || currentChannelId) && (
-            <button
-              onClick={() => (isCallActive ? endCall() : leaveChannel())}
-              className="p-2 bg-[#2b2d31] rounded-full hover:bg-[#404249] border border-[#3a3c42]"
-              title="Отключиться"
-            >
-              <PhoneOff className="w-5 h-5 text-gray-200" />
-            </button>
-          )}
-          <button onClick={() => setIsMicOn((prev) => !prev)}>
-            {isMicOn ? (
-              <Mic className="w-5 h-5 text-gray-400 hover:text-white" />
-            ) : (
-              <MicOff className="w-5 h-5 text-gray-400 hover:text-white" />
-            )}
+        {/* Controls */}
+        <div className="flex shrink-0 items-center gap-0.5">
+          {/* Mic toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMicOn((prev) => !prev)}
+            title={isMicOn ? 'Выключить микрофон' : 'Включить микрофон'}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+              isMicOn
+                ? 'text-gray-400 hover:bg-white/8 hover:text-white'
+                : 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
+            }`}
+          >
+            {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
           </button>
 
-          <button onClick={() => setIsHeadphonesOn((prev) => !prev)}>
+          {/* Headphones toggle */}
+          <button
+            type="button"
+            onClick={() => setIsHeadphonesOn((prev) => !prev)}
+            title={isHeadphonesOn ? 'Выключить звук' : 'Включить звук'}
+            className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+              isHeadphonesOn
+                ? 'text-gray-400 hover:bg-white/8 hover:text-white'
+                : 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
+            }`}
+          >
             {isHeadphonesOn ? (
-              <Headphones className="w-5 h-5 text-gray-400 hover:text-white" />
+              <Headphones className="h-4 w-4" />
             ) : (
-              <HeadphoneOff className="w-5 h-5 text-gray-400 hover:text-white" />
+              <HeadphoneOff className="h-4 w-4" />
             )}
           </button>
 
+          {/* Settings */}
           <button
             type="button"
             onClick={() => {
               setShowProfile(false);
               setShowSettings(true);
             }}
-            title="Настройки пользователя"
+            title="Настройки"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/8 hover:text-white"
           >
-            <Settings className="w-5 h-5 text-gray-400 hover:text-white" />
+            <Settings className="h-4 w-4" />
           </button>
-        </div>
 
-        {showProfile && (
-          <UserProfileCard
-            onClose={() => setShowProfile(false)}
-            onOpenSettings={() => {
-              setShowProfile(false);
-              setShowSettings(true);
-            }}
-          />
-        )}
+          {/* Disconnect call — far right, only when active */}
+          {isInCall && (
+            <>
+              <div className="mx-1 h-5 w-px bg-white/10" />
+              <button
+                type="button"
+                onClick={() => (isCallActive ? endCall() : leaveChannel())}
+                title="Завершить звонок"
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-500/20 text-red-400 transition-colors hover:bg-red-500 hover:text-white"
+              >
+                <Phone className="h-4 w-4 rotate-[135deg]" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
+
+      {showProfile && (
+        <UserProfileCard
+          onClose={() => setShowProfile(false)}
+          onOpenSettings={() => {
+            setShowProfile(false);
+            setShowSettings(true);
+          }}
+        />
+      )}
 
       {showSettings && <UserSettingsModal onClose={() => setShowSettings(false)} />}
     </section>

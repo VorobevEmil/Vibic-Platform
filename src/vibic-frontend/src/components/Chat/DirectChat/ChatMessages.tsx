@@ -68,10 +68,10 @@ function MessageRow({ message, onHeightChange }: MessageRowProps) {
   }, [message.id, onHeightChange]);
 
   return (
-    <div ref={rowRef} className="flex items-start gap-3 pb-4">
+    <div ref={rowRef} className="group flex items-start gap-3 pb-4 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors">
       <img
         src={resolveAssetUrl(message.senderAvatarUrl)}
-        className="w-8 h-8 rounded-full"
+        className="w-8 h-8 rounded-full mt-0.5 shrink-0"
         alt={message.senderUsername}
         loading="lazy"
       />

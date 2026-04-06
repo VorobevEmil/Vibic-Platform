@@ -25,6 +25,24 @@ public class UserProfileRepository : IUserProfileRepository
         return users;
     }
 
+    public async Task<List<UserProfile>> GetByIdsAsync(
+        IEnumerable<Guid> userIds,
+        CancellationToken cancellationToken = default)
+    {
+        Guid[] ids = userIds
+            .Distinct()
+            .ToArray();
+
+        if (ids.Length == 0)
+        {
+            return [];
+        }
+
+        return await _dbContext.UserProfiles
+            .Where(profile => ids.Contains(profile.Id))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<UserProfile> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         UserProfile? userProfile = await _dbContext.UserProfiles

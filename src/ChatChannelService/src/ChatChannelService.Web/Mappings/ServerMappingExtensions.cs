@@ -6,6 +6,17 @@ namespace ChatChannelService.Web.Mappings;
 
 public static class ServerMappingExtensions
 {
+    public static ServerMemberResponse MapToResponse(this ServerMemberDto dto)
+    {
+        return new ServerMemberResponse
+        {
+            UserId = dto.UserId,
+            DisplayName = dto.DisplayName,
+            Username = dto.Username,
+            AvatarUrl = dto.AvatarUrl
+        };
+    }
+
     public static ServerSummaryResponse MapToResponse(this ServerSummaryDto dto)
     {
         return new ServerSummaryResponse
@@ -25,7 +36,9 @@ public static class ServerMappingExtensions
             Name = dto.Name,
             IconUrl = dto.IconUrl,
             Channels = dto.Channels
-                .ConvertAll(sc => sc.MapToServerChannelResponse())
+                .ConvertAll(sc => sc.MapToServerChannelResponse()),
+            Members = dto.Members
+                .ConvertAll(member => member.MapToResponse())
         };
     }
 }

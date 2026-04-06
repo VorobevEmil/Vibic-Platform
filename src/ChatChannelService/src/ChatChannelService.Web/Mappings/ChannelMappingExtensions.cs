@@ -8,6 +8,17 @@ namespace ChatChannelService.Web.Mappings;
 
 public static class ChannelMappingExtensions
 {
+    public static ServerChannelParticipantResponse MapToResponse(this ServerChannelParticipantDto dto)
+    {
+        return new ServerChannelParticipantResponse
+        {
+            UserId = dto.UserId,
+            DisplayName = dto.DisplayName,
+            Username = dto.Username,
+            AvatarUrl = dto.AvatarUrl
+        };
+    }
+
     public static DirectChannelResponse MapToDirectMessageResponse(this DirectChannelDto dto)
     {
         return new DirectChannelResponse

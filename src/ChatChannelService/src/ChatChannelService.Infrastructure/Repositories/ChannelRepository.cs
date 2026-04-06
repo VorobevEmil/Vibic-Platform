@@ -60,6 +60,9 @@ public class ChannelRepository : IChannelRepository
         CancellationToken cancellationToken = default)
     {
         return await _dbContext.Channels
+            .Include(x => x.Server)
+            .ThenInclude(server => server!.ServerMembers)
+            .ThenInclude(serverMember => serverMember.ChatUser)
             .Include(x => x.ChannelMembers)
             .ThenInclude(x => x.ChatUser)
             .FirstOrDefaultAsync(x =>

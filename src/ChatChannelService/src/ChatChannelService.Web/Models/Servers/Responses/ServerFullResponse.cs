@@ -8,4 +8,5 @@ public class ServerFullResponse
     public required string Name { get; init; }
     public string? IconUrl { get; init; }
     public required List<ServerChannelResponse> Channels { get; init; }
+    public required List<ServerMemberResponse> Members { get; init; }
 }

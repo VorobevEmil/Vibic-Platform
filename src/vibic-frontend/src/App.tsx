@@ -10,14 +10,17 @@ import InvitePage from './pages/InvitePage';
 import AppShell from './layout/AppShell';
 import { AuthProvider } from './context/AuthContext';
 import { HeaderProvider } from './context/HeaderContext';
+import { RightSidebarProvider } from './context/RightSidebarContext';
 import ServerAvailabilityToast from './components/Layout/ServerAvailabilityToast';
 
 function ProtectedAppLayout() {
   return (
     <AuthProvider>
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <RightSidebarProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </RightSidebarProvider>
     </AuthProvider>
   );
 }
