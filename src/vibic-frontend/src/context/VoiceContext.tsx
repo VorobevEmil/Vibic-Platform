@@ -1,12 +1,19 @@
 import { createContext, useContext } from 'react';
 
+export interface VoiceUser {
+    userId: string;
+    displayName: string;
+    avatarUrl?: string | null;
+    isMicOn: boolean;
+}
+
 export interface VoiceContextType {
     joinChannel: (channelId: string, serverId: string) => void;
     joinServer: (serverId: string, voiceChannelIds: string[]) => void;
     leaveServer: (serverId: string) => void;
     leaveChannel: () => void;
-    voiceUsers: { userId: string; displayName: string; avatarUrl?: string | null }[];
-    voiceUsersByChannel: Record<string, { userId: string; displayName: string; avatarUrl?: string | null }[]>;
+    voiceUsers: VoiceUser[];
+    voiceUsersByChannel: Record<string, VoiceUser[]>;
     currentChannelId: string | null;
 }
 

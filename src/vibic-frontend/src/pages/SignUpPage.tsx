@@ -10,24 +10,26 @@ function SignUpPage() {
 
   return (
     <AuthLayout
-      title="Create your Vibic account"
-      subtitle="Join the community — it’s free!"
+      title="Создать аккаунт"
+      subtitle="Присоединяйтесь — это бесплатно!"
       footer={
         <>
-          Already have an account?{' '}
-          <Link to="/sign-in" className="text-indigo-600 hover:text-indigo-500 font-medium">
-            Sign in
+          Уже есть аккаунт?{' '}
+          <Link to="/sign-in" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+            Войти
           </Link>
         </>
       }
     >
       <form className="space-y-4" onSubmit={handleRegister}>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Email
+          </label>
           <input
             type="email"
             className="input"
+            placeholder="you@example.com"
             value={signUpRequest.email}
             onChange={(e) =>
               setSignUpRequest(prev => ({ ...prev, email: e.target.value }))
@@ -37,10 +39,13 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Display Name</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Отображаемое имя
+          </label>
           <input
             type="text"
             className="input"
+            placeholder="Как вас зовут?"
             value={signUpRequest.displayName}
             onChange={(e) =>
               setSignUpRequest(prev => ({ ...prev, displayName: e.target.value }))
@@ -50,10 +55,13 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Имя пользователя
+          </label>
           <input
             type="text"
             className="input"
+            placeholder="username"
             value={signUpRequest.username}
             onChange={(e) =>
               setSignUpRequest(prev => ({ ...prev, username: e.target.value }))
@@ -63,10 +71,13 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Пароль
+          </label>
           <input
             type="password"
             className="input"
+            placeholder="••••••••"
             value={signUpRequest.password}
             onChange={(e) =>
               setSignUpRequest(prev => ({ ...prev, password: e.target.value }))
@@ -75,7 +86,9 @@ function SignUpPage() {
           />
         </div>
 
-        <button type="submit" className="btn-primary w-full">Sign Up</button>
+        <button type="submit" className="btn-primary w-full mt-2">
+          Зарегистрироваться
+        </button>
       </form>
     </AuthLayout>
   );

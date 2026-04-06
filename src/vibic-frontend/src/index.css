@@ -4,11 +4,11 @@
 
 @layer components {
   .input {
-    @apply mt-1 w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none;
+    @apply mt-1 w-full px-4 py-3 rounded-xl border border-white/10 bg-[#1e1f22] text-white placeholder-gray-500 focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/40 focus:outline-none transition;
   }
 
   .btn-primary {
-    @apply py-2 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-500;
+    @apply py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all;
   }
 }
 

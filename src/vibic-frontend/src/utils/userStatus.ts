@@ -37,13 +37,6 @@ export const USER_STATUS_OPTIONS: UserStatusOption[] = [
     badgeClassName: 'text-gray-400',
     accentClassName: 'border-gray-500/50 bg-gray-500/10 text-gray-100',
   },
-  {
-    value: 5,
-    label: 'Невидимка',
-    description: 'Вы остаетесь в приложении, но выглядите офлайн.',
-    badgeClassName: 'text-violet-300',
-    accentClassName: 'border-violet-500/50 bg-violet-500/10 text-violet-100',
-  },
 ];
 
 export function isValidUserStatus(value: number): boolean {

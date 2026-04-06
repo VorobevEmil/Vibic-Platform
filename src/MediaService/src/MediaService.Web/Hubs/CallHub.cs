@@ -57,7 +57,7 @@ public class CallHub : Hub
         return VoiceChannelManager.GetUsersForChannels(channelIds);
     }
 
-    public async Task JoinVoiceChannel(string channelId, string serverId, string userId, string displayName, string? avatarUrl = null)
+    public async Task JoinVoiceChannel(string channelId, string serverId, string userId, string displayName, string? avatarUrl = null, bool isMicOn = true)
     {
         string resolvedUserId = !string.IsNullOrWhiteSpace(userId)
             ? userId
@@ -78,7 +78,8 @@ public class CallHub : Hub
         {
             UserId = resolvedUserId,
             DisplayName = resolvedDisplayName,
-            AvatarUrl = avatarUrl
+            AvatarUrl = avatarUrl,
+            IsMicOn = isMicOn
         };
 
         VoiceChannelManager.AddUser(Context.ConnectionId, channelId, serverId, user);
@@ -185,6 +186,24 @@ public class CallHub : Hub
         }
 
         await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", isCamOn);
+    }
+
+    public async Task NotifyVoiceMicStatusChanged(bool isMicOn)
+    {
+        string userId = Context.UserIdentifier!;
+
+        bool updated = VoiceChannelManager.UpdateMicStatus(
+            Context.ConnectionId, userId, isMicOn,
+            out string? channelId, out string? serverId);
+
+        if (!updated || channelId == null) return;
+
+        await Clients.Group(channelId).SendAsync("VoiceUserMicStatusChanged", userId, isMicOn);
+
+        if (!string.IsNullOrWhiteSpace(serverId))
+        {
+            await Clients.Group($"server:{serverId}").SendAsync("VoiceChannelUserMicStatusChanged", channelId, userId, isMicOn);
+        }
     }
 
     public async Task NotifyMicStatusChanged(string toUserId, bool isMicOn)

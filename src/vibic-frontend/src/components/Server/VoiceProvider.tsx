@@ -1,17 +1,12 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { VoiceContext } from '../../context/VoiceContext';
+import { VoiceContext, VoiceUser } from '../../context/VoiceContext';
 import { callHubConnection } from '../../services/signalRClient';
 import { rtcConfiguration } from '../../utils/webrtcConfig';
 import { useAuthContext } from '../../context/AuthContext';
+import { useMedia } from '../../context/MediaContext';
 
 interface Props {
     children: React.ReactNode;
-}
-
-interface VoiceUser {
-    userId: string;
-    displayName: string;
-    avatarUrl?: string | null;
 }
 
 export default function VoiceProvider({ children }: Props) {
@@ -21,6 +16,9 @@ export default function VoiceProvider({ children }: Props) {
     const [voiceUsersByChannel, setVoiceUsersByChannel] = useState<Record<string, VoiceUser[]>>({});
     const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
     const { selfUser } = useAuthContext();
+    const { isMicOn, isHeadphonesOn } = useMedia();
+    const isMicOnRef = useRef(isMicOn);
+    isMicOnRef.current = isMicOn;
     const currentServerRef = useRef<string | null>(null);
     const voiceChannelIdsRef = useRef<string[]>([]);
     const lastJoinKeyRef = useRef<string | null>(null);
@@ -121,6 +119,9 @@ export default function VoiceProvider({ children }: Props) {
 
         if (!streamRef.current) {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getAudioTracks().forEach((track) => {
+                track.enabled = isMicOnRef.current;
+            });
             streamRef.current = stream;
         }
 
@@ -175,6 +176,10 @@ export default function VoiceProvider({ children }: Props) {
             });
 
             console.log(`📤 Offer отправлен (по UserJoinedVoice) пользователю: ${user.displayName}`);
+        });
+
+        callHubConnection.on('VoiceUserMicStatusChanged', (userId: string, isMicOn: boolean) => {
+            setVoiceUsers(prev => prev.map(u => u.userId === userId ? { ...u, isMicOn } : u));
         });
 
         callHubConnection.on('UserLeftVoice', (userId: string) => {
@@ -247,7 +252,7 @@ export default function VoiceProvider({ children }: Props) {
             }
         });
 
-        await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl);
+        await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl, isMicOnRef.current);
     }, [selfUser, leaveChannel]);
 
     const joinServer = useCallback(async (serverId: string, voiceChannelIds: string[]) => {
@@ -284,6 +289,27 @@ export default function VoiceProvider({ children }: Props) {
         lastJoinKeyRef.current = null;
         setVoiceUsersByChannel({});
     }, []);
+
+    // Sync mic track with isMicOn state and notify voice channel
+    useEffect(() => {
+        streamRef.current?.getAudioTracks().forEach((track) => {
+            track.enabled = isMicOn;
+        });
+
+        if (currentChannelIdRef.current) {
+            callHubConnection.invoke('NotifyVoiceMicStatusChanged', isMicOn).catch(console.error);
+        }
+    }, [isMicOn]);
+
+    // Mute/unmute all remote audio elements when headphones toggled
+    useEffect(() => {
+        peersRef.current.forEach((_, userId) => {
+            const audio = document.getElementById(`audio-${userId}`) as HTMLAudioElement | null;
+            if (audio) {
+                audio.muted = !isHeadphonesOn;
+            }
+        });
+    }, [isHeadphonesOn]);
 
     useEffect(() => {
         return () => {
@@ -333,14 +359,24 @@ export default function VoiceProvider({ children }: Props) {
             });
         };
 
+        const handleMicStatusChanged = (channelId: string, userId: string, isMicOn: boolean) => {
+            setVoiceUsersByChannel((prev) => {
+                const current = prev[channelId] ?? [];
+                return { ...prev, [channelId]: current.map(u => u.userId === userId ? { ...u, isMicOn } : u) };
+            });
+        };
+
         callHubConnection.off('VoiceChannelUserJoined');
         callHubConnection.off('VoiceChannelUserLeft');
+        callHubConnection.off('VoiceChannelUserMicStatusChanged');
         callHubConnection.on('VoiceChannelUserJoined', handleUserJoined);
         callHubConnection.on('VoiceChannelUserLeft', handleUserLeft);
+        callHubConnection.on('VoiceChannelUserMicStatusChanged', handleMicStatusChanged);
 
         return () => {
             callHubConnection.off('VoiceChannelUserJoined');
             callHubConnection.off('VoiceChannelUserLeft');
+            callHubConnection.off('VoiceChannelUserMicStatusChanged');
         };
     }, []);
 

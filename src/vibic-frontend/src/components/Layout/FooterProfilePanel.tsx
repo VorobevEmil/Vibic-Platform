@@ -18,7 +18,7 @@ import { getUserStatusOption } from '../../utils/userStatus';
 
 export default function FooterProfilePanel() {
   const { selfUser: user } = useAuthContext();
-  const { isMicOn, isHeadphonesOn, setIsMicOn, setIsHeadphonesOn } = useMedia();
+  const { isMicOn, isHeadphonesOn, setIsMicOn, toggleHeadphones } = useMedia();
   const { currentChannelId, leaveChannel } = useVoice();
   const { isCallActive, endCall } = useCallContext();
   const [showProfile, setShowProfile] = useState(false);
@@ -69,22 +69,28 @@ export default function FooterProfilePanel() {
           {/* Mic toggle */}
           <button
             type="button"
-            onClick={() => setIsMicOn((prev) => !prev)}
-            title={isMicOn ? 'Выключить микрофон' : 'Включить микрофон'}
+            onClick={() => !isHeadphonesOn ? toggleHeadphones() : setIsMicOn((prev) => !prev)}
+            title={
+              !isHeadphonesOn
+                ? 'Вы заглушены — нажмите для включения звука'
+                : isMicOn
+                ? 'Выключить микрофон'
+                : 'Включить микрофон'
+            }
             className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-              isMicOn
+              isMicOn && isHeadphonesOn
                 ? 'text-gray-400 hover:bg-white/8 hover:text-white'
                 : 'bg-red-500/15 text-red-400 hover:bg-red-500/25'
             }`}
           >
-            {isMicOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+            {isMicOn && isHeadphonesOn ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
           </button>
 
           {/* Headphones toggle */}
           <button
             type="button"
-            onClick={() => setIsHeadphonesOn((prev) => !prev)}
-            title={isHeadphonesOn ? 'Выключить звук' : 'Включить звук'}
+            onClick={toggleHeadphones}
+            title={isHeadphonesOn ? 'Заглушить звук' : 'Включить звук'}
             className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
               isHeadphonesOn
                 ? 'text-gray-400 hover:bg-white/8 hover:text-white'

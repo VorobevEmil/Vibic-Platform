@@ -60,6 +60,26 @@ public static class VoiceChannelManager
         }
     }
 
+    public static bool UpdateMicStatus(string connectionId, string userId, bool isMicOn, out string? channelId, out string? serverId)
+    {
+        channelId = null;
+        serverId = null;
+
+        ConnectionToServer.TryGetValue(connectionId, out serverId);
+
+        if (!ConnectionToChannel.TryGetValue(connectionId, out string? chId)) return false;
+        channelId = chId;
+
+        lock (Lock)
+        {
+            if (!ChannelUsers.TryGetValue(chId, out List<VoiceUser>? users)) return false;
+            VoiceUser? user = users.FirstOrDefault(u => u.UserId == userId);
+            if (user == null) return false;
+            user.IsMicOn = isMicOn;
+            return true;
+        }
+    }
+
     public static Dictionary<string, List<VoiceUser>> GetUsersForChannels(IEnumerable<string> channelIds)
     {
         Dictionary<string, List<VoiceUser>> result = new();

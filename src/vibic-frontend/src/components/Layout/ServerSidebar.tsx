@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import CreateServerModal from '../Server/CreateServerModal';
@@ -10,77 +10,102 @@ import { resolveAssetUrl } from '../../api/httpClient';
 export default function ServerSidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
+    const { serverId } = useParams<{ serverId: string }>();
 
-    const CreateServer = async (name: string, iconFile: File | null) => {
-
+    const createServer = async (name: string, iconFile: File | null) => {
         try {
             const response = await serversApi.createServer(name, iconFile);
-
             setServers(prev => [...prev, response.data]);
-        } catch (error) {
-            console.log('Не удалось создать сервер')
+        } catch {
+            console.log('Не удалось создать сервер');
         }
     };
 
     useEffect(() => {
-        const ReceiveMyServers = (async () => {
+        const fetchServers = async () => {
             try {
                 const response = await serversApi.getMyServers();
-
                 setServers(response.data);
             } catch (error) {
-                console.log('Не получилось получить список серверов', error)
+                console.log('Не получилось получить список серверов', error);
             }
-        })
-
-        ReceiveMyServers();
-    }, [])
+        };
+        fetchServers();
+    }, []);
 
     return (
-        <div className="w-[72px] flex flex-col items-center py-4 gap-4">
+        <div className="w-[72px] flex flex-col items-center py-3 gap-2 bg-[#1e1f22] border-r border-white/[0.05]">
 
-            {/* Vibic Logo button */}
+            {/* Home / DM button */}
             <Link
                 to="/channels/@me"
-                className="group w-12 h-12 rounded-2xl hover:rounded-3xl hover:bg-[#5865F2]/40 transition-all flex items-center justify-center overflow-hidden"
+                className="group relative flex items-center justify-center w-12 h-12 rounded-2xl hover:rounded-3xl bg-[#313338] hover:bg-indigo-600 transition-all duration-200 overflow-hidden"
             >
                 <img
                     src="/vibic_logo.svg"
-                    alt="Vibic Logo"
-                    className="w-7 h-7 object-contain"
+                    alt="Vibic"
+                    className="w-6 h-6 object-contain"
                 />
+                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                    Личные сообщения
+                </span>
             </Link>
 
-            {servers.map((server) => (
-                <div key={server.id} className="group relative">
-                    <Link
-                        to={`/channels/${server.id}/${server.channelId}`}
-                        className="relative w-10 h-10 bg-indigo-500 rounded-2xl transition-all hover:rounded-3xl flex items-center justify-center overflow-hidden"
-                    >
-                        {server.iconUrl ? (
-                            <img src={resolveAssetUrl(server.iconUrl)} alt={server.name} className="absolute inset-0 w-full h-full object-cover object-center" />
-                        ) : (
-                            <span className="text-white font-bold">{server.name.charAt(0)}</span>
-                        )}
-                    </Link>
+            {/* Separator */}
+            <div className="w-8 h-px bg-white/10 my-1" />
 
-                    <div className="absolute left-14 top-1/2 -translate-y-1/2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                        {server.name}
+            {/* Server list */}
+            {servers.map((server) => {
+                const isActive = server.id === serverId;
+                return (
+                    <div key={server.id} className="group relative flex items-center">
+                        {/* Active indicator */}
+                        <div className={`absolute -left-3 w-1 rounded-r-full bg-white transition-all duration-200 ${isActive ? 'h-8' : 'h-0 group-hover:h-5'}`} />
+
+                        <Link
+                            to={`/channels/${server.id}/${server.channelId}`}
+                            className={`relative w-12 h-12 flex items-center justify-center overflow-hidden transition-all duration-200 ${
+                                isActive
+                                    ? 'rounded-2xl'
+                                    : 'rounded-3xl hover:rounded-2xl'
+                            } ${!server.iconUrl ? 'bg-indigo-600 hover:bg-indigo-500' : ''}`}
+                        >
+                            {server.iconUrl ? (
+                                <img
+                                    src={resolveAssetUrl(server.iconUrl)}
+                                    alt={server.name}
+                                    className="absolute inset-0 w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white font-bold text-sm">
+                                    {server.name.charAt(0).toUpperCase()}
+                                </span>
+                            )}
+                        </Link>
+
+                        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                            {server.name}
+                        </span>
                     </div>
-                </div>
-            ))}
+                );
+            })}
 
-
-            <button onClick={() => setIsCreateModalOpen(true)}
-                className="w-10 h-10 bg-gray-600 rounded-2xl transition-all text-white hover:rounded-3xl hover:bg-gray-500 flex items-center justify-center"
+            {/* Add server */}
+            <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="group relative w-12 h-12 rounded-3xl hover:rounded-2xl bg-[#313338] hover:bg-green-600 text-green-500 hover:text-white flex items-center justify-center transition-all duration-200"
+                title="Создать сервер"
             >
                 <Plus className="w-5 h-5" />
+                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                    Создать сервер
+                </span>
             </button>
 
             {isCreateModalOpen && (
                 <CreateServerModal
                     onClose={() => setIsCreateModalOpen(false)}
-                    onCreate={CreateServer}
+                    onCreate={createServer}
                 />
             )}
         </div>

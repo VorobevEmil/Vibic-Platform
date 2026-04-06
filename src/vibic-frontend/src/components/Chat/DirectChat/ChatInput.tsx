@@ -10,12 +10,15 @@ interface ChatInputProps {
 
 export default function ChatInput({ inputValue, setInputValue, handleSend, handleTyping, placeholder }: ChatInputProps) {
     return (
-        <div className="h-16 px-4 py-2 border-t border-[#1e1f22] flex items-center gap-3 bg-[#383a40]">
-            <button><Paperclip className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+        <div className="flex items-center gap-2 bg-[#383a40] rounded-2xl px-3 py-2">
+            <button className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                <Paperclip className="w-4 h-4" />
+            </button>
+
             <input
                 type="text"
                 placeholder={placeholder || 'Сообщение...'}
-                className="flex-1 bg-[#1e1f22] rounded-md px-4 py-2 text-sm text-white placeholder-gray-400 outline-none"
+                className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 outline-none py-1"
                 value={inputValue}
                 onChange={(e) => {
                     setInputValue(e.target.value);
@@ -23,10 +26,18 @@ export default function ChatInput({ inputValue, setInputValue, handleSend, handl
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             />
-            <button onClick={handleSend} className="hover:text-white text-gray-400">
-                <Send className="w-5 h-5" />
+
+            <button className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                <Smile className="w-4 h-4" />
             </button>
-            <button><Smile className="w-5 h-5 text-gray-400 hover:text-white" /></button>
+
+            <button
+                onClick={handleSend}
+                disabled={!inputValue.trim()}
+                className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+                <Send className="w-4 h-4" />
+            </button>
         </div>
     );
 }

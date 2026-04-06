@@ -21,7 +21,7 @@ interface UserStatusSnapshot {
 }
 
 function isPresentStatus(userStatus: number | null): boolean {
-  return userStatus !== null && userStatus !== 4 && userStatus !== 5;
+  return userStatus !== null && userStatus !== 4;
 }
 
 function getStatusRank(userStatus: number | null): number {

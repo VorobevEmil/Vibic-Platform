@@ -10,23 +10,26 @@ function SignInPage() {
 
   return (
     <AuthLayout
-      title="Sign in to Vibic"
-      subtitle="Welcome back! Please enter your credentials."
+      title="С возвращением"
+      subtitle="Введите данные, чтобы войти в аккаунт."
       footer={
         <>
-          Don’t have an account?{' '}
-          <Link to="/sign-up" className="text-indigo-600 hover:text-indigo-500 font-medium">
-            Sign up
+          Нет аккаунта?{' '}
+          <Link to="/sign-up" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+            Зарегистрироваться
           </Link>
         </>
       }
     >
-      <form className="space-y-4" onSubmit={handleSignIn}>
+      <form className="space-y-5" onSubmit={handleSignIn}>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Email
+          </label>
           <input
             type="email"
             className="input"
+            placeholder="you@example.com"
             value={signInRequest.email}
             onChange={(e) =>
               setSignInRequest(prev => ({ ...prev, email: e.target.value }))
@@ -36,19 +39,24 @@ function SignInPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+            Пароль
+          </label>
           <input
             type="password"
             className="input"
+            placeholder="••••••••"
             value={signInRequest.password}
-            onChange={(e) => 
+            onChange={(e) =>
               setSignInRequest(prev => ({ ...prev, password: e.target.value }))
             }
             required
           />
         </div>
 
-        <button type="submit" className="btn-primary w-full">Sign In</button>
+        <button type="submit" className="btn-primary w-full mt-2">
+          Войти
+        </button>
       </form>
     </AuthLayout>
   );

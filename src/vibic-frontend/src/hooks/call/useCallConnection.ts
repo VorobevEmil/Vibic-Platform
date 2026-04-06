@@ -19,7 +19,7 @@ export default function useCallConnection({
     const streamRef = useRef<MediaStream | null>(null);
 
     const [isCamOn, setIsCamOn] = useState(callRequest.isCamOn ?? true);
-    const { isMicOn } = useMedia();
+    const { isMicOn, isHeadphonesOn } = useMedia();
     const [remoteStreamStarted, setRemoteStreamStarted] = useState(false);
     const [isRemoteCamOn, setIsRemoteCamOn] = useState(false);
     const [isRemoteMicOn, setIsRemoteMicOn] = useState(true);
@@ -112,6 +112,12 @@ export default function useCallConnection({
             callHubConnection.invoke('NotifyMicStatusChanged', callRequest.peerUserId, isMicOn);
         }
     }, [isMicOn]);
+
+    useEffect(() => {
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.muted = !isHeadphonesOn;
+        }
+    }, [isHeadphonesOn]);
 
 
     useEffect(() => {

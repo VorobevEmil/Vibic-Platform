@@ -86,22 +86,24 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   }, [loadMoreMessages, scrollContainerRef]);
 
   return (
-    <div className="relative flex flex-col flex-1 h-full bg-[#313338] border-t border-gray-700">
+    <div className="relative flex flex-col flex-1 h-full bg-[#313338]">
 
       <div>
         {children}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-3" ref={scrollContainerRef}>
-        <ChatMessages
-          messages={messages}
-          typingUsername={typingUsername}
-          messagesEndRef={messagesEndRef}
-          isLoadingMore={isLoadingMore}
-          scrollContainerRef={scrollContainerRef}
-          unreadMessageId={unreadMessageId}
-          unreadCount={unreadCount}
-        />
+      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+        <div className="max-w-3xl mx-auto px-4 py-3">
+          <ChatMessages
+            messages={messages}
+            typingUsername={typingUsername}
+            messagesEndRef={messagesEndRef}
+            isLoadingMore={isLoadingMore}
+            scrollContainerRef={scrollContainerRef}
+            unreadMessageId={unreadMessageId}
+            unreadCount={unreadCount}
+          />
+        </div>
       </div>
 
       {(!isNearBottom || unreadCount > 0) && (
@@ -116,13 +118,15 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
         </div>
       )}
 
-      <ChatInput
-        inputValue={inputValue}
-        setInputValue={setInputValue}
-        handleSend={handleSend}
-        handleTyping={handleTyping}
-        placeholder={serverId ? 'Написать' : (peerUser ? `Написать @${peerUser.displayName}` : 'Загрузка...')}
-      />
+      <div className="max-w-3xl mx-auto w-full px-4 pb-4">
+        <ChatInput
+          inputValue={inputValue}
+          setInputValue={setInputValue}
+          handleSend={handleSend}
+          handleTyping={handleTyping}
+          placeholder={serverId ? 'Написать' : (peerUser ? `Написать @${peerUser.displayName}` : 'Загрузка...')}
+        />
+      </div>
     </div>
   );
 }

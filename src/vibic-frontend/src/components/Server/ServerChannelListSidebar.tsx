@@ -6,7 +6,8 @@ import {
     Plus,
     Hash,
     Volume2,
-    UserPlus
+    UserPlus,
+    MicOff,
 } from 'lucide-react';
 import { channelsApi } from '../../api/channelsApi';
 import CreateChannelModal from './CreateChannelModal';
@@ -161,7 +162,10 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                                                             {user.displayName.charAt(0)}
                                                         </span>
                                                     )}
-                                                    <span className="truncate">{user.displayName}</span>
+                                                    <span className="truncate flex-1">{user.displayName}</span>
+                                                    {user.isMicOn === false && (
+                                                        <MicOff className="w-3 h-3 shrink-0 text-red-400" />
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
