@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { resolveAssetUrl } from '../api/httpClient';
 
 // ── Image attachment marker: %%IMG|/files/attachments/...%% ──────────────────
-const IMG_RE = /%%IMG\|([^%]+)%%/g;
+// const IMG_RE = /%%IMG\|([^%]+)%%/g;
 
 function ImageAttachment({ url }: { url: string }) {
   const [open, setOpen] = useState(false);
