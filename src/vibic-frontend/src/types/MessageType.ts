@@ -5,7 +5,8 @@ interface MessageResponse {
     senderId: string;
     senderUsername: string;
     senderAvatarUrl: string;
-    sentAt: Date
+    sentAt: Date;
+    isEdited?: boolean;
 }
 
 export default MessageResponse;

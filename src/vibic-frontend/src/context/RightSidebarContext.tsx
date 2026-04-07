@@ -1,8 +1,10 @@
-import React, { ReactNode, createContext, useContext, useMemo, useState } from 'react';
+import React, { ReactNode, createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 interface RightSidebarContextType {
   sidebar: ReactNode | null;
   setSidebar: (sidebar: ReactNode | null) => void;
+  isVisible: boolean;
+  toggleVisibility: () => void;
 }
 
 const RightSidebarContext = createContext<RightSidebarContextType | null>(null);
@@ -18,12 +20,26 @@ export const useRightSidebarContext = (): RightSidebarContextType => {
 };
 
 export const RightSidebarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [sidebar, setSidebar] = useState<ReactNode | null>(null);
+  const [sidebar, setSidebarState] = useState<ReactNode | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const setSidebar = useCallback((next: ReactNode | null) => {
+    setSidebarState(next);
+    if (next !== null) {
+      setIsVisible(true);
+    }
+  }, []);
+
+  const toggleVisibility = useCallback(() => {
+    setIsVisible((v) => !v);
+  }, []);
 
   const value = useMemo<RightSidebarContextType>(() => ({
     sidebar,
     setSidebar,
-  }), [sidebar]);
+    isVisible,
+    toggleVisibility,
+  }), [sidebar, setSidebar, isVisible, toggleVisibility]);
 
   return (
     <RightSidebarContext.Provider value={value}>

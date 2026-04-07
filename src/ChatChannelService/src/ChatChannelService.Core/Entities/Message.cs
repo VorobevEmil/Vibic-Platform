@@ -20,6 +20,11 @@ public class Message : BaseEntity, IUpdatable, ISoftDeletable
     public ChatUser Sender { get; init; } = null!;
     public string Content { get; private set; } = string.Empty;
     public DateTime? UpdatedAt { get; init; }
+
+    public void UpdateContent(string newContent)
+    {
+        Content = newContent;
+    }
     public bool IsDeleted { get; init; }
     public DateTime? DeletedAt { get; init; }
 }

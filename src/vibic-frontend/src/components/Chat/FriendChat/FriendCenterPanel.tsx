@@ -2,6 +2,7 @@ import { Check, MessageCircle, UserMinus, UserPlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { friendsApi } from '../../../api/friendsApi';
+import { useToast } from '../../../context/ToastContext';
 import { resolveAssetUrl } from '../../../api/httpClient';
 import { presenceHubConnection } from '../../../services/signalRClient';
 import { resolveOrCreateChannel } from '../../../services/channelService';
@@ -26,6 +27,7 @@ export default function FriendCenterPanel() {
     const [receiverId, setReceiverId] = useState('');
     const [refresh, setRefresh] = useState(false);
     const navigate = useNavigate();
+    const { showToast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -66,7 +68,7 @@ export default function FriendCenterPanel() {
             setReceiverId('');
             setRefresh((r) => !r);
         } catch {
-            alert('Не удалось отправить запрос');
+            showToast('error', 'Не удалось отправить запрос', 'Проверьте имя пользователя и попробуйте снова.');
         }
     };
 

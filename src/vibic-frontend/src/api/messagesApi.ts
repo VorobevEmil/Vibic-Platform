@@ -20,6 +20,17 @@ export const messagesApi = {
     }
 
     return http.get<CursorPaginatedResult<MessageResponse>>(url.toString());
+  },
 
-  }
+  deleteMessage: (channelId: string, messageId: string) =>
+    http.delete(`/channels/${channelId}/messages/${messageId}`),
+
+  deleteServerMessage: (serverId: string, channelId: string, messageId: string) =>
+    http.delete(`/servers/${serverId}/channels/${channelId}/messages/${messageId}`),
+
+  editMessage: (channelId: string, messageId: string, content: string) =>
+    http.patch(`/channels/${channelId}/messages/${messageId}`, { content }),
+
+  editServerMessage: (serverId: string, channelId: string, messageId: string, content: string) =>
+    http.patch(`/servers/${serverId}/channels/${channelId}/messages/${messageId}`, { content }),
 };

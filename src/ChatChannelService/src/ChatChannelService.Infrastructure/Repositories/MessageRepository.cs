@@ -41,8 +41,21 @@ public class MessageRepository : IMessageRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Message?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Messages
+            .Include(m => m.Channel)
+            .Include(m => m.Sender)
+            .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+    }
+
     public async Task CreateAsync(Message message, CancellationToken cancellationToken = default)
     {
         await _dbContext.Messages.AddAsync(message, cancellationToken);
+    }
+
+    public void Delete(Message message)
+    {
+        _dbContext.Messages.Remove(message);
     }
 }

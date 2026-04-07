@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useDirectChannel from '../../hooks/chat/useDirectChannel';
 import useSignalRChannel from '../../hooks/chat/useSignalRChannel';
 import { useChatMessages } from '../../hooks/chat/useChatMessages';
-import ChatMessages from './DirectChat/ChatMessages';
+import ChatMessages, { ChatMessagesRef } from './DirectChat/ChatMessages';
 import ChatInput from './DirectChat/ChatInput';
 import { chatHubConnection } from '../../services/signalRClient';
 import { useAuthContext } from '../../context/AuthContext';
 import { ChannelType } from '../../types/enums/ChannelType';
 import MessageResponse from '../../types/MessageType';
+import { messagesApi } from '../../api/messagesApi';
+import { filesApi } from '../../api/filesApi';
 
 interface ChatCenterPanelProps {
   channelType: ChannelType;
@@ -19,12 +21,14 @@ interface ChatCenterPanelProps {
 export default function ChatCenterPanel({ channelType, serverId, channelId, children }: ChatCenterPanelProps) {
   const { selfUser } = useAuthContext();
   const [inputValue, setInputValue] = useState('');
-  const peerUser = useDirectChannel(
-    {
-      serverId: serverId,
-      channelId: channelId,
-      localUserId: selfUser?.id
-    });
+  const [replyTo, setReplyTo] = useState<MessageResponse | null>(null);
+  const chatMessagesRef = useRef<ChatMessagesRef>(null);
+
+  const peerUser = useDirectChannel({
+    serverId: serverId,
+    channelId: channelId,
+    localUserId: selfUser?.id,
+  });
 
   const {
     messages,
@@ -37,13 +41,10 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     loadMoreMessages,
     initializeMessages,
     appendIncomingMessage,
-    scrollToBottom
-  } = useChatMessages(
-    {
-      serverId: serverId,
-      channelId: channelId
-    }
-  );
+    deleteMessageById,
+    updateMessageContent,
+    scrollToBottom,
+  } = useChatMessages({ serverId, channelId });
 
   const handleIncomingMessage = useCallback((message: MessageResponse) => {
     appendIncomingMessage(message, {
@@ -51,19 +52,43 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     });
   }, [appendIncomingMessage, selfUser?.id]);
 
-  const { sendMessage, connected, typingUsername } = useSignalRChannel(channelId, handleIncomingMessage);
+  const { sendMessage, connected, typingUsername } = useSignalRChannel(
+    channelId,
+    handleIncomingMessage,
+    deleteMessageById,
+    updateMessageContent,
+  );
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || !connected || !selfUser) return;
+  const handleSend = async (files: File[] = []) => {
+    const text = inputValue.trim();
+    if (!text && files.length === 0) return;
+    if (!connected || !selfUser) return;
+
+    // Upload images and build markers
+    let imageMarkers = '';
+    for (const file of files) {
+      try {
+        const res = await filesApi.uploadAttachment(file);
+        imageMarkers += `%%IMG|${res.data}%%\n`;
+      } catch (err) {
+        console.error('Failed to upload image:', err);
+      }
+    }
+
+    const baseContent = imageMarkers + text;
+    const content = replyTo
+      ? `%%REPLY|${replyTo.id}|${replyTo.senderUsername}|${replyTo.content.replace(/^%%REPLY\|[^|]+\|[^|]+\|[^%]*%%\n?/, '').slice(0, 120).replace(/\|/g, ' ').replace(/%/g, '')}%%\n${baseContent}`
+      : baseContent;
 
     await sendMessage({
       channelType: channelType,
       serverId: serverId,
       channelId: channelId,
-      content: inputValue,
+      content,
     });
 
     setInputValue('');
+    setReplyTo(null);
     setTimeout(() => scrollToBottom('smooth'), 50);
   };
 
@@ -73,9 +98,44 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     }
   };
 
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    deleteMessageById(messageId);
+    try {
+      if (serverId) {
+        await messagesApi.deleteServerMessage(serverId, channelId, messageId);
+      } else {
+        await messagesApi.deleteMessage(channelId, messageId);
+      }
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+    }
+  }, [deleteMessageById, channelId, serverId]);
+
+  const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
+    updateMessageContent(messageId, newContent);
+    try {
+      if (serverId) {
+        await messagesApi.editServerMessage(serverId, channelId, messageId, newContent);
+      } else {
+        await messagesApi.editMessage(channelId, messageId, newContent);
+      }
+    } catch (err) {
+      console.error('Failed to edit message:', err);
+    }
+  }, [updateMessageContent, channelId, serverId]);
+
+  const handleReply = useCallback((message: MessageResponse) => {
+    setReplyTo(message);
+  }, []);
+
   useEffect(() => {
     initializeMessages();
   }, [initializeMessages]);
+
+  useEffect(() => {
+    // Сбрасываем ответ при смене канала
+    setReplyTo(null);
+  }, [channelId]);
 
   useEffect(() => {
     const scrollEl = scrollContainerRef.current;
@@ -95,6 +155,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
       <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
         <div className="max-w-3xl mx-auto px-4 py-3">
           <ChatMessages
+            ref={chatMessagesRef}
             messages={messages}
             typingUsername={typingUsername}
             messagesEndRef={messagesEndRef}
@@ -102,6 +163,11 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
             scrollContainerRef={scrollContainerRef}
             unreadMessageId={unreadMessageId}
             unreadCount={unreadCount}
+            currentUserId={selfUser?.id}
+            serverId={serverId}
+            onDeleteMessage={handleDeleteMessage}
+            onEditMessage={handleEditMessage}
+            onReply={handleReply}
           />
         </div>
       </div>
@@ -125,6 +191,8 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
           handleSend={handleSend}
           handleTyping={handleTyping}
           placeholder={serverId ? 'Написать' : (peerUser ? `Написать @${peerUser.displayName}` : 'Загрузка...')}
+          replyTo={replyTo}
+          onCancelReply={() => setReplyTo(null)}
         />
       </div>
     </div>

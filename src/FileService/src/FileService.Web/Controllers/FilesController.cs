@@ -45,4 +45,31 @@ public class FilesController(IMediator mediator) : ControllerBase
 
         return Created(string.Empty, uniqueFileName);
     }
+
+    [HttpPost("attachments")]
+    public async Task<IActionResult> UploadAttachment([FromForm] IFormFile file)
+    {
+        UploadAttachmentCommand command = new(file);
+        string url = await mediator.Send(command);
+
+        return Created(string.Empty, url);
+    }
+
+    [HttpGet("attachments/{fileId}/{fileName}")]
+    public async Task<IActionResult> GetAttachment(Guid fileId, string fileName)
+    {
+        GetFileQuery query = new(fileId, fileName, "attachments");
+        Stream stream = await mediator.Send(query);
+
+        string contentType = Path.GetExtension(fileName).ToLowerInvariant() switch
+        {
+            ".png"  => "image/png",
+            ".gif"  => "image/gif",
+            ".webp" => "image/webp",
+            ".svg"  => "image/svg+xml",
+            _       => "image/jpeg",
+        };
+
+        return File(stream, contentType);
+    }
 }

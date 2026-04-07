@@ -57,7 +57,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 </span>
                 <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
                     <UserPlus className="w-4 h-4 hover:text-white" />
-                    <span className="pointer-events-none absolute right-0 bottom-full mb-2
+                    <span className="pointer-events-none absolute right-0 top-full mt-1
                         opacity-0 group-hover:opacity-100 transition-opacity duration-200
                         bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                         Пригласить на сервер

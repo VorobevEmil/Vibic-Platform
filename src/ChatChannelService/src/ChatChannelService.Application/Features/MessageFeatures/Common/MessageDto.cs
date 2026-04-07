@@ -7,5 +7,6 @@ public record MessageDto(
     Guid SenderId,
     string SenderUsername,
     string SenderAvatarUrl,
-    DateTime SentAt
+    DateTime SentAt,
+    DateTime? UpdatedAt
 );

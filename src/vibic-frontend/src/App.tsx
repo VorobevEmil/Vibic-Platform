@@ -12,6 +12,7 @@ import { AuthProvider } from './context/AuthContext';
 import { HeaderProvider } from './context/HeaderContext';
 import { RightSidebarProvider } from './context/RightSidebarContext';
 import ServerAvailabilityToast from './components/Layout/ServerAvailabilityToast';
+import { ToastProvider } from './context/ToastContext';
 
 function ProtectedAppLayout() {
   return (
@@ -27,6 +28,7 @@ function ProtectedAppLayout() {
 
 function App() {
   return (
+    <ToastProvider>
     <HeaderProvider>
       <ServerAvailabilityToast />
       <Routes>
@@ -43,7 +45,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </HeaderProvider>
-
+    </ToastProvider>
   );
 }
 

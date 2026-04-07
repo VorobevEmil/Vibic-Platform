@@ -27,7 +27,18 @@ export default function FooterProfilePanel() {
   if (!user) {
     return (
       <section className="absolute bottom-2 left-2 w-[312px] rounded-xl border border-white/8 bg-[#1a1b1f] px-3 py-2.5">
-        <div className="animate-pulse text-sm text-white/40">Загрузка профиля...</div>
+        <div className="flex items-center gap-2.5 px-1 py-0.5 animate-pulse">
+          <div className="w-8 h-8 rounded-full bg-white/10 shrink-0" />
+          <div className="flex-1 space-y-1.5 min-w-0">
+            <div className="h-3 w-24 bg-white/10 rounded-full" />
+            <div className="h-2.5 w-16 bg-white/[0.07] rounded-full" />
+          </div>
+          <div className="flex gap-0.5 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-white/[0.06]" />
+            <div className="w-8 h-8 rounded-lg bg-white/[0.06]" />
+            <div className="w-8 h-8 rounded-lg bg-white/[0.06]" />
+          </div>
+        </div>
       </section>
     );
   }

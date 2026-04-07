@@ -9,4 +9,5 @@ public class MessageResponse
     public required string SenderUsername { get; init; }
     public required string SenderAvatarUrl { get; init; }
     public required DateTime SentAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
 }

@@ -21,6 +21,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<MessageResponse[]>([]);
   const isNearBottomRef = useRef(true);
+  const pendingScrollRef = useRef<ScrollBehavior | false>(false);
 
   const clearUnreadState = useCallback(() => {
     setUnreadMessageId(null);
@@ -94,11 +95,11 @@ export function useChatMessages({ serverId, channelId }: Props) {
       setMessages(response.data.items);
       setCursor(response.data.cursor);
       setHasMore(response.data.hasMore);
-      setTimeout(() => scrollToBottom('auto'), 10);
+      pendingScrollRef.current = 'auto';
     } catch (error) {
       console.log("Ошибка во время инициализации сообщении", error)
     }
-  }, [channelId, clearUnreadState, scrollToBottom, serverId]);
+  }, [channelId, clearUnreadState, serverId]);
 
   const loadMoreMessages = useCallback(async () => {
     if (!hasMore || isLoadingMore) return;
@@ -152,13 +153,35 @@ export function useChatMessages({ serverId, channelId }: Props) {
 
     if (options?.forceScroll || isNearBottomRef.current) {
       clearUnreadState();
-      setTimeout(() => scrollToBottom('smooth'), 10);
+      pendingScrollRef.current = 'smooth';
       return;
     }
 
     setUnreadMessageId((currentUnreadMessageId) => currentUnreadMessageId ?? message.id);
     setUnreadCount((currentUnreadCount) => currentUnreadCount + 1);
-  }, [clearUnreadState, scrollToBottom]);
+  }, [clearUnreadState]);
+
+  // Скролл вниз после того как React закоммитил новое сообщение в DOM
+  useEffect(() => {
+    const behavior = pendingScrollRef.current;
+    if (!behavior) return;
+    pendingScrollRef.current = false;
+    requestAnimationFrame(() => scrollToBottom(behavior));
+  }, [messages, scrollToBottom]);
+
+  const deleteMessageById = useCallback((messageId: string) => {
+    const next = messagesRef.current.filter(m => m.id !== messageId);
+    messagesRef.current = next;
+    setMessages(next);
+  }, []);
+
+  const updateMessageContent = useCallback((messageId: string, newContent: string) => {
+    const next = messagesRef.current.map(m =>
+      m.id === messageId ? { ...m, content: newContent, isEdited: true } : m
+    );
+    messagesRef.current = next;
+    setMessages(next);
+  }, []);
 
   return {
     messages,
@@ -172,6 +195,8 @@ export function useChatMessages({ serverId, channelId }: Props) {
     loadMoreMessages,
     initializeMessages,
     appendIncomingMessage,
+    deleteMessageById,
+    updateMessageContent,
     scrollToBottom,
   };
 }

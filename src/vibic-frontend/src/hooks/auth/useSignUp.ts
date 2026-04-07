@@ -10,26 +10,26 @@ export function useSignUp() {
     displayName: '',
     username: '',
     email: '',
-    password: ''
+    password: '',
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
     try {
       await authApi.signUp(signUpRequest);
-
-      alert('Account created! 🎉');
-      navigate('/sign-in');
+      navigate('/sign-in?registered=1');
     } catch (err: any) {
-      console.error('Registration error:', err);
-      const message = err.response?.data?.message || 'Unknown error';
-      alert('Registration failed: ' + message);
+      const msg = err.response?.data?.message || err.response?.data || null;
+      setError(msg || 'Не удалось создать аккаунт. Попробуйте позже.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return {
-    signUpRequest, setSignUpRequest,
-    handleRegister
-  };
+  return { signUpRequest, setSignUpRequest, handleRegister, error, isLoading };
 }

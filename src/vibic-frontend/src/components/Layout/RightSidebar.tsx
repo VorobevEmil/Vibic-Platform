@@ -1,9 +1,9 @@
 import { useRightSidebarContext } from '../../context/RightSidebarContext';
 
 export default function RightSidebar() {
-    const { sidebar } = useRightSidebarContext();
+    const { sidebar, isVisible } = useRightSidebarContext();
 
-    if (!sidebar) {
+    if (!sidebar || !isVisible) {
         return null;
     }
 

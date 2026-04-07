@@ -5,7 +5,9 @@ import SendMessageRequest from '../../types/signalR/sendMessageRequest';
 
 export default function useSignalRChannel(
     channelId: string,
-    onReceiveMessage: (message: MessageResponse) => void
+    onReceiveMessage: (message: MessageResponse) => void,
+    onMessageDeleted?: (messageId: string) => void,
+    onMessageEdited?: (messageId: string, newContent: string) => void,
 ) {
     const [connected, setConnected] = useState(false);
     const [typingUsername, setTypingUsername] = useState<string | null>(null);
@@ -13,10 +15,12 @@ export default function useSignalRChannel(
     const prevChannelIdRef = useRef<string | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onReceiveMessageRef = useRef(onReceiveMessage);
+    const onMessageDeletedRef = useRef(onMessageDeleted);
+    const onMessageEditedRef = useRef(onMessageEdited);
 
-    useEffect(() => {
-        onReceiveMessageRef.current = onReceiveMessage;
-    }, [onReceiveMessage]);
+    useEffect(() => { onReceiveMessageRef.current = onReceiveMessage; }, [onReceiveMessage]);
+    useEffect(() => { onMessageDeletedRef.current = onMessageDeleted; }, [onMessageDeleted]);
+    useEffect(() => { onMessageEditedRef.current = onMessageEdited; }, [onMessageEdited]);
 
     useEffect(() => {
         const connect = async () => {
@@ -32,6 +36,8 @@ export default function useSignalRChannel(
 
                 chatHubConnection.off('ReceiveMessage');
                 chatHubConnection.off('UserTyping');
+                chatHubConnection.off('MessageDeleted');
+                chatHubConnection.off('MessageEdited');
 
                 chatHubConnection.on('ReceiveMessage', (msg: MessageResponse) => {
                     onReceiveMessageRef.current(msg);
@@ -40,10 +46,17 @@ export default function useSignalRChannel(
                 chatHubConnection.on('UserTyping', (channelIdFromServer, username) => {
                     if (channelIdFromServer === channelId) {
                         setTypingUsername(username);
-
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
                         typingTimeoutRef.current = setTimeout(() => setTypingUsername(null), 500);
                     }
+                });
+
+                chatHubConnection.on('MessageDeleted', (cId: string, messageId: string) => {
+                    if (cId === channelId) onMessageDeletedRef.current?.(messageId);
+                });
+
+                chatHubConnection.on('MessageEdited', (cId: string, messageId: string, newContent: string) => {
+                    if (cId === channelId) onMessageEditedRef.current?.(messageId, newContent);
                 });
 
                 if (prevChannelIdRef.current && prevChannelIdRef.current !== channelId) {
@@ -64,6 +77,8 @@ export default function useSignalRChannel(
         return () => {
             chatHubConnection.off('ReceiveMessage');
             chatHubConnection.off('UserTyping');
+            chatHubConnection.off('MessageDeleted');
+            chatHubConnection.off('MessageEdited');
 
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         };

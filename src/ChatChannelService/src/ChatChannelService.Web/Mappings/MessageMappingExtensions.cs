@@ -15,7 +15,8 @@ public static class MessageMappingExtensions
             SenderId = messageDto.SenderId,
             SenderUsername = messageDto.SenderUsername,
             SenderAvatarUrl = messageDto.SenderAvatarUrl,
-            SentAt = messageDto.SentAt
+            SentAt = messageDto.SentAt,
+            UpdatedAt = messageDto.UpdatedAt
         };
     }
 }

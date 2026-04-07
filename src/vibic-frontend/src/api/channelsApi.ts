@@ -15,5 +15,8 @@ export const channelsApi = {
   getServerChannelMembers: (serverId: string, channelId: string) =>
     http.get<ServerChannelParticipantResponse[]>(`/servers/${serverId}/channels/${channelId}/members`),
   createServerChannel: (serverId: string, request: ServerChannelRequest) =>
-    http.post(`/servers/${serverId}/channels`, request)
+    http.post(`/servers/${serverId}/channels`, request),
+
+  closeDirectChannel: (channelId: string) =>
+    http.delete(`/channels/direct/${channelId}`),
 };

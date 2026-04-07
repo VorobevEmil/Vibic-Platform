@@ -8,11 +8,46 @@
   }
 
   .btn-primary {
-    @apply py-3 px-4 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all;
+    @apply py-3 px-4 bg-gradient-to-r from-indigo-600 to-violet-600
+           hover:from-indigo-500 hover:to-violet-500
+           active:from-indigo-700 active:to-violet-700
+           text-white font-semibold rounded-xl shadow-lg
+           focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all;
+  }
+
+  .typing-dot {
+    @apply w-1 h-1 rounded-full bg-gray-400 inline-block;
+    animation: typingBounce 1.2s ease-in-out infinite;
   }
 }
 
 html,
 body {
   overscroll-behavior: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%            { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes shrink {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+@keyframes messageHighlight {
+  0%   { background-color: rgba(99, 102, 241, 0.18); }
+  70%  { background-color: rgba(99, 102, 241, 0.12); }
+  100% { background-color: transparent; }
+}
+
+.message-highlight {
+  animation: messageHighlight 2s ease-out forwards;
 }

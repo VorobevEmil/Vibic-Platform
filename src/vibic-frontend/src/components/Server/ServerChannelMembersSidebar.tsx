@@ -6,6 +6,7 @@ import { useAuthContext } from '../../context/AuthContext';
 import { createPresenceHubConnection } from '../../services/signalRClient';
 import { ServerChannelParticipantResponse } from '../../types/channels/ServerChannelType';
 import { getUserStatusOption } from '../../utils/userStatus';
+import UserProfileModal from '../Chat/DirectChat/UserProfileModal';
 
 interface Props {
   serverId: string;
@@ -54,6 +55,13 @@ export default function ServerChannelMembersSidebar({
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
   const participantIdsRef = useRef<string[]>([]);
+  const [profileModal, setProfileModal] = useState<{
+    userId: string;
+    username: string;
+    avatarUrl: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!selfUser) {
@@ -218,14 +226,31 @@ export default function ServerChannelMembersSidebar({
             return (
               <div
                 key={participant.userId}
+                onClick={(e) => setProfileModal({
+                  userId: participant.userId,
+                  username: participant.username,
+                  avatarUrl: participant.avatarUrl ?? '',
+                  x: e.clientX + 12,
+                  y: e.clientY - 20,
+                })}
                 className="rounded-2xl border border-white/8 bg-[#202228] px-3 py-3 transition cursor-pointer hover:border-white/20 hover:bg-[#2a2d35]"
               >
                 <div className="flex items-start gap-3">
-                  <img
-                    src={resolveAssetUrl(participant.avatarUrl)}
-                    alt={participant.displayName}
-                    className="h-10 w-10 rounded-full object-cover"
-                  />
+                  <div className="relative shrink-0 group/avatar">
+                    <img
+                      src={resolveAssetUrl(participant.avatarUrl)}
+                      alt={participant.displayName}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    <Circle
+                      className={`absolute bottom-0 right-0 h-3.5 w-3.5 fill-current ring-2 ring-[#202228] rounded-full ${
+                        statusOption?.badgeClassName ?? 'text-gray-500'
+                      }`}
+                    />
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 rounded-lg bg-[#111214] px-2.5 py-1.5 text-xs text-white shadow-lg whitespace-nowrap opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                      {statusOption?.label ?? 'Статус обновляется'}
+                    </div>
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -239,16 +264,6 @@ export default function ServerChannelMembersSidebar({
 
                     <div className="truncate text-xs text-gray-400">@{participant.username}</div>
 
-                    <div className="mt-2 flex items-center gap-2 text-xs">
-                      <Circle
-                        className={`h-2.5 w-2.5 fill-current ${
-                          statusOption?.badgeClassName ?? 'text-gray-500'
-                        }`}
-                      />
-                      <span className="text-gray-300">
-                        {statusOption?.label ?? 'Статус обновляется'}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -260,7 +275,7 @@ export default function ServerChannelMembersSidebar({
   };
 
   return (
-    <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-t border-gray-700 bg-[#2b2d31] px-4 py-5">
+    <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-t border-gray-700 bg-[#2b2d31] px-4 py-5 relative">
       <div className="mb-5 rounded-2xl border border-white/8 bg-[#23252b] px-4 py-4">
         <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
           <Users className="h-4 w-4 text-sky-300" />
@@ -290,6 +305,18 @@ export default function ServerChannelMembersSidebar({
           {renderParticipants('Сейчас в сети', onlineParticipants)}
           {renderParticipants('Остальные', offlineParticipants)}
         </div>
+      )}
+
+      {profileModal && (
+        <UserProfileModal
+          userId={profileModal.userId}
+          username={profileModal.username}
+          avatarUrl={profileModal.avatarUrl}
+          anchorX={profileModal.x}
+          anchorY={profileModal.y}
+          serverId={serverId}
+          onClose={() => setProfileModal(null)}
+        />
       )}
     </aside>
   );

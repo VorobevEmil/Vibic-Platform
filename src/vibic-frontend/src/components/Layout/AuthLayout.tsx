@@ -49,7 +49,7 @@ function AuthLayout({ title, subtitle, footer, children }: AuthLayoutProps) {
                 </div>
             </div>
 
-            <p className="mt-8 text-xs text-gray-600">© 2025 Vibic. All rights reserved.</p>
+            <p className="mt-8 text-xs text-gray-600">© 2026 Vibic. All rights reserved.</p>
         </div>
     );
 }

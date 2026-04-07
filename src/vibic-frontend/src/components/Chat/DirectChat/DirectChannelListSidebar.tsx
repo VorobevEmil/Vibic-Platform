@@ -31,6 +31,17 @@ export default function DirectChannelListSidebar() {
         setChannels((prev) => [...prev, channel]);
     };
 
+    const handleCloseChannel = async (e: React.MouseEvent, channelId: string) => {
+        e.stopPropagation();
+        try {
+            await channelsApi.closeDirectChannel(channelId);
+            setChannels(prev => prev.filter(c => c.id !== channelId));
+            if (channelId === activeChannelId) navigate('/channels/@me');
+        } catch (err) {
+            console.error('Failed to close channel:', err);
+        }
+    };
+
     return (
         <div className="h-full w-60 bg-[#2b2d31] border-r border-white/[0.06] flex flex-col">
             {/* Search */}
@@ -80,7 +91,7 @@ export default function DirectChannelListSidebar() {
 
                                 <button
                                     className="opacity-0 group-hover:opacity-100 shrink-0 w-5 h-5 rounded flex items-center justify-center hover:text-white transition-all"
-                                    onClick={(e) => { e.stopPropagation(); }}
+                                    onClick={(e) => handleCloseChannel(e, channel.id)}
                                     title="Закрыть"
                                 >
                                     <X className="w-3.5 h-3.5" />

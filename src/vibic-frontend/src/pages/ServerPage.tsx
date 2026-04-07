@@ -10,12 +10,13 @@ import { useHeaderContext } from "../context/HeaderContext";
 import { useRightSidebarContext } from "../context/RightSidebarContext";
 import { resolveAssetUrl } from "../api/httpClient";
 import ServerChannelMembersSidebar from "../components/Server/ServerChannelMembersSidebar";
+import { Users } from "lucide-react";
 
 function ServerPageContent({ serverId, channelId }: { serverId: string; channelId?: string }) {
     const [server, setServer] = useState<ServerFullResponse>();
     const { joinServer, leaveServer } = useVoice();
     const { setHeader } = useHeaderContext();
-    const { setSidebar } = useRightSidebarContext();
+    const { setSidebar, isVisible, toggleVisibility } = useRightSidebarContext();
     const joinedServerRef = useRef<string | null>(null);
     const leaveServerRef = useRef(leaveServer);
     const setHeaderRef = useRef(setHeader);
@@ -102,8 +103,20 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
             />
             {channelId ? (
                 <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId}>
-                    <div className="h-12 px-4 flex items-center border-b border-[#1e1f22]">
+                    <div className="h-12 px-4 flex items-center justify-between border-b border-[#1e1f22]">
                         <h1 className="text-lg font-bold text-white"># {currentChannel?.name ?? 'Unknown Channel'}</h1>
+                        <div className="relative group">
+                            <button
+                                type="button"
+                                onClick={toggleVisibility}
+                                className={`rounded-lg p-1.5 transition ${isVisible ? 'text-white' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <Users className="h-5 w-5" />
+                            </button>
+                            <div className="pointer-events-none absolute right-0 top-full z-50 mt-2 w-max rounded-lg bg-[#111214] px-3 py-2 text-sm text-white opacity-0 shadow-lg transition group-hover:opacity-100">
+                                {isVisible ? 'Скрыть список участников' : 'Показать список участников'}
+                            </div>
+                        </div>
                     </div>
                 </ChatCenterPanel>
             ) : (

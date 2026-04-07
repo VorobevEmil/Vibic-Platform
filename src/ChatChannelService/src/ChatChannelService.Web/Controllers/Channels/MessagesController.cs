@@ -1,17 +1,22 @@
 using ChatChannelService.Application.Common.Pagination;
+using ChatChannelService.Application.Features.MessageFeatures.Commands;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Features.MessageFeatures.Queries;
 using ChatChannelService.Core.Enums;
+using ChatChannelService.Web.Hubs;
 using ChatChannelService.Web.Mappings;
+using ChatChannelService.Web.Models.Messages.Requests;
 using ChatChannelService.Web.Models.Messages.Responses;
 using MediatR;
-using Vibic.Shared.Core.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Vibic.Shared.Core.Controllers;
+using Vibic.Shared.Core.Extensions;
 
 namespace ChatChannelService.Web.Controllers.Channels;
 
 [Route("/channels/{channelId}/messages")]
-public class MessagesController(IMediator mediator) : AuthenticateControllerBase
+public class MessagesController(IMediator mediator, IHubContext<ChatHub> hubContext) : AuthenticateControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetMessages(
@@ -30,5 +35,42 @@ public class MessagesController(IMediator mediator) : AuthenticateControllerBase
         CursorPaginatedResult<MessageResponse> responseResult = new(responses, result.Cursor, result.HasMore);
 
         return Ok(responseResult);
+    }
+
+    [HttpDelete("{messageId:guid}")]
+    public async Task<IActionResult> DeleteMessage(
+        Guid channelId,
+        Guid messageId,
+        CancellationToken cancellationToken = default)
+    {
+        Guid userId = User.GetUserId();
+
+        DeleteMessageCommand command = new(ChannelType.Direct, channelId, null, messageId, userId);
+        await mediator.Send(command, cancellationToken);
+
+        await hubContext.Clients.Group($"chat:{channelId}")
+            .SendAsync("MessageDeleted", new { MessageId = messageId, ChannelId = channelId }, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpPatch("{messageId:guid}")]
+    public async Task<IActionResult> EditMessage(
+        Guid channelId,
+        Guid messageId,
+        [FromBody] EditMessageRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        Guid userId = User.GetUserId();
+
+        EditMessageCommand command = new(ChannelType.Direct, channelId, null, messageId, userId, request.Content);
+        MessageDto messageDto = await mediator.Send(command, cancellationToken);
+
+        MessageResponse response = messageDto.MapToResponse();
+
+        await hubContext.Clients.Group($"chat:{channelId}")
+            .SendAsync("MessageEdited", response, cancellationToken);
+
+        return Ok(response);
     }
 }

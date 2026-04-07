@@ -10,30 +10,32 @@ export function useSignIn() {
     email: '',
     password: '',
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
     try {
       const response = await authApi.signIn(signInRequest);
-
       const token = response.data.accessToken;
+
       if (!token) {
-        alert('Ошибка: токен не получен');
+        setError('Не удалось получить токен. Попробуйте ещё раз.');
         return;
       }
 
       localStorage.setItem('access_token', token);
-
       navigate('/channels/@me');
     } catch (err: any) {
-      console.error('Login error:', err);
-      alert('Login failed: ' + (err.response?.data?.message || 'Unknown error'));
+      const msg = err.response?.data?.message || err.response?.data || null;
+      setError(msg || 'Неверный email или пароль.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return {
-    signInRequest, setSignInRequest,
-    handleSignIn
-  };
+  return { signInRequest, setSignInRequest, handleSignIn, error, isLoading };
 }

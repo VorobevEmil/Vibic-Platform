@@ -1,3 +1,6 @@
+# IDE cache
+*.lscache
+
 # User-specific files
 *.rsuser
 *.suo

@@ -15,6 +15,7 @@ public static class MessageMappingExtensions
             message.Sender.Id,
             message.Sender.Username,
             configuration.BuildUserAvatarUrl(message.Sender.AvatarUrl),
-            message.CreatedAt);
+            message.CreatedAt,
+            message.UpdatedAt);
     }
 }

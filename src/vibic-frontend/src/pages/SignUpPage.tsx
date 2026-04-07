@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import AuthLayout from '../components/Layout/AuthLayout';
 import { useSignUp } from '../hooks/auth/useSignUp';
 
 function SignUpPage() {
-  const {
-    signUpRequest, setSignUpRequest,
-    handleRegister
-  } = useSignUp();
+  const { signUpRequest, setSignUpRequest, handleRegister, error, isLoading } = useSignUp();
 
   return (
     <AuthLayout
@@ -31,9 +29,7 @@ function SignUpPage() {
             className="input"
             placeholder="you@example.com"
             value={signUpRequest.email}
-            onChange={(e) =>
-              setSignUpRequest(prev => ({ ...prev, email: e.target.value }))
-            }
+            onChange={(e) => setSignUpRequest(prev => ({ ...prev, email: e.target.value }))}
             required
           />
         </div>
@@ -47,9 +43,7 @@ function SignUpPage() {
             className="input"
             placeholder="Как вас зовут?"
             value={signUpRequest.displayName}
-            onChange={(e) =>
-              setSignUpRequest(prev => ({ ...prev, displayName: e.target.value }))
-            }
+            onChange={(e) => setSignUpRequest(prev => ({ ...prev, displayName: e.target.value }))}
             required
           />
         </div>
@@ -63,9 +57,7 @@ function SignUpPage() {
             className="input"
             placeholder="username"
             value={signUpRequest.username}
-            onChange={(e) =>
-              setSignUpRequest(prev => ({ ...prev, username: e.target.value }))
-            }
+            onChange={(e) => setSignUpRequest(prev => ({ ...prev, username: e.target.value }))}
             required
           />
         </div>
@@ -79,15 +71,20 @@ function SignUpPage() {
             className="input"
             placeholder="••••••••"
             value={signUpRequest.password}
-            onChange={(e) =>
-              setSignUpRequest(prev => ({ ...prev, password: e.target.value }))
-            }
+            onChange={(e) => setSignUpRequest(prev => ({ ...prev, password: e.target.value }))}
             required
           />
         </div>
 
-        <button type="submit" className="btn-primary w-full mt-2">
-          Зарегистрироваться
+        {error && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-red-400/25 bg-red-500/10 px-3.5 py-3 text-sm text-red-200">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <button type="submit" disabled={isLoading} className="btn-primary w-full mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
+          {isLoading ? 'Создаём аккаунт...' : 'Зарегистрироваться'}
         </button>
       </form>
     </AuthLayout>
