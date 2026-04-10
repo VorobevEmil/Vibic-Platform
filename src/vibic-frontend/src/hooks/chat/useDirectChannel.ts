@@ -11,23 +11,44 @@ interface Props {
 
 export default function useDirectChannel({ serverId, channelId, localUserId }: Props) {
   const [peerUser, setPeerUser] = useState<UserProfileType | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      if (!localUserId || serverId) return;
+      if (!localUserId || serverId) {
+        setPeerUser(null);
+        setIsLoading(false);
+        return;
+      }
 
-      const channelResponse = await channelsApi.getDirectChannelById(channelId);
-      const loadedChannel = channelResponse.data;
+      setPeerUser(null);
+      setIsLoading(true);
 
-      const otherUserId = loadedChannel.channelMembers.find(m => m.userId !== localUserId)?.userId;
-      if (!otherUserId) return;
+      try {
+        const channelResponse = await channelsApi.getDirectChannelById(channelId);
+        const loadedChannel = channelResponse.data;
 
-      const userResponse = await userProfilesApi.getById(otherUserId);
-      setPeerUser(userResponse.data);
+        const otherUserId = loadedChannel.channelMembers.find(m => m.userId !== localUserId)?.userId;
+        if (!otherUserId) {
+          setPeerUser(null);
+          return;
+        }
+
+        const userResponse = await userProfilesApi.getById(otherUserId);
+        setPeerUser(userResponse.data);
+      } catch (error) {
+        console.error('Не удалось загрузить данные собеседника', error);
+        setPeerUser(null);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    load();
-  }, [channelId, localUserId]);
+    void load();
+  }, [channelId, localUserId, serverId]);
 
-  return peerUser;
+  return {
+    peerUser,
+    isLoading,
+  };
 }

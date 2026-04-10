@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using ChatChannelService.Application.Features.MessageFeatures.Common;
 using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Entities;
@@ -67,6 +68,16 @@ public class EditMessageHandler : IRequestHandler<EditMessageCommand, MessageDto
         if (message.SenderId != request.UserId)
         {
             throw new ForbiddenException("You do not have permission to edit this message");
+        }
+
+        if (request.Content == message.Content)
+        {
+            return message.MapToDto(_configuration);
+        }
+
+        if (!MessageContentValidator.HasMeaningfulContent(request.Content))
+        {
+            throw new ValidationException("Message content cannot be empty.");
         }
 
         message.UpdateContent(request.Content);

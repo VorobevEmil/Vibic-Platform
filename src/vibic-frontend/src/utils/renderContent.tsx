@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ExternalLink, ImageIcon, LoaderCircle, X } from 'lucide-react';
+import { ExternalLink, ImageIcon, X } from 'lucide-react';
 import { channelsApi } from '../api/channelsApi';
 import { resolveAssetUrl } from '../api/httpClient';
 import LinkPreviewResponse from '../types/LinkPreviewType';
+import Skeleton from '../components/ui/Skeleton';
 
 const FENCED_CODE_SEGMENT_RE = /(```(?:[\w-]+)?\n?[\s\S]*?```)/g;
 const IMAGE_MARKER_RE = /%%IMG\|([^%]+)%%/g;
@@ -67,6 +68,10 @@ function isGifProviderHost(host: string | null): boolean {
   }
 
   return GIF_PROVIDER_HOSTS.some((providerHost) => host === providerHost || host.endsWith(`.${providerHost}`));
+}
+
+function shouldHideInlineUrl(url: string): boolean {
+  return isLikelyImageUrl(url) || isGifProviderHost(getHostname(url));
 }
 
 function shouldRenderAsMediaPreview(preview: LinkPreviewResponse, fallbackUrl: string): boolean {
@@ -276,7 +281,7 @@ function ImageLightbox({
           <img
             src={src}
             alt={alt}
-            className="max-h-[calc(100vh-7rem)] max-w-full rounded-3xl border border-white/10 bg-black/20 object-contain shadow-[0_30px_120px_rgba(0,0,0,0.45)]"
+            className="max-h-[calc(100vh-7rem)] max-w-full rounded-2xl border border-white/10 bg-black/20 object-contain shadow-[0_30px_120px_rgba(0,0,0,0.45)]"
             onLoad={(event) => {
               setImageSize({
                 width: event.currentTarget.naturalWidth,
@@ -296,14 +301,12 @@ function ClickableImagePreview({
   alt,
   title,
   subtitle,
-  isGif,
   compact = false,
 }: {
   url: string;
   alt: string;
   title?: string | null;
   subtitle?: string | null;
-  isGif?: boolean;
   compact?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -314,32 +317,15 @@ function ClickableImagePreview({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`group mt-2 block text-left ${compact ? 'w-auto' : 'w-full max-w-[460px]'}`}
+        className="group mt-2 inline-block max-w-full cursor-zoom-in text-left"
       >
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/25 shadow-[0_14px_40px_rgba(0,0,0,0.22)]">
+        <div className="overflow-hidden rounded-xl shadow-[0_14px_40px_rgba(0,0,0,0.22)] transition duration-200">
           <img
             src={src}
             alt={alt}
             loading="lazy"
-            className={`w-full transition duration-200 group-hover:scale-[1.01] ${compact ? 'max-h-[300px] max-w-[380px] object-contain' : 'max-h-[360px] object-contain'}`}
+            className={`block h-auto w-auto max-w-full transition duration-200 group-hover:scale-[1.01] ${compact ? 'max-h-[300px] max-w-[380px] object-contain' : 'max-h-[360px] max-w-[460px] object-contain'}`}
           />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-80" />
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 px-4 py-3">
-            <div className="min-w-0">
-              {title && <div className="truncate text-sm font-semibold text-white">{title}</div>}
-              {subtitle && <div className="truncate text-xs text-gray-300">{subtitle}</div>}
-            </div>
-            <div className="flex items-center gap-2">
-              {isGif && (
-                <span className="rounded-full border border-white/10 bg-black/45 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white">
-                  GIF
-                </span>
-              )}
-              <span className="rounded-full border border-white/10 bg-black/45 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white">
-                Open
-              </span>
-            </div>
-          </div>
         </div>
       </button>
 
@@ -461,15 +447,17 @@ function LinkPreviewCard({ url }: { url: string }) {
   const finalUrl = effectivePreview.finalUrl || url;
   const title = effectivePreview.title || formatDisplayUrl(finalUrl);
   const subtitle = effectivePreview.siteName || getHostname(finalUrl);
-  const isGif = (effectivePreview.contentType ?? '').toLowerCase().includes('gif')
-    || isGifUrl(finalUrl)
-    || (!!effectivePreview.imageUrl && isGifUrl(effectivePreview.imageUrl));
 
   if (isLoading && effectivePreview.kind === 'link') {
     return (
-      <div className="mt-2 flex w-full max-w-[460px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-gray-300">
-        <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-sky-300" />
-        <div className="truncate">Loading preview…</div>
+      <div className="mt-2 w-full max-w-[460px] rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-24 rounded-md" />
+            <Skeleton className="h-3 w-full max-w-[220px] rounded-md" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -481,7 +469,6 @@ function LinkPreviewCard({ url }: { url: string }) {
         alt={title}
         title={title}
         subtitle={subtitle}
-        isGif={isGif}
       />
     );
   }
@@ -585,7 +572,9 @@ function parseInline(text: string, prefix: string): React.ReactNode[] {
       candidates.push({
         index: urlM.index,
         end: urlM.index + sanitizedUrl.length,
-        node: <InlineLink key={`${prefix}-u${offset + urlM.index}`} url={sanitizedUrl} />,
+        node: shouldHideInlineUrl(sanitizedUrl)
+          ? null
+          : <InlineLink key={`${prefix}-u${offset + urlM.index}`} url={sanitizedUrl} />,
       });
     }
 

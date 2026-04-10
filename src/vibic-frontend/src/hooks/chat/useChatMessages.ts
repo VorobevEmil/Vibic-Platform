@@ -11,6 +11,7 @@ const NEAR_BOTTOM_THRESHOLD_PX = 220;
 
 export function useChatMessages({ serverId, channelId }: Props) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [unreadMessageId, setUnreadMessageId] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
   const cursorRef = useRef<string | undefined>(undefined);
   const hasMoreRef = useRef(true);
   const isLoadingMoreRef = useRef(false);
+  const prependRestoreRef = useRef<{ previousScrollHeight: number; previousScrollTop: number } | null>(null);
 
   const clearUnreadState = useCallback(() => {
     setUnreadMessageId(null);
@@ -89,7 +91,42 @@ export function useChatMessages({ serverId, channelId }: Props) {
     });
   }, [scrollContainerToBottom, updateBottomState]);
 
+  const restorePrependScrollPosition = useCallback(() => {
+    const pendingRestore = prependRestoreRef.current;
+    const scrollEl = scrollContainerRef.current;
+
+    if (!pendingRestore || !scrollEl) {
+      return;
+    }
+
+    let remainingFrames = 2;
+
+    const applyRestore = () => {
+      const nextScrollTop = scrollEl.scrollHeight
+        - pendingRestore.previousScrollHeight
+        + pendingRestore.previousScrollTop;
+
+      scrollEl.scrollTo({
+        top: nextScrollTop,
+        behavior: 'auto',
+      });
+
+      remainingFrames -= 1;
+
+      if (remainingFrames > 0) {
+        requestAnimationFrame(applyRestore);
+        return;
+      }
+
+      prependRestoreRef.current = null;
+      updateBottomState();
+    };
+
+    requestAnimationFrame(applyRestore);
+  }, [updateBottomState]);
+
   const initializeMessages = useCallback(async () => {
+    setIsInitializing(true);
     clearUnreadState();
     isNearBottomRef.current = true;
     setIsNearBottom(true);
@@ -115,6 +152,8 @@ export function useChatMessages({ serverId, channelId }: Props) {
       pendingScrollRef.current = 'auto';
     } catch (error) {
       console.log("Ошибка во время инициализации сообщении", error)
+    } finally {
+      setIsInitializing(false);
     }
   }, [channelId, clearUnreadState, serverId]);
 
@@ -139,16 +178,16 @@ export function useChatMessages({ serverId, channelId }: Props) {
       }
 
       const nextMessages = [...response.data.items, ...messagesRef.current];
+      prependRestoreRef.current = {
+        previousScrollHeight: prevScrollHeight,
+        previousScrollTop: prevScrollTop,
+      };
       messagesRef.current = nextMessages;
       setMessages(nextMessages);
       cursorRef.current = response.data.cursor;
       hasMoreRef.current = response.data.hasMore;
       isLoadingMoreRef.current = false;
       setIsLoadingMore(false);
-
-      setTimeout(() => {
-        scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight + prevScrollTop;
-      }, 10);
     } catch (error) {
       console.error('Ошибка при загрузке сообщений:', error);
       isLoadingMoreRef.current = false;
@@ -186,15 +225,23 @@ export function useChatMessages({ serverId, channelId }: Props) {
     requestAnimationFrame(() => scrollToBottom(behavior));
   }, [messages, scrollToBottom]);
 
+  useEffect(() => {
+    if (!prependRestoreRef.current) {
+      return;
+    }
+
+    restorePrependScrollPosition();
+  }, [messages, restorePrependScrollPosition]);
+
   const deleteMessageById = useCallback((messageId: string) => {
     const next = messagesRef.current.filter(m => m.id !== messageId);
     messagesRef.current = next;
     setMessages(next);
   }, []);
 
-  const updateMessageContent = useCallback((messageId: string, newContent: string) => {
+  const replaceMessage = useCallback((updatedMessage: MessageResponse) => {
     const next = messagesRef.current.map(m =>
-      m.id === messageId ? { ...m, content: newContent, isEdited: true } : m
+      m.id === updatedMessage.id ? { ...m, ...updatedMessage } : m
     );
     messagesRef.current = next;
     setMessages(next);
@@ -237,6 +284,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
 
   return {
     messages,
+    isInitializing,
     scrollContainerRef,
     messagesEndRef,
     isLoadingMore,
@@ -247,7 +295,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
     initializeMessages,
     appendIncomingMessage,
     deleteMessageById,
-    updateMessageContent,
+    replaceMessage,
     syncSenderMetadata,
     scrollToBottom,
   };

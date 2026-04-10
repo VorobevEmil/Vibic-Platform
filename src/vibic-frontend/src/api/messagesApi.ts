@@ -29,8 +29,8 @@ export const messagesApi = {
     http.delete(`/servers/${serverId}/channels/${channelId}/messages/${messageId}`),
 
   editMessage: (channelId: string, messageId: string, content: string) =>
-    http.patch(`/channels/${channelId}/messages/${messageId}`, { content }),
+    http.patch<MessageResponse>(`/channels/${channelId}/messages/${messageId}`, { content }),
 
   editServerMessage: (serverId: string, channelId: string, messageId: string, content: string) =>
-    http.patch(`/servers/${serverId}/channels/${channelId}/messages/${messageId}`, { content }),
+    http.patch<MessageResponse>(`/servers/${serverId}/channels/${channelId}/messages/${messageId}`, { content }),
 };

@@ -4,13 +4,17 @@ import UserProfileType from '../types/UserProfileType';
 
 export default function useSearchUsers(query: string) {
   const [results, setResults] = useState<UserProfileType[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
       if (query.trim().length === 0) {
         setResults([]);
+        setIsLoading(false);
         return;
       }
+
+      setIsLoading(true);
 
       try {
         const response = await userProfilesApi.search(query);
@@ -18,11 +22,16 @@ export default function useSearchUsers(query: string) {
       } catch (error) {
         console.error('Ошибка поиска:', error);
         setResults([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetch();
+    void fetch();
   }, [query]);
 
-  return results;
+  return {
+    results,
+    isLoading,
+  };
 }

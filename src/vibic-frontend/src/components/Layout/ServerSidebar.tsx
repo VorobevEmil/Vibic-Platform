@@ -5,11 +5,13 @@ import CreateServerModal from '../Server/CreateServerModal';
 import { ServerSummaryResponse } from '../../types/ServerType';
 import { serversApi } from '../../api/serversApi';
 import { resolveAssetUrl } from '../../api/httpClient';
+import Skeleton from '../ui/Skeleton';
 
 
 export default function ServerSidebar() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const { serverId } = useParams<{ serverId: string }>();
 
     const createServer = async (name: string, iconFile: File | null) => {
@@ -22,11 +24,14 @@ export default function ServerSidebar() {
     };
 
     const fetchServers = async () => {
+        setIsLoading(true);
         try {
             const response = await serversApi.getMyServers();
             setServers(response.data);
         } catch (error) {
             console.log('Не получилось получить список серверов', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -59,7 +64,13 @@ export default function ServerSidebar() {
             <div className="w-8 h-px bg-white/10 my-1" />
 
             {/* Server list */}
-            {servers.map((server) => {
+            {isLoading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="flex items-center">
+                        <Skeleton className="h-12 w-12 rounded-3xl" />
+                    </div>
+                ))
+            ) : servers.map((server) => {
                 const isActive = server.id === serverId;
                 return (
                     <div key={server.id} className="group relative flex items-center">

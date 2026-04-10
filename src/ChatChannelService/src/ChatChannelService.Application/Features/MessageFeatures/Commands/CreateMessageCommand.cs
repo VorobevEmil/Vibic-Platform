@@ -47,6 +47,11 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
             throw new ValidationException("Server is required for channel type 'Server'.");
         }
 
+        if (!MessageContentValidator.HasMeaningfulContent(request.Content))
+        {
+            throw new ValidationException("Message content cannot be empty.");
+        }
+
         Channel? channel;
 
         switch (request.ChannelType)

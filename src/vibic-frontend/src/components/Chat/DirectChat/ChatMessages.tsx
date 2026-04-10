@@ -7,12 +7,13 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Copy, Pencil, Reply, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Reply, Smile, Trash2 } from 'lucide-react';
 import { resolveAssetUrl } from '../../../api/httpClient';
 import MessageResponse from '../../../types/MessageType';
 import { formatMessageTime, formatTimeOnly } from '../../../utils/formatMessageTime';
 import { renderContent } from '../../../utils/renderContent';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
+import EmojiPicker from './EmojiPicker';
 import UserProfileModal from './UserProfileModal';
 
 const GROUP_TIME_WINDOW_MS = 5 * 60 * 1000;
@@ -45,6 +46,7 @@ export interface ChatMessagesRef {
 // ── Props ────────────────────────────────────────────────────────────────────
 interface ChatMessageProps {
   messages: MessageResponse[];
+  isInitializing: boolean;
   typingUsername: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
@@ -186,6 +188,63 @@ function MeasuredMessageItem({
   return <div ref={containerRef}>{children}</div>;
 }
 
+function MessageSkeletonRow({
+  grouped = false,
+  compact = false,
+}: {
+  grouped?: boolean;
+  compact?: boolean;
+}) {
+  if (grouped) {
+    return (
+      <div className="flex items-start gap-3 px-4 py-1.5">
+        <div className="w-8 shrink-0" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className={`h-4 rounded-full bg-white/[0.06] animate-pulse ${compact ? 'w-[34%]' : 'w-[48%]'}`} />
+          {!compact && <div className="h-4 w-[78%] rounded-full bg-white/[0.05] animate-pulse" />}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-3 px-4 py-3">
+      <div className="h-8 w-8 shrink-0 rounded-full bg-white/[0.07] animate-pulse" />
+      <div className="min-w-0 flex-1 space-y-2.5">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-24 rounded-full bg-white/[0.07] animate-pulse" />
+          <div className="h-3 w-16 rounded-full bg-white/[0.05] animate-pulse" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-4 w-[68%] rounded-full bg-white/[0.06] animate-pulse" />
+          <div className="h-4 w-[52%] rounded-full bg-white/[0.05] animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MessageSkeletonList({ mode }: { mode: 'initial' | 'prepend' }) {
+  const rows = mode === 'initial'
+    ? [false, true, false, true, false, true]
+    : [false, true, false];
+
+  return (
+    <div
+      className={`pointer-events-none ${mode === 'prepend' ? 'mb-2 rounded-2xl border border-white/[0.04] bg-white/[0.02] py-2' : 'py-3'}`}
+      aria-hidden="true"
+    >
+      {rows.map((grouped, index) => (
+        <MessageSkeletonRow
+          key={`${mode}-${grouped ? 'grouped' : 'full'}-${index}`}
+          grouped={grouped}
+          compact={mode === 'prepend'}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── MessageRow ───────────────────────────────────────────────────────────────
 function MessageRow({
   message,
@@ -201,8 +260,12 @@ function MessageRow({
   onScrollToMessage,
 }: MessageRowProps) {
   const editRef = useRef<HTMLTextAreaElement | null>(null);
+  const rowRef = useRef<HTMLDivElement | null>(null);
+  const editCursorRef = useRef(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
+  const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false);
   const isOwn = currentUserId === message.senderId;
   const { text, quote } = parseMessageContent(message.content);
 
@@ -221,25 +284,97 @@ function MessageRow({
     }
   }, [editValue, isEditing]);
 
-  const startEdit = () => {
+  const startEdit = useCallback(() => {
     setEditValue(text);
+    setEditError(null);
+    setShowEditEmojiPicker(false);
     setIsEditing(true);
-  };
+  }, [text]);
+
+  useEffect(() => {
+    const element = rowRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const handleStartEdit = () => {
+      if (isOwn) {
+        startEdit();
+      }
+    };
+
+    element.addEventListener('vibic:start-edit', handleStartEdit);
+
+    return () => {
+      element.removeEventListener('vibic:start-edit', handleStartEdit);
+    };
+  }, [isOwn, startEdit]);
 
   const submitEdit = () => {
     const trimmed = editValue.trim();
-    if (trimmed && trimmed !== text) {
-      // Сохраняем цитату в контенте если она была
-      const prefix = quote ? `%%REPLY|${quote.id}|${quote.username}|${quote.content}%%\n` : '';
-      onEdit?.(message.id, prefix + trimmed);
+    if (!trimmed) {
+      setEditError('Сообщение не может быть пустым.');
+      return;
     }
+
+    if (trimmed === text) {
+      setEditError(null);
+      setShowEditEmojiPicker(false);
+      setIsEditing(false);
+      return;
+    }
+
+    const prefix = quote ? `%%REPLY|${quote.id}|${quote.username}|${quote.content}%%\n` : '';
+    onEdit?.(message.id, prefix + trimmed);
+
+    setEditError(null);
+    setShowEditEmojiPicker(false);
     setIsEditing(false);
   };
 
   const handleEditKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitEdit(); }
-    if (e.key === 'Escape') setIsEditing(false);
+    if (e.key === 'Escape') {
+      setShowEditEmojiPicker(false);
+      setIsEditing(false);
+    }
   };
+
+  const syncEditCursor = () => {
+    if (!editRef.current) {
+      return;
+    }
+
+    editCursorRef.current = editRef.current.selectionStart ?? editValue.length;
+  };
+
+  const handleEditEmojiButtonClick = () => {
+    syncEditCursor();
+    setShowEditEmojiPicker((current) => !current);
+  };
+
+  const insertEditEmoji = useCallback((emoji: string) => {
+    const insertPosition = editCursorRef.current;
+    const nextValue = editValue.slice(0, insertPosition) + emoji + editValue.slice(insertPosition);
+
+    setEditValue(nextValue);
+    editCursorRef.current = insertPosition + emoji.length;
+    setShowEditEmojiPicker(false);
+
+    requestAnimationFrame(() => {
+      const textarea = editRef.current;
+
+      if (!textarea) {
+        return;
+      }
+
+      textarea.focus();
+      textarea.setSelectionRange(editCursorRef.current, editCursorRef.current);
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    });
+  }, [editValue]);
 
   const actions = isOwn && !isEditing ? (
     <div className="absolute -top-3 right-2 hidden group-hover:flex items-center gap-0.5 bg-[#2b2d31] border border-white/10 rounded-lg px-1 py-0.5 shadow-lg z-10">
@@ -253,15 +388,44 @@ function MessageRow({
   ) : null;
 
   const editUI = (
-    <div>
-      <textarea
-        ref={editRef}
-        value={editValue}
-        onChange={e => setEditValue(e.target.value)}
-        onKeyDown={handleEditKeyDown}
-        rows={1}
-        className="w-full bg-[#383a40] text-sm text-white rounded-lg px-3 py-2 outline-none resize-none leading-[1.4] border border-indigo-500/50 mt-1"
-      />
+    <div className="relative">
+      {showEditEmojiPicker && (
+        <EmojiPicker
+          onSelect={insertEditEmoji}
+          onClose={() => setShowEditEmojiPicker(false)}
+        />
+      )}
+      <div className="mt-1 flex items-end gap-2 rounded-lg border border-indigo-500/50 bg-[#383a40] px-3 py-2">
+        <textarea
+          ref={editRef}
+          value={editValue}
+          onChange={e => {
+            setEditValue(e.target.value);
+            if (editError) {
+              setEditError(null);
+            }
+          }}
+          onKeyDown={handleEditKeyDown}
+          onClick={syncEditCursor}
+          onKeyUp={syncEditCursor}
+          onSelect={syncEditCursor}
+          rows={1}
+          className="min-h-[24px] flex-1 bg-transparent text-sm text-white outline-none resize-none leading-[1.4]"
+        />
+        <button
+          type="button"
+          onClick={handleEditEmojiButtonClick}
+          className={`mb-0.5 shrink-0 rounded-lg p-1.5 transition-colors ${
+            showEditEmojiPicker
+              ? 'bg-indigo-500/10 text-indigo-400'
+              : 'text-gray-400 hover:bg-white/10 hover:text-white'
+          }`}
+          title="Эмодзи"
+        >
+          <Smile className="h-4 w-4" />
+        </button>
+      </div>
+      {editError && <p className="mt-1 text-[11px] text-red-400">{editError}</p>}
       <p className="text-[11px] text-gray-500 mt-1">Enter — сохранить · Esc — отмена</p>
     </div>
   );
@@ -317,6 +481,7 @@ function MessageRow({
   if (isGrouped) {
     return (
       <div
+        ref={rowRef}
         data-message-id={message.id}
         onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
         className={`group relative flex flex-col pb-1 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
@@ -334,7 +499,6 @@ function MessageRow({
               <div
                 className="text-sm text-gray-300 break-words"
                 style={{ overflowWrap: 'anywhere' }}
-                onDoubleClick={isOwn ? startEdit : undefined}
               >
                 {renderContent(text)}
                 {message.isEdited && <span className="text-[11px] text-gray-500 ml-1">(изменено)</span>}
@@ -348,6 +512,7 @@ function MessageRow({
 
   return (
     <div
+      ref={rowRef}
       data-message-id={message.id}
       onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
       className={`group relative flex flex-col pb-4 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
@@ -382,7 +547,6 @@ function MessageRow({
             <div
               className="text-sm text-gray-300 mt-1 break-words"
               style={{ overflowWrap: 'anywhere' }}
-              onDoubleClick={isOwn ? startEdit : undefined}
             >
               {renderContent(text)}
               {message.isEdited && <span className="text-[11px] text-gray-500 ml-1">(изменено)</span>}
@@ -398,6 +562,7 @@ function MessageRow({
 const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function ChatMessages(
   {
     messages,
+    isInitializing,
     typingUsername,
     messagesEndRef,
     scrollContainerRef,
@@ -676,7 +841,9 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
         icon: <Pencil className="w-4 h-4" />,
         onClick: () => {
           const el = document.querySelector(`[data-message-id="${msg.id}"]`);
-          if (el) (el as HTMLElement).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+          if (el instanceof HTMLElement) {
+            el.dispatchEvent(new Event('vibic:start-edit'));
+          }
         },
       });
       items.push({
@@ -691,54 +858,60 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
 
   return (
     <>
-      {isLoadingMore && (
-        <div className="text-sm text-gray-400 text-center animate-pulse pb-3">Загрузка сообщений...</div>
-      )}
+      {isInitializing && messages.length === 0 ? (
+        <MessageSkeletonList mode="initial" />
+      ) : (
+        <>
+          {isLoadingMore && messages.length > 0 && (
+            <MessageSkeletonList mode="prepend" />
+          )}
 
-      <div
-        className="relative"
-        style={{ height: totalHeight > 0 ? totalHeight : undefined, minHeight: totalHeight > 0 ? totalHeight : undefined }}
-      >
-        {visibleItems.length > 0 && (
           <div
-            className="absolute inset-x-0 top-0"
-            style={{ transform: `translateY(${topSpacerHeight}px)` }}
+            className="relative"
+            style={{ height: totalHeight > 0 ? totalHeight : undefined, minHeight: totalHeight > 0 ? totalHeight : undefined }}
           >
-            {visibleItems.map((item) => (
-              <MeasuredMessageItem
-                key={item.key}
-                rowKey={item.key}
-                messageId={item.message.id}
-                onHeightChange={handleRowHeightChange}
-                onRowRefChange={handleRowRefChange}
+            {visibleItems.length > 0 && (
+              <div
+                className="absolute inset-x-0 top-0"
+                style={{ transform: `translateY(${topSpacerHeight}px)` }}
               >
-                {item.showUnreadDivider && (
-                  <div className="flex items-center gap-3 pb-3">
-                    <div className="h-px flex-1 bg-sky-500/60" />
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
-                      Новые сообщения
-                    </span>
-                    <div className="h-px flex-1 bg-sky-500/60" />
-                  </div>
-                )}
-                <MessageRow
-                  message={item.message}
-                  isGrouped={item.isGrouped}
-                  isHighlighted={highlightedMessageId === item.message.id}
-                  currentUserId={currentUserId}
-                  senderInfoByUsername={senderInfoByUsername}
-                  onDelete={onDeleteMessage}
-                  onEdit={onEditMessage}
-                  onContextMenu={(e, m) => setContextMenu({ x: e.clientX, y: e.clientY, message: m })}
-                  onAvatarClick={(e, m) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: m.senderId, username: m.senderUsername, avatarUrl: m.senderAvatarUrl })}
-                  onQuoteUserClick={(e, senderId, username, avatarUrl) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: senderId, username, avatarUrl })}
-                  onScrollToMessage={handleScrollToMessage}
-                />
-              </MeasuredMessageItem>
-            ))}
+                {visibleItems.map((item) => (
+                  <MeasuredMessageItem
+                    key={item.key}
+                    rowKey={item.key}
+                    messageId={item.message.id}
+                    onHeightChange={handleRowHeightChange}
+                    onRowRefChange={handleRowRefChange}
+                  >
+                    {item.showUnreadDivider && (
+                      <div className="flex items-center gap-3 pb-3">
+                        <div className="h-px flex-1 bg-sky-500/60" />
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+                          Новые сообщения
+                        </span>
+                        <div className="h-px flex-1 bg-sky-500/60" />
+                      </div>
+                    )}
+                    <MessageRow
+                      message={item.message}
+                      isGrouped={item.isGrouped}
+                      isHighlighted={highlightedMessageId === item.message.id}
+                      currentUserId={currentUserId}
+                      senderInfoByUsername={senderInfoByUsername}
+                      onDelete={onDeleteMessage}
+                      onEdit={onEditMessage}
+                      onContextMenu={(e, m) => setContextMenu({ x: e.clientX, y: e.clientY, message: m })}
+                      onAvatarClick={(e, m) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: m.senderId, username: m.senderUsername, avatarUrl: m.senderAvatarUrl })}
+                      onQuoteUserClick={(e, senderId, username, avatarUrl) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: senderId, username, avatarUrl })}
+                      onScrollToMessage={handleScrollToMessage}
+                    />
+                  </MeasuredMessageItem>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {typingUsername && (
         <div className="flex items-center gap-1.5 text-xs ml-3 mt-1 mb-2">

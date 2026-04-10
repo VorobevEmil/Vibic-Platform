@@ -2,23 +2,28 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { invitesApi } from '../api/invitesApi';
 import { Users, ArrowRight, X } from 'lucide-react';
+import Skeleton from '../components/ui/Skeleton';
 
 export default function InvitePage() {
     const { inviteCode } = useParams<{ inviteCode: string }>();
     const [serverName, setServerName] = useState('');
     const [loading, setLoading] = useState(false);
+    const [isInviteLoading, setIsInviteLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchInvite = async () => {
+            setIsInviteLoading(true);
             try {
                 const response = await invitesApi.getInvite(inviteCode!);
                 setServerName(response.data.serverName);
             } catch (err) {
                 console.error('Ошибка получения приглашения', err);
+            } finally {
+                setIsInviteLoading(false);
             }
         };
-        fetchInvite();
+        void fetchInvite();
     }, [inviteCode]);
 
     const joinServer = async () => {
@@ -67,17 +72,28 @@ export default function InvitePage() {
                         <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-1">
                             Вы приглашены присоединиться к
                         </p>
-                        <h1 className="text-2xl font-bold text-white mb-1">
-                            {serverName || '...'}
-                        </h1>
+                        {isInviteLoading ? (
+                            <div className="mb-1 space-y-2">
+                                <Skeleton className="h-8 w-56 max-w-full rounded-lg" />
+                                <Skeleton className="h-4 w-32 rounded-md" />
+                            </div>
+                        ) : (
+                            <h1 className="text-2xl font-bold text-white mb-1">
+                                {serverName || '...'}
+                            </h1>
+                        )}
 
                         <div className="mt-6 space-y-2">
                             <button
                                 onClick={joinServer}
-                                disabled={loading || !serverName}
+                                disabled={loading || !serverName || isInviteLoading}
                                 className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-4 py-3 rounded-xl transition-all shadow-lg shadow-indigo-900/30"
                             >
-                                {loading ? (
+                                {isInviteLoading ? (
+                                    <div className="flex w-full items-center justify-center">
+                                        <Skeleton className="h-4 w-40 rounded-md bg-white/20" />
+                                    </div>
+                                ) : loading ? (
                                     <span className="animate-pulse">Вступаем...</span>
                                 ) : (
                                     <>

@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Circle, MoreHorizontal, Send, UserMinus, UserPlus, Clock, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { resolveAssetUrl } from '../../../api/httpClient';
 import { userProfilesApi } from '../../../api/userProfilesApi';
 import { friendsApi } from '../../../api/friendsApi';
 import { invitesApi } from '../../../api/invitesApi';
 import { useAuthContext } from '../../../context/AuthContext';
+import { useToast } from '../../../context/ToastContext';
+import { resolveOrCreateChannel } from '../../../services/channelService';
 import UserProfileResponse from '../../../types/UserProfileType';
 import { getUserStatusOption } from '../../../utils/userStatus';
+import Skeleton from '../../ui/Skeleton';
 
 interface UserProfileModalProps {
   userId: string;
@@ -30,12 +34,16 @@ export default function UserProfileModal({
   onClose,
 }: UserProfileModalProps) {
   const { selfUser } = useAuthContext();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
   const modalRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
 
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [friendStatus, setFriendStatus] = useState<FriendStatus>('loading');
   const [messageText, setMessageText] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
@@ -47,14 +55,21 @@ export default function UserProfileModal({
   const isSelf = selfUser?.id === userId;
 
   useEffect(() => {
-    userProfilesApi.getById(userId).then(r => setProfile(r.data)).catch(() => {});
+    setIsProfileLoading(true);
+    setProfile(null);
+    void userProfilesApi.getById(userId)
+      .then((r) => setProfile(r.data))
+      .catch(() => setProfile(null))
+      .finally(() => setIsProfileLoading(false));
 
     if (isSelf) {
       setFriendStatus('self');
       return;
     }
 
-    Promise.all([
+    setFriendStatus('loading');
+
+    void Promise.all([
       friendsApi.getFriends(),
       friendsApi.getOutgoing(),
     ]).then(([friendsRes, outgoingRes]) => {
@@ -120,6 +135,40 @@ export default function UserProfileModal({
     setTimeout(() => setInviteCopied(false), 1500);
   };
 
+  const handleSendDirectMessage = async () => {
+    const trimmedMessage = messageText.trim();
+
+    if (isSelf || !trimmedMessage || isSendingMessage) {
+      return;
+    }
+
+    setIsSendingMessage(true);
+
+    try {
+      const channel = await resolveOrCreateChannel(userId);
+
+      if (!channel) {
+        showToast('error', 'Не удалось открыть диалог', 'Попробуйте ещё раз.');
+        return;
+      }
+
+      navigate(`/channels/@me/${channel.id}`, {
+        state: {
+          pendingDirectMessage: trimmedMessage,
+          autoSendDirectMessage: true,
+        },
+      });
+
+      setMessageText('');
+      onClose();
+    } catch (error) {
+      console.error('Failed to resolve direct channel:', error);
+      showToast('error', 'Не удалось отправить сообщение', 'Попробуйте ещё раз.');
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
   const MODAL_W = 288;
   const MODAL_H = 380;
   const left = Math.min(anchorX, window.innerWidth - MODAL_W - 8);
@@ -141,6 +190,9 @@ export default function UserProfileModal({
         {!isSelf && (
           <div className="absolute top-2 right-2 flex items-center gap-1">
             {/* Добавить/удалить друга */}
+            {friendStatus === 'loading' && (
+              <Skeleton className="h-8 w-8 rounded-full bg-white/20" />
+            )}
             {friendStatus === 'none' && (
               <button
                 type="button"
@@ -237,15 +289,21 @@ export default function UserProfileModal({
       <div className="px-4 pb-4">
         {/* Аватар + статус */}
         <div className="relative -mt-8 mb-3 w-fit">
-          <img
-            src={resolveAssetUrl(profile?.avatarUrl ?? avatarUrl)}
-            alt={displayName}
-            className="w-16 h-16 rounded-full border-4 border-[#1e1f23] object-cover"
-          />
-          {statusOption && (
-            <Circle
-              className={`absolute bottom-1 right-0.5 h-4 w-4 fill-current ring-2 ring-[#1e1f23] rounded-full ${statusOption.badgeClassName}`}
-            />
+          {isProfileLoading ? (
+            <Skeleton className="h-16 w-16 rounded-full border-4 border-[#1e1f23] bg-white/20" />
+          ) : (
+            <>
+              <img
+                src={resolveAssetUrl(profile?.avatarUrl ?? avatarUrl)}
+                alt={displayName}
+                className="w-16 h-16 rounded-full border-4 border-[#1e1f23] object-cover"
+              />
+              {statusOption && (
+                <Circle
+                  className={`absolute bottom-1 right-0.5 h-4 w-4 fill-current ring-2 ring-[#1e1f23] rounded-full ${statusOption.badgeClassName}`}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -274,26 +332,46 @@ export default function UserProfileModal({
 
         {/* Имя + статус-строка */}
         <div className="mb-1">
-          <div className="flex items-center gap-2">
-            <p className="font-bold text-white text-base leading-tight">{displayName}</p>
-            {isSelf && (
-              <span className="rounded-full border border-sky-400/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-200">
-                Ты
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-gray-400 mt-0.5">@{profile?.username ?? username}</p>
+          {isProfileLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-28 rounded-md" />
+              <Skeleton className="h-3 w-20 rounded-md" />
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <p className="font-bold text-white text-base leading-tight">{displayName}</p>
+                {isSelf && (
+                  <span className="rounded-full border border-sky-400/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-200">
+                    Ты
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">@{profile?.username ?? username}</p>
+            </>
+          )}
         </div>
 
-        {statusOption && (
+        {isProfileLoading ? (
+          <div className="mb-3 flex items-center gap-1.5">
+            <Skeleton className="h-2.5 w-2.5 rounded-full" />
+            <Skeleton className="h-3 w-20 rounded-md" />
+          </div>
+        ) : statusOption ? (
           <div className="flex items-center gap-1.5 mb-3">
             <Circle className={`h-2.5 w-2.5 fill-current shrink-0 ${statusOption.badgeClassName}`} />
             <span className="text-xs text-gray-300">{statusOption.label}</span>
           </div>
-        )}
+        ) : null}
 
         {/* Bio */}
-        {bio && (
+        {isProfileLoading ? (
+          <div className="mb-3 border-t border-white/10 pt-3 space-y-2">
+            <Skeleton className="h-3 w-14 rounded-md" />
+            <Skeleton className="h-3.5 w-full rounded-md" />
+            <Skeleton className="h-3.5 w-4/5 rounded-md" />
+          </div>
+        ) : bio && (
           <div className="mb-3 border-t border-white/10 pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1">О себе</p>
             <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">{bio}</p>
@@ -305,17 +383,29 @@ export default function UserProfileModal({
           <div className="mb-3 border-t border-white/10 pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Ссылка-приглашение</p>
             <div className="flex items-center gap-2 bg-[#2b2d31] rounded-xl px-3 py-2">
-              <span className="flex-1 text-xs text-gray-300 truncate min-w-0">
-                {inviteUrl === null ? 'Генерируем...' : inviteUrl || 'Ошибка'}
-              </span>
-              <button
-                type="button"
-                onClick={handleCopyInvite}
-                disabled={!inviteUrl}
-                className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40 shrink-0 transition-colors"
-              >
-                {inviteCopied ? 'Скопировано!' : 'Копировать'}
-              </button>
+              {inviteUrl === null ? (
+                <>
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-3.5 w-full rounded-md" />
+                    <Skeleton className="h-3 w-32 rounded-md" />
+                  </div>
+                  <Skeleton className="h-6 w-20 rounded-md" />
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 text-xs text-gray-300 truncate min-w-0">
+                    {inviteUrl || 'Ошибка'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyInvite}
+                    disabled={!inviteUrl}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40 shrink-0 transition-colors"
+                  >
+                    {inviteCopied ? 'Скопировано!' : 'Копировать'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -328,12 +418,19 @@ export default function UserProfileModal({
                 type="text"
                 value={messageText}
                 onChange={e => setMessageText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void handleSendDirectMessage();
+                  }
+                }}
                 placeholder={`Написать @${profile?.username ?? username}`}
                 className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none min-w-0"
               />
               <button
                 type="button"
-                disabled={!messageText.trim()}
+                onClick={() => void handleSendDirectMessage()}
+                disabled={!messageText.trim() || isSendingMessage}
                 className="text-gray-500 hover:text-indigo-400 disabled:opacity-30 transition-colors shrink-0"
               >
                 <Send className="h-4 w-4" />

@@ -9,6 +9,7 @@ import { resolveOrCreateChannel } from '../../../services/channelService';
 import { FriendRequestResponse } from '../../../types/FriendRequestType';
 import UserProfileResponse from '../../../types/UserProfileType';
 import { getUserStatusOption } from '../../../utils/userStatus';
+import Skeleton from '../../ui/Skeleton';
 
 type Tab = 'all' | 'online' | 'pending' | 'incoming' | 'add';
 
@@ -25,12 +26,14 @@ export default function FriendCenterPanel() {
     const [incoming, setIncoming] = useState<FriendRequestResponse[]>([]);
     const [outgoing, setOutgoing] = useState<FriendRequestResponse[]>([]);
     const [receiverId, setReceiverId] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
     const [refresh, setRefresh] = useState(false);
     const navigate = useNavigate();
     const { showToast } = useToast();
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true);
             try {
                 const [friendsRes, incomingRes, pendingRes] = await Promise.all([
                     friendsApi.getFriends(),
@@ -42,6 +45,8 @@ export default function FriendCenterPanel() {
                 setOutgoing(pendingRes.data);
             } catch (err) {
                 console.error('Ошибка при загрузке данных:', err);
+            } finally {
+                setIsLoading(false);
             }
         };
         void fetchData();
@@ -100,7 +105,50 @@ export default function FriendCenterPanel() {
         ? friends.filter((f) => f.userStatus === 1)
         : friends;
 
+    const renderLoadingContent = () => (
+        <div className="max-w-2xl space-y-3">
+            <Skeleton className="h-3 w-28 rounded-md" />
+            {Array.from({ length: tab === 'add' ? 1 : 5 }).map((_, index) => (
+                <div
+                    key={index}
+                    className={`rounded-xl border border-white/[0.05] bg-[#2b2d31] ${
+                        tab === 'add' ? 'px-4 py-4' : 'px-4 py-3'
+                    }`}
+                >
+                    {tab === 'add' ? (
+                        <div className="space-y-3">
+                            <Skeleton className="h-5 w-40 rounded-md" />
+                            <Skeleton className="h-3.5 w-72 max-w-full rounded-md" />
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-11 flex-1 rounded-xl" />
+                                <Skeleton className="h-10 w-28 rounded-xl" />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-3.5 w-28 rounded-md" />
+                                    <Skeleton className="h-3 w-20 rounded-md" />
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+
     const renderContent = () => {
+        if (isLoading) {
+            return renderLoadingContent();
+        }
+
         if (tab === 'add') {
             return (
                 <div className="max-w-xl">

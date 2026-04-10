@@ -7,7 +7,7 @@ export default function useSignalRChannel(
     channelId: string,
     onReceiveMessage: (message: MessageResponse) => void,
     onMessageDeleted?: (messageId: string) => void,
-    onMessageEdited?: (messageId: string, newContent: string) => void,
+    onMessageEdited?: (message: MessageResponse) => void,
 ) {
     const [connected, setConnected] = useState(false);
     const [typingUsername, setTypingUsername] = useState<string | null>(null);
@@ -25,14 +25,13 @@ export default function useSignalRChannel(
     useEffect(() => {
         const connect = async () => {
             try {
+                setConnected(false);
                 setTypingUsername(null);
 
                 if (chatHubConnection.state === 'Disconnected') {
                     await chatHubConnection.start();
                     console.log('✅ SignalR connected');
                 }
-
-                setConnected(true);
 
                 chatHubConnection.off('ReceiveMessage');
                 chatHubConnection.off('UserTyping');
@@ -51,12 +50,12 @@ export default function useSignalRChannel(
                     }
                 });
 
-                chatHubConnection.on('MessageDeleted', (cId: string, messageId: string) => {
-                    if (cId === channelId) onMessageDeletedRef.current?.(messageId);
+                chatHubConnection.on('MessageDeleted', (payload: { messageId: string; channelId: string }) => {
+                    if (payload.channelId === channelId) onMessageDeletedRef.current?.(payload.messageId);
                 });
 
-                chatHubConnection.on('MessageEdited', (cId: string, messageId: string, newContent: string) => {
-                    if (cId === channelId) onMessageEditedRef.current?.(messageId, newContent);
+                chatHubConnection.on('MessageEdited', (message: MessageResponse) => {
+                    if (message.channelId === channelId) onMessageEditedRef.current?.(message);
                 });
 
                 if (prevChannelIdRef.current && prevChannelIdRef.current !== channelId) {
@@ -67,7 +66,9 @@ export default function useSignalRChannel(
                 await chatHubConnection.invoke('JoinChannel', channelId);
                 console.log(`✅ Joined channel: ${channelId}`);
                 prevChannelIdRef.current = channelId;
+                setConnected(true);
             } catch (err) {
+                setConnected(false);
                 console.error('❌ SignalR error:', err);
             }
         };
@@ -81,6 +82,7 @@ export default function useSignalRChannel(
             chatHubConnection.off('MessageEdited');
 
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            setConnected(false);
         };
     }, [channelId]);
 

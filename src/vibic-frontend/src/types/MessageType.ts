@@ -7,6 +7,7 @@ interface MessageResponse {
     senderAvatarUrl: string;
     sentAt: Date;
     isEdited?: boolean;
+    updatedAt?: string | null;
 }
 
 export default MessageResponse;

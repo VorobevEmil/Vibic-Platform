@@ -6,25 +6,30 @@ import { useAuthContext } from '../../../context/AuthContext';
 import DirectChannelResponse from '../../../types/channels/DirectChannelType';
 import { useNavigate, useParams } from 'react-router-dom';
 import { resolveAssetUrl } from '../../../api/httpClient';
+import Skeleton from '../../ui/Skeleton';
 
 
 export default function DirectChannelListSidebar() {
     const { selfUser: user } = useAuthContext();
     const { id: activeChannelId } = useParams<{ id: string }>();
     const [channels, setChannels] = useState<DirectChannelResponse[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
     const [searchOpen, setSearchOpen] = useState(false);
 
     useEffect(() => {
         const fetchDMs = async () => {
+            setIsLoading(true);
             try {
                 const response = await channelsApi.getDirectChannels();
                 setChannels(response.data);
             } catch (err) {
                 console.error('Failed to load channels:', err);
+            } finally {
+                setIsLoading(false);
             }
         };
-        fetchDMs();
+        void fetchDMs();
     }, []);
 
     const onUpdateChannel = (channel: DirectChannelResponse) => {
@@ -57,14 +62,28 @@ export default function DirectChannelListSidebar() {
 
             {/* DM list */}
             <div className="flex-1 overflow-y-auto px-2 pb-2">
-                {channels.length > 0 && (
+                {(channels.length > 0 || isLoading) && (
                     <p className="px-2 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-gray-500">
                         Личные сообщения
                     </p>
                 )}
 
                 <div className="space-y-0.5">
-                    {channels.map((channel) => {
+                    {isLoading ? (
+                        Array.from({ length: 6 }).map((_, index) => (
+                            <div key={index} className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+                                <Skeleton className="h-8 w-8 rounded-full" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-3.5 w-24 rounded-md" />
+                                    <Skeleton className="h-3 w-16 rounded-md" />
+                                </div>
+                            </div>
+                        ))
+                    ) : channels.length === 0 ? (
+                        <div className="px-2 py-4 text-sm text-gray-500">
+                            Здесь появятся ваши личные сообщения.
+                        </div>
+                    ) : channels.map((channel) => {
                         const member = channel.channelMembers.find(cm => cm.userId !== user?.id);
                         if (!member) return null;
 

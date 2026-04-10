@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link2 } from 'lucide-react';
 import { invitesApi } from '../../api/invitesApi';
+import Skeleton from '../ui/Skeleton';
 
 interface InviteModalProps {
     isOpen: boolean;
@@ -11,6 +12,7 @@ interface InviteModalProps {
 export default function InviteModal({ isOpen, onClose, serverId }: InviteModalProps) {
     const [inviteUrl, setInviteUrl] = useState('');
     const [copied, setCopied] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -19,12 +21,15 @@ export default function InviteModal({ isOpen, onClose, serverId }: InviteModalPr
     }, [isOpen]);
 
     const generateInvite = async () => {
+        setIsLoading(true);
         try {
             const response = await invitesApi.createInvite(serverId);
             const url = `${window.location.origin}/invite/${response.data.code}`;
             setInviteUrl(url);
         } catch (error) {
             console.error('Ошибка при создании ссылки приглашения:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -54,19 +59,34 @@ export default function InviteModal({ isOpen, onClose, serverId }: InviteModalPr
                 <div className="mb-6">
                     <label className="text-sm text-gray-400 mb-1 block">Ссылка приглашения</label>
                     <div className="relative mt-1 flex items-center">
-                        <Link2 className="absolute left-3 text-gray-400" />
-                        <input
-                            type="text"
-                            readOnly
-                            value={inviteUrl}
-                            className="w-full pl-10 pr-28 py-2 rounded bg-[#1E1F22] text-white text-sm placeholder-gray-500 outline-none"
-                        />
-                        <button
-                            onClick={handleCopy}
-                            className="absolute right-2 px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded"
-                        >
-                            {copied ? 'Скопировано!' : 'Скопировать'}
-                        </button>
+                        {isLoading ? (
+                            <div className="w-full rounded bg-[#1E1F22] px-3 py-3">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-4 w-4 rounded-md" />
+                                    <div className="flex-1 space-y-2">
+                                        <Skeleton className="h-3.5 w-full rounded-md" />
+                                        <Skeleton className="h-3 w-40 rounded-md" />
+                                    </div>
+                                    <Skeleton className="h-8 w-24 rounded-md" />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <Link2 className="absolute left-3 text-gray-400" />
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={inviteUrl}
+                                    className="w-full pl-10 pr-28 py-2 rounded bg-[#1E1F22] text-white text-sm placeholder-gray-500 outline-none"
+                                />
+                                <button
+                                    onClick={handleCopy}
+                                    className="absolute right-2 px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded"
+                                >
+                                    {copied ? 'Скопировано!' : 'Скопировать'}
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 

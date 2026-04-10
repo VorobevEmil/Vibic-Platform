@@ -7,6 +7,7 @@ import { Phone, Settings, Video } from "lucide-react";
 import CallPanel from "./CallPanel";
 import { useCallContext } from "../../context/CallContext";
 import { resolveAssetUrl } from "../../api/httpClient";
+import Skeleton from "../ui/Skeleton";
 
 interface Props {
     channelId: string;
@@ -20,7 +21,7 @@ export default function CallHeaderHandler({ channelId }: Props) {
     const [isCalling, setIsCalling] = useState(false);
     const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
     const { setCallActive } = useCallContext();
-    const peerUser = useDirectChannel(
+    const { peerUser, isLoading } = useDirectChannel(
         {
             channelId: channelId,
             localUserId: selfUser?.id
@@ -59,12 +60,17 @@ export default function CallHeaderHandler({ channelId }: Props) {
         <div>
             <div className="h-14 px-4 flex items-center justify-between border-b border-[#1e1f22]">
                 <div className="flex items-center gap-3">
-                    {peerUser && (
+                    {isLoading ? (
+                        <>
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                            <Skeleton className="h-5 w-32 rounded-lg" />
+                        </>
+                    ) : peerUser ? (
                         <>
                             <img src={resolveAssetUrl(peerUser.avatarUrl)} className="w-8 h-8 rounded-full" />
                             <span className="font-bold text-white text-lg">{peerUser.displayName}</span>
                         </>
-                    )}
+                    ) : null}
                 </div>
                 <div className="flex gap-4 text-gray-300">
                     <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall(false)} />

@@ -1,9 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { ServerChannelResponse } from '../../types/ServerType';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
     ChevronDown,
-    Plus,
     Hash,
     Volume2,
     UserPlus,
@@ -18,6 +17,7 @@ import EditServerModal from './EditServerModal';
 import { ChannelType } from '../../types/enums/ChannelType';
 import { useVoice } from '../../context/VoiceContext';
 import { resolveAssetUrl } from '../../api/httpClient';
+import Skeleton from '../ui/Skeleton';
 
 interface ServerChannelListSidebarProps {
     serverName: string;
@@ -25,24 +25,28 @@ interface ServerChannelListSidebarProps {
     serverIconUrl?: string | null;
     isOwner: boolean;
     channels: ServerChannelResponse[];
+    isLoading?: boolean;
     onChannelCreated: (channel: ServerChannelResponse) => void;
     onServerUpdated: (name: string, iconFile: File | null) => Promise<void>;
     onServerDeleted: () => Promise<void>;
 }
 
-export default function ServerChannelListSidebar({ serverName, serverId, serverIconUrl, isOwner, channels, onChannelCreated, onServerUpdated, onServerDeleted }: ServerChannelListSidebarProps) {
+export default function ServerChannelListSidebar({ serverName, serverId, serverIconUrl, isOwner, channels, isLoading = false, onChannelCreated, onServerUpdated, onServerDeleted }: ServerChannelListSidebarProps) {
     const { channelId } = useParams<{ channelId: string }>();
 
     const [textOpen, setTextOpen] = useState(true);
     const [voiceOpen, setVoiceOpen] = useState(true);
+    const [isServerMenuOpen, setIsServerMenuOpen] = useState(false);
 
     const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isEditServerModalOpen, setIsEditServerModalOpen] = useState(false);
     const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId } = useVoice();
+    const serverMenuRef = useRef<HTMLDivElement | null>(null);
 
     const textChannels = channels?.filter((c) => c.channelType === ChannelType.Server);
     const voiceChannels = channels?.filter((c) => c.channelType === ChannelType.Voice);
+    const showChannelSkeleton = isLoading && channels.length === 0;
 
     const createServer = async (request: ServerChannelRequest) => {
         try {
@@ -54,34 +58,127 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
         }
     };
 
+    useEffect(() => {
+        if (!isServerMenuOpen) {
+            return;
+        }
+
+        const handlePointerDown = (event: MouseEvent) => {
+            if (!serverMenuRef.current?.contains(event.target as Node)) {
+                setIsServerMenuOpen(false);
+            }
+        };
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsServerMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('keydown', handleEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+            window.removeEventListener('keydown', handleEscape);
+        };
+    }, [isServerMenuOpen]);
+
+    const openCreateChannelModal = () => {
+        setIsServerMenuOpen(false);
+        setIsCreateChannelModalOpen(true);
+    };
+
+    const openInviteModal = () => {
+        setIsServerMenuOpen(false);
+        setIsInviteModalOpen(true);
+    };
+
+    const openEditServerModal = () => {
+        setIsServerMenuOpen(false);
+        setIsEditServerModalOpen(true);
+    };
+
     return (
         <div className="h-full w-64 bg-[#2B2D31] text-gray-200 border-r border-gray-700 flex flex-col overflow-y-auto py-3 px-2 space-y-4">
 
             {/* Заголовок сервера */}
-            <div className="flex items-center justify-between px-2 py-2 hover:bg-[#3A3C41] rounded transition-colors cursor-pointer">
-                <span className="text-sm font-semibold uppercase text-gray-400 truncate max-w-[120px]">
-                    Сервер {serverName}
-                </span>
-                <div className="flex items-center gap-2">
-                    <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
-                        <UserPlus className="w-4 h-4 hover:text-white" />
+            <div className="relative" ref={serverMenuRef}>
+                <div className="flex items-center gap-2 px-2">
+                    <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => setIsServerMenuOpen((current) => !current)}
+                        className={`flex min-w-0 flex-1 items-center justify-between rounded-md px-3 py-2 text-left transition-colors ${isServerMenuOpen ? 'bg-[#404249] text-white' : 'hover:bg-[#3A3C41] text-white'
+                            }`}
+                    >
+                        {isLoading ? (
+                            <div className="flex w-full items-center justify-between gap-3">
+                                <Skeleton className="h-4 w-32 rounded-md" />
+                                <Skeleton className="h-4 w-4 rounded-full" />
+                            </div>
+                        ) : (
+                            <>
+                                <span className="truncate text-[15px] font-semibold">
+                                    {serverName}
+                                </span>
+                                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isServerMenuOpen ? 'rotate-180' : ''}`} />
+                            </>
+                        )}
+                    </button>
+
+                    <div className="relative group shrink-0">
+                        <button
+                            type="button"
+                            disabled={isLoading}
+                            onClick={openInviteModal}
+                            className="rounded-md p-2 text-gray-300 transition-colors hover:bg-[#3A3C41] hover:text-white"
+                        >
+                            {isLoading ? <Skeleton className="h-4 w-4 rounded-full" /> : <UserPlus className="h-4 w-4" />}
+                        </button>
                         <span className="pointer-events-none absolute right-0 top-full mt-1
                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
                             bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
                             Пригласить на сервер
                         </span>
                     </div>
-                    {isOwner && (
-                        <div className="relative group" onClick={() => setIsEditServerModalOpen(true)}>
-                            <Settings className="w-4 h-4 hover:text-white" />
-                            <span className="pointer-events-none absolute right-0 top-full mt-1
-                                opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                                bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                                Настройки сервера
-                            </span>
-                        </div>
-                    )}
                 </div>
+
+                {isServerMenuOpen && (
+                    <div className="absolute inset-x-2 top-full z-30 mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#1f2126] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                        <button
+                            type="button"
+                            onClick={openInviteModal}
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                        >
+                            <span>Пригласить на сервер</span>
+                            <UserPlus className="h-4 w-4" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={openCreateChannelModal}
+                            className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                        >
+                            <span>Создать канал</span>
+                            <Hash className="h-4 w-4" />
+                        </button>
+
+                        {isOwner && (
+                            <>
+                                <div className="my-2 h-px bg-white/10" />
+                                <button
+                                    type="button"
+                                    onClick={openEditServerModal}
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                                >
+                                    <span>Настройки сервера</span>
+                                    <Settings className="h-4 w-4" />
+                                </button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Текстовые каналы */}
@@ -96,19 +193,18 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                         />
                         Текстовые каналы
                     </button>
-                    <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
-                        <Plus className="w-4 h-4 hover:text-white" />
-                        <span className="pointer-events-none absolute right-0 bottom-full mb-2
-                            opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                            Создать канал
-                        </span>
-                    </div>
                 </div>
 
                 {textOpen && (
                     <div className="space-y-1 mt-1">
-                        {textChannels.map((channel) => (
+                        {showChannelSkeleton ? (
+                            Array.from({ length: 4 }).map((_, index) => (
+                                <div key={index} className="flex items-center gap-2 px-3 py-1.5">
+                                    <Skeleton className="h-4 w-4 rounded-md" />
+                                    <Skeleton className="h-4 w-28 rounded-md" />
+                                </div>
+                            ))
+                        ) : textChannels.map((channel) => (
                             <Link
                                 key={channel.id}
                                 to={`/channels/${serverId}/${channel.id}`}
@@ -137,19 +233,18 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                         />
                         Голосовые каналы
                     </button>
-                    <div className="relative group cursor-pointer" onClick={() => setIsCreateChannelModalOpen(true)}>
-                        <Plus className="w-4 h-4 hover:text-white" />
-                        <span className="pointer-events-none absolute right-0 bottom-full mb-2
-                            opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                            Создать канал
-                        </span>
-                    </div>
                 </div>
 
                 {voiceOpen && (
                     <div className="space-y-1 mt-1">
-                        {voiceChannels.map((channel) => {
+                        {showChannelSkeleton ? (
+                            Array.from({ length: 2 }).map((_, index) => (
+                                <div key={index} className="flex items-center gap-2 px-3 py-1.5">
+                                    <Skeleton className="h-4 w-4 rounded-md" />
+                                    <Skeleton className="h-4 w-24 rounded-md" />
+                                </div>
+                            ))
+                        ) : voiceChannels.map((channel) => {
                             const usersInChannel = voiceUsersByChannel[channel.id]
                                 ?? (currentChannelId === channel.id ? voiceUsers : []);
 

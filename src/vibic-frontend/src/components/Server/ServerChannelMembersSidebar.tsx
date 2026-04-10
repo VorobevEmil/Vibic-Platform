@@ -7,6 +7,7 @@ import { createPresenceHubConnection } from '../../services/signalRClient';
 import { ServerChannelParticipantResponse } from '../../types/channels/ServerChannelType';
 import { getUserStatusOption } from '../../utils/userStatus';
 import UserProfileModal from '../Chat/DirectChat/UserProfileModal';
+import Skeleton from '../ui/Skeleton';
 
 interface Props {
   serverId: string;
@@ -205,6 +206,32 @@ export default function ServerChannelMembersSidebar({
   const onlineParticipants = enrichedParticipants.filter((participant) => isPresentStatus(participant.userStatus));
   const offlineParticipants = enrichedParticipants.filter((participant) => !isPresentStatus(participant.userStatus));
 
+  const renderLoadingGroup = (count: number) => (
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <Skeleton className="h-3 w-24 rounded-md" />
+        <Skeleton className="h-3 w-6 rounded-md" />
+      </div>
+
+      <div className="space-y-2.5">
+        {Array.from({ length: count }).map((_, index) => (
+          <div
+            key={index}
+            className="rounded-2xl border border-white/8 bg-[#202228] px-3 py-3"
+          >
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <Skeleton className="h-3.5 w-28 rounded-md" />
+                <Skeleton className="h-3 w-20 rounded-md" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
   const renderParticipants = (title: string, items: typeof enrichedParticipants) => {
     if (items.length === 0) {
       return null;
@@ -287,9 +314,15 @@ export default function ServerChannelMembersSidebar({
           {!isPublic && <Lock className="h-3.5 w-3.5 text-amber-300" />}
           <span>{isPublic ? 'Публичный канал' : 'Приватный канал'}</span>
         </div>
-        <div className="mt-2 text-xs text-gray-400">
-          {onlineParticipants.length} онлайн из {enrichedParticipants.length}
-        </div>
+        {isLoading ? (
+          <div className="mt-2">
+            <Skeleton className="h-3 w-24 rounded-md" />
+          </div>
+        ) : (
+          <div className="mt-2 text-xs text-gray-400">
+            {onlineParticipants.length} онлайн из {enrichedParticipants.length}
+          </div>
+        )}
       </div>
 
       {hasLoadError ? (
@@ -297,8 +330,9 @@ export default function ServerChannelMembersSidebar({
           Не удалось загрузить участников этого канала.
         </div>
       ) : isLoading ? (
-        <div className="rounded-2xl border border-white/8 bg-[#23252b] px-4 py-4 text-sm text-gray-300">
-          Загружаем участников канала...
+        <div className="space-y-5">
+          {renderLoadingGroup(3)}
+          {renderLoadingGroup(2)}
         </div>
       ) : (
         <div className="space-y-5">

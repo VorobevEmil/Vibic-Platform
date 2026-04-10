@@ -4,6 +4,7 @@ import SearchResultItem from './SearchResultItem';
 import { resolveOrCreateChannel } from '../../services/channelService';
 import { useNavigate } from 'react-router-dom';
 import DirectChannelResponse from '../../types/channels/DirectChannelType';
+import Skeleton from '../ui/Skeleton';
 
 interface Props {
   channels: DirectChannelResponse[];
@@ -14,7 +15,7 @@ interface Props {
 
 export default function SearchUserOverlay({ channels, onUpdateChannel, isOpen, onClose }: Props) {
   const [searchChannel, setSearchChannel] = useState('');
-  const results = useSearchUsers(searchChannel);
+  const { results, isLoading } = useSearchUsers(searchChannel);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,7 +58,17 @@ export default function SearchUserOverlay({ channels, onUpdateChannel, isOpen, o
         />
 
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {results.length === 0 && searchChannel.trim() !== '' ? (
+          {isLoading && searchChannel.trim() !== '' ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-3 rounded-xl bg-[#3c3e45] px-3 py-2.5">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-24 rounded-md" />
+                  <Skeleton className="h-3 w-16 rounded-md" />
+                </div>
+              </div>
+            ))
+          ) : results.length === 0 && searchChannel.trim() !== '' ? (
             <div className="text-sm text-gray-400">Ничего не найдено</div>
           ) : (
             results.map((user) => (

@@ -12,6 +12,7 @@ import { resolveAssetUrl } from "../api/httpClient";
 import ServerChannelMembersSidebar from "../components/Server/ServerChannelMembersSidebar";
 import { useAuthContext } from "../context/AuthContext";
 import { Users } from "lucide-react";
+import Skeleton from "../components/ui/Skeleton";
 
 function ServerPageContent({ serverId, channelId }: { serverId: string; channelId?: string }) {
     const [server, setServer] = useState<ServerFullResponse>();
@@ -124,6 +125,7 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
                 serverIconUrl={server?.iconUrl}
                 isOwner={!!selfUser && !!server && server.ownerId === selfUser.id}
                 channels={server?.channels ?? []}
+                isLoading={!server}
                 onChannelCreated={(channel) => {
                     if (!server) return;
                     setServer({ ...server, channels: [...server.channels, channel] });
@@ -134,11 +136,19 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
             {channelId ? (
                 <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId}>
                     <div className="h-12 px-4 flex items-center justify-between border-b border-[#1e1f22]">
-                        <h1 className="text-lg font-bold text-white"># {currentChannel?.name ?? 'Unknown Channel'}</h1>
+                        {server ? (
+                            <h1 className="text-lg font-bold text-white"># {currentChannel?.name ?? 'Unknown Channel'}</h1>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="h-6 w-6 rounded-md" />
+                                <Skeleton className="h-6 w-40 rounded-lg" />
+                            </div>
+                        )}
                         <div className="relative group">
                             <button
                                 type="button"
                                 onClick={toggleVisibility}
+                                disabled={!server}
                                 className={`rounded-lg p-1.5 transition ${isVisible ? 'text-white' : 'text-gray-400 hover:text-white'}`}
                             >
                                 <Users className="h-5 w-5" />
