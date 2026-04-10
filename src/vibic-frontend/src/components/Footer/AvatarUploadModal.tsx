@@ -1,12 +1,12 @@
 import { useRef, useState, useCallback } from 'react';
-import { X, Upload, Trash2 } from 'lucide-react';
+import { LoaderCircle, RotateCcw, Upload, X } from 'lucide-react';
 import Cropper, { Area } from 'react-easy-crop';
 import getCroppedImg from '../../utils/cropImage';
 
 interface Props {
-    currentAvatar: string | undefined;
+  currentAvatar: string | undefined;
   onClose: () => void;
-  onSave: (file: File | null) => void;
+  onSave: (file: File) => Promise<void>;
 }
 
 export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Props) {
@@ -14,17 +14,25 @@ export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Pr
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (file) {
+      setError(null);
       const reader = new FileReader();
       reader.onload = () => {
         setImageSrc(reader.result as string);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
       };
       reader.readAsDataURL(file);
     }
+
+    e.target.value = '';
   };
 
   const onCropComplete = useCallback((_: Area, croppedAreaPixels: Area) => {
@@ -32,21 +40,30 @@ export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Pr
   }, []);
 
   const handleSave = async () => {
-    if (!imageSrc || !croppedAreaPixels) return;
+    if (!imageSrc || !croppedAreaPixels || isSaving) return;
 
     try {
+      setIsSaving(true);
+      setError(null);
       const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
       const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' });
 
-      onSave(croppedFile);
+      await onSave(croppedFile);
       onClose();
     } catch (error) {
       console.error('Ошибка обрезки изображения:', error);
+      setError('Не удалось сохранить новый аватар. Попробуй ещё раз.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = () => {
+  const handleResetSelection = () => {
     setImageSrc(null);
+    setCroppedAreaPixels(null);
+    setCrop({ x: 0, y: 0 });
+    setZoom(1);
+    setError(null);
   };
 
   return (
@@ -54,7 +71,8 @@ export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Pr
       <div className="bg-[#2b2d31] rounded-lg p-6 w-[400px] text-white relative">
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-400 hover:text-white"
+          disabled={isSaving}
+          className="absolute top-3 right-3 text-gray-400 hover:text-white disabled:opacity-60"
         >
           <X className="w-5 h-5" />
         </button>
@@ -80,47 +98,72 @@ export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Pr
             <div className="flex gap-6 mt-4">
               <button
                 onClick={() => inputRef.current?.click()}
-                className="flex items-center gap-2 text-sm hover:underline"
+                disabled={isSaving}
+                className="flex items-center gap-2 text-sm hover:underline disabled:opacity-60"
               >
                 <Upload className="w-4 h-4" />
                 Загрузить
               </button>
-
-              <button
-                onClick={handleDelete}
-                className="flex items-center gap-2 text-sm text-red-400 hover:underline"
-              >
-                <Trash2 className="w-4 h-4" />
-                Удалить
-              </button>
             </div>
           </div>
         ) : (
-          <div className="relative w-full h-64 bg-black">
-            <Cropper
-              image={imageSrc}
-              crop={crop}
-              zoom={zoom}
-              aspect={1}
-              onCropChange={setCrop}
-              onZoomChange={setZoom}
-              onCropComplete={onCropComplete}
-            />
+          <>
+            <div className="relative w-full h-64 bg-black">
+              <Cropper
+                image={imageSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+
+            <div className="mt-3 flex items-center justify-between text-sm text-gray-300">
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 hover:text-white disabled:opacity-60"
+              >
+                <Upload className="w-4 h-4" />
+                Выбрать другой файл
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResetSelection}
+                disabled={isSaving}
+                className="inline-flex items-center gap-2 text-gray-400 hover:text-white disabled:opacity-60"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Сбросить
+              </button>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+            {error}
           </div>
         )}
 
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-500 rounded"
+            disabled={isSaving}
+            className="px-4 py-2 text-sm bg-gray-600 hover:bg-gray-500 rounded disabled:opacity-60"
           >
             Отмена
           </button>
           <button
             onClick={handleSave}
-            disabled={!imageSrc}
-            className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded disabled:opacity-50"
+            disabled={!imageSrc || isSaving}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded disabled:opacity-50"
           >
+            {isSaving && <LoaderCircle className="w-4 h-4 animate-spin" />}
             Сохранить
           </button>
         </div>

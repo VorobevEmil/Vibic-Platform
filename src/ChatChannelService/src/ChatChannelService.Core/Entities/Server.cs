@@ -32,4 +32,10 @@ public class Server : BaseEntity, IUpdatable, ISoftDeletable
         if (string.IsNullOrWhiteSpace(iconUrl)) return;
         IconUrl = iconUrl;
     }
+
+    public void UpdateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        Name = name;
+    }
 }

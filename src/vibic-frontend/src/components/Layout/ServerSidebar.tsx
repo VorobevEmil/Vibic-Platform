@@ -21,16 +21,20 @@ export default function ServerSidebar() {
         }
     };
 
+    const fetchServers = async () => {
+        try {
+            const response = await serversApi.getMyServers();
+            setServers(response.data);
+        } catch (error) {
+            console.log('Не получилось получить список серверов', error);
+        }
+    };
+
     useEffect(() => {
-        const fetchServers = async () => {
-            try {
-                const response = await serversApi.getMyServers();
-                setServers(response.data);
-            } catch (error) {
-                console.log('Не получилось получить список серверов', error);
-            }
-        };
         fetchServers();
+
+        window.addEventListener('server-list-changed', fetchServers);
+        return () => window.removeEventListener('server-list-changed', fetchServers);
     }, []);
 
     return (

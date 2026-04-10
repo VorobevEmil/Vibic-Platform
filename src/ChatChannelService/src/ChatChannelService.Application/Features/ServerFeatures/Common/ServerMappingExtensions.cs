@@ -38,6 +38,6 @@ public static class ServerMappingExtensions
             iconUrl = null;
         }
 
-        return new ServerFullDto(server.Id, server.Name, iconUrl, serverChannels, serverMembers);
+        return new ServerFullDto(server.Id, server.Name, iconUrl, server.OwnerId, serverChannels, serverMembers);
     }
 }

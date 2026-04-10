@@ -4,6 +4,7 @@ using ChatChannelService.Application.Features.ChannelFeatures.Queries;
 using ChatChannelService.Web.Mappings;
 using ChatChannelService.Web.Models.Channels.Requests;
 using ChatChannelService.Web.Models.Channels.Responses;
+using ChatChannelService.Web.Services;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Vibic.Shared.Core.Controllers;
@@ -11,7 +12,7 @@ using Vibic.Shared.Core.Controllers;
 namespace ChatChannelService.Web.Controllers.Channels;
 
 [Route("/channels")]
-public class ChannelsController(IMediator mediator) : AuthenticateControllerBase
+public class ChannelsController(IMediator mediator, ILinkPreviewService linkPreviewService) : AuthenticateControllerBase
 {
     [HttpGet("direct/{id}")]
     public async Task<IActionResult> GetDirectChannelById(Guid id)
@@ -55,5 +56,13 @@ public class ChannelsController(IMediator mediator) : AuthenticateControllerBase
         DirectChannelResponse response = directChannelDto.MapToDirectMessageResponse();
 
         return Created(string.Empty, response);
+    }
+
+    [HttpGet("link-preview")]
+    [ProducesResponseType(typeof(LinkPreviewResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetLinkPreview([FromQuery] string url, CancellationToken cancellationToken)
+    {
+        LinkPreviewResponse response = await linkPreviewService.GetPreviewAsync(url, cancellationToken);
+        return Ok(response);
     }
 }

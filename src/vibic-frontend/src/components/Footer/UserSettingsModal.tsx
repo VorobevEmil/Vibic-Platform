@@ -26,12 +26,20 @@ export default function UserSettingsModal({ onClose }: Props) {
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
+      if (isAvatarModalOpen) {
+        return;
+      }
+
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
+      if (isAvatarModalOpen) {
+        return;
+      }
+
       if (event.key === 'Escape') {
         onClose();
       }
@@ -44,27 +52,26 @@ export default function UserSettingsModal({ onClose }: Props) {
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [onClose]);
+  }, [isAvatarModalOpen, onClose]);
 
   if (!selfUser) {
     return null;
   }
 
-  const handleAvatarSave = async (file: File | null) => {
-    if (!file) {
-      return;
-    }
-
+  const handleAvatarSave = async (file: File) => {
     try {
+      setError(null);
       const response = await userProfilesApi.updateAvatar(file);
-      updateSelfUser({
-        ...selfUser,
-        avatarUrl: response.data.url,
-      });
-      setIsAvatarModalOpen(false);
+      updateSelfUser((currentUser) => currentUser
+        ? {
+            ...currentUser,
+            avatarUrl: response.data.url,
+          }
+        : currentUser);
     } catch (avatarError) {
       console.error('Ошибка при обновлении аватара:', avatarError);
       setError('Не удалось обновить аватар. Попробуй еще раз.');
+      throw avatarError;
     }
   };
 
@@ -95,12 +102,14 @@ export default function UserSettingsModal({ onClose }: Props) {
 
       localStorage.setItem(PREFERRED_USER_STATUS_STORAGE_KEY, String(selectedStatus));
 
-      updateSelfUser({
-        ...selfUser,
-        username: trimmedUsername,
-        bio: trimmedBio || null,
-        userStatus: selectedStatus,
-      });
+      updateSelfUser((currentUser) => currentUser
+        ? {
+            ...currentUser,
+            username: trimmedUsername,
+            bio: trimmedBio || null,
+            userStatus: selectedStatus,
+          }
+        : currentUser);
 
       onClose();
     } catch (saveError) {
@@ -290,9 +299,7 @@ export default function UserSettingsModal({ onClose }: Props) {
         <AvatarUploadModal
           currentAvatar={resolveAssetUrl(selfUser.avatarUrl)}
           onClose={() => setIsAvatarModalOpen(false)}
-          onSave={(file) => {
-            void handleAvatarSave(file);
-          }}
+          onSave={handleAvatarSave}
         />
       )}
     </>

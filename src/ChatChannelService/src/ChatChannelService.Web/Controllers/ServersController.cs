@@ -54,6 +54,19 @@ public class ServersController(IMediator mediator) : AuthenticateControllerBase
         return Created(string.Empty, summaryResponse);
     }
 
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ServerSummaryResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateServer(Guid id, [FromForm] UpdateServerRequest request)
+    {
+        UpdateServerCommand command = new(id, request.Name, request.Icon);
+
+        ServerSummaryDto serverSummary = await mediator.Send(command);
+
+        ServerSummaryResponse summaryResponse = serverSummary.MapToResponse();
+
+        return Ok(summaryResponse);
+    }
+
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteServer(Guid id)

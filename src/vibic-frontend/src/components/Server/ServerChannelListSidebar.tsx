@@ -8,11 +8,13 @@ import {
     Volume2,
     UserPlus,
     MicOff,
+    Settings,
 } from 'lucide-react';
 import { channelsApi } from '../../api/channelsApi';
 import CreateChannelModal from './CreateChannelModal';
 import { ServerChannelRequest } from '../../types/channels/ServerChannelType';
 import InviteModal from './InviteModal';
+import EditServerModal from './EditServerModal';
 import { ChannelType } from '../../types/enums/ChannelType';
 import { useVoice } from '../../context/VoiceContext';
 import { resolveAssetUrl } from '../../api/httpClient';
@@ -20,11 +22,15 @@ import { resolveAssetUrl } from '../../api/httpClient';
 interface ServerChannelListSidebarProps {
     serverName: string;
     serverId: string;
+    serverIconUrl?: string | null;
+    isOwner: boolean;
     channels: ServerChannelResponse[];
     onChannelCreated: (channel: ServerChannelResponse) => void;
+    onServerUpdated: (name: string, iconFile: File | null) => Promise<void>;
+    onServerDeleted: () => Promise<void>;
 }
 
-export default function ServerChannelListSidebar({ serverName, serverId, channels, onChannelCreated }: ServerChannelListSidebarProps) {
+export default function ServerChannelListSidebar({ serverName, serverId, serverIconUrl, isOwner, channels, onChannelCreated, onServerUpdated, onServerDeleted }: ServerChannelListSidebarProps) {
     const { channelId } = useParams<{ channelId: string }>();
 
     const [textOpen, setTextOpen] = useState(true);
@@ -32,6 +38,7 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
 
     const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isEditServerModalOpen, setIsEditServerModalOpen] = useState(false);
     const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId } = useVoice();
 
     const textChannels = channels?.filter((c) => c.channelType === ChannelType.Server);
@@ -52,16 +59,28 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
 
             {/* Заголовок сервера */}
             <div className="flex items-center justify-between px-2 py-2 hover:bg-[#3A3C41] rounded transition-colors cursor-pointer">
-                <span className="text-sm font-semibold uppercase text-gray-400 truncate max-w-[140px]">
+                <span className="text-sm font-semibold uppercase text-gray-400 truncate max-w-[120px]">
                     Сервер {serverName}
                 </span>
-                <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
-                    <UserPlus className="w-4 h-4 hover:text-white" />
-                    <span className="pointer-events-none absolute right-0 top-full mt-1
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                        bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                        Пригласить на сервер
-                    </span>
+                <div className="flex items-center gap-2">
+                    <div className="relative group" onClick={() => setIsInviteModalOpen(true)}>
+                        <UserPlus className="w-4 h-4 hover:text-white" />
+                        <span className="pointer-events-none absolute right-0 top-full mt-1
+                            opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                            Пригласить на сервер
+                        </span>
+                    </div>
+                    {isOwner && (
+                        <div className="relative group" onClick={() => setIsEditServerModalOpen(true)}>
+                            <Settings className="w-4 h-4 hover:text-white" />
+                            <span className="pointer-events-none absolute right-0 top-full mt-1
+                                opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                                bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
+                                Настройки сервера
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -189,6 +208,16 @@ export default function ServerChannelListSidebar({ serverName, serverId, channel
                 onClose={() => setIsInviteModalOpen(false)}
                 serverId={serverId}
             />
+
+            {isEditServerModalOpen && (
+                <EditServerModal
+                    currentName={serverName}
+                    currentIconUrl={serverIconUrl}
+                    onClose={() => setIsEditServerModalOpen(false)}
+                    onSave={onServerUpdated}
+                    onDelete={onServerDeleted}
+                />
+            )}
         </div>
     );
 }

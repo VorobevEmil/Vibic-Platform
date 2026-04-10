@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import ServerChannelListSidebar from "../components/Server/ServerChannelListSidebar";
 import { useEffect, useRef, useState } from "react";
 import { serversApi } from "../api/serversApi";
@@ -10,6 +10,7 @@ import { useHeaderContext } from "../context/HeaderContext";
 import { useRightSidebarContext } from "../context/RightSidebarContext";
 import { resolveAssetUrl } from "../api/httpClient";
 import ServerChannelMembersSidebar from "../components/Server/ServerChannelMembersSidebar";
+import { useAuthContext } from "../context/AuthContext";
 import { Users } from "lucide-react";
 
 function ServerPageContent({ serverId, channelId }: { serverId: string; channelId?: string }) {
@@ -17,6 +18,8 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
     const { joinServer, leaveServer } = useVoice();
     const { setHeader } = useHeaderContext();
     const { setSidebar, isVisible, toggleVisibility } = useRightSidebarContext();
+    const { selfUser } = useAuthContext();
+    const navigate = useNavigate();
     const joinedServerRef = useRef<string | null>(null);
     const leaveServerRef = useRef(leaveServer);
     const setHeaderRef = useRef(setHeader);
@@ -90,16 +93,43 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
         };
     }, []);
 
+    const handleServerUpdate = async (name: string, iconFile: File | null) => {
+        try {
+            const response = await serversApi.updateServer(serverId, name, iconFile);
+            if (server) {
+                setServer({ ...server, name: response.data.name, iconUrl: response.data.iconUrl });
+                setHeader({ title: response.data.name, iconUrl: resolveAssetUrl(response.data.iconUrl) });
+            }
+            window.dispatchEvent(new CustomEvent('server-list-changed'));
+        } catch (error) {
+            console.error('Ошибка при обновлении сервера:', error);
+        }
+    };
+
+    const handleServerDelete = async () => {
+        try {
+            await serversApi.deleteServer(serverId);
+            window.dispatchEvent(new CustomEvent('server-list-changed'));
+            navigate('/');
+        } catch (error) {
+            console.error('Ошибка при удалении сервера:', error);
+        }
+    };
+
     return (
         <>
             <ServerChannelListSidebar
                 serverName={server?.name ?? 'Unknown'}
                 serverId={serverId}
+                serverIconUrl={server?.iconUrl}
+                isOwner={!!selfUser && !!server && server.ownerId === selfUser.id}
                 channels={server?.channels ?? []}
                 onChannelCreated={(channel) => {
                     if (!server) return;
                     setServer({ ...server, channels: [...server.channels, channel] });
                 }}
+                onServerUpdated={handleServerUpdate}
+                onServerDeleted={handleServerDelete}
             />
             {channelId ? (
                 <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId}>

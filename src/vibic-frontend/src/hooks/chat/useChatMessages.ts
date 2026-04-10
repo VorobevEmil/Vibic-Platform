@@ -7,12 +7,10 @@ interface Props {
   channelId: string
 }
 
-const NEAR_BOTTOM_THRESHOLD_PX = 160;
+const NEAR_BOTTOM_THRESHOLD_PX = 220;
 
 export function useChatMessages({ serverId, channelId }: Props) {
   const [messages, setMessages] = useState<MessageResponse[]>([]);
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
-  const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(true);
   const [unreadMessageId, setUnreadMessageId] = useState<string | null>(null);
@@ -23,9 +21,27 @@ export function useChatMessages({ serverId, channelId }: Props) {
   const isNearBottomRef = useRef(true);
   const pendingScrollRef = useRef<ScrollBehavior | false>(false);
 
+  // Stable refs so loadMoreMessages doesn't recreate on every state change
+  const cursorRef = useRef<string | undefined>(undefined);
+  const hasMoreRef = useRef(true);
+  const isLoadingMoreRef = useRef(false);
+
   const clearUnreadState = useCallback(() => {
     setUnreadMessageId(null);
     setUnreadCount(0);
+  }, []);
+
+  const scrollContainerToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    const scrollEl = scrollContainerRef.current;
+
+    if (!scrollEl) {
+      return;
+    }
+
+    scrollEl.scrollTo({
+      top: scrollEl.scrollHeight,
+      behavior,
+    });
   }, []);
 
   const updateBottomState = useCallback(() => {
@@ -67,11 +83,11 @@ export function useChatMessages({ serverId, channelId }: Props) {
   }, [updateBottomState]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    scrollContainerToBottom(behavior);
     requestAnimationFrame(() => {
       updateBottomState();
     });
-  }, [updateBottomState]);
+  }, [scrollContainerToBottom, updateBottomState]);
 
   const initializeMessages = useCallback(async () => {
     clearUnreadState();
@@ -79,11 +95,12 @@ export function useChatMessages({ serverId, channelId }: Props) {
     setIsNearBottom(true);
     messagesRef.current = [];
     setMessages([]);
-    setCursor(undefined);
-    setHasMore(true);
+    cursorRef.current = undefined;
+    hasMoreRef.current = true;
+    isLoadingMoreRef.current = false;
+    setIsLoadingMore(false);
 
     try {
-
       let response = null;
       if (serverId) {
         response = await messagesApi.getMessagesByServerIdAndChannelId(serverId, channelId);
@@ -93,8 +110,8 @@ export function useChatMessages({ serverId, channelId }: Props) {
       }
       messagesRef.current = response.data.items;
       setMessages(response.data.items);
-      setCursor(response.data.cursor);
-      setHasMore(response.data.hasMore);
+      cursorRef.current = response.data.cursor;
+      hasMoreRef.current = response.data.hasMore;
       pendingScrollRef.current = 'auto';
     } catch (error) {
       console.log("Ошибка во время инициализации сообщении", error)
@@ -102,42 +119,42 @@ export function useChatMessages({ serverId, channelId }: Props) {
   }, [channelId, clearUnreadState, serverId]);
 
   const loadMoreMessages = useCallback(async () => {
-    if (!hasMore || isLoadingMore) return;
+    if (!hasMoreRef.current || isLoadingMoreRef.current) return;
     const scrollEl = scrollContainerRef.current;
     if (!scrollEl) return;
 
     const prevScrollHeight = scrollEl.scrollHeight;
     const prevScrollTop = scrollEl.scrollTop;
 
+    isLoadingMoreRef.current = true;
     setIsLoadingMore(true);
 
     try {
-
-
       let response = null;
       if (serverId) {
-        response = await messagesApi.getMessagesByServerIdAndChannelId(serverId!, channelId, cursor);
+        response = await messagesApi.getMessagesByServerIdAndChannelId(serverId!, channelId, cursorRef.current);
       }
       else {
-        response = await messagesApi.getMessagesByChannelId(channelId, cursor);
+        response = await messagesApi.getMessagesByChannelId(channelId, cursorRef.current);
       }
-
-      setIsLoadingMore(false);
 
       const nextMessages = [...response.data.items, ...messagesRef.current];
       messagesRef.current = nextMessages;
       setMessages(nextMessages);
-      setCursor(response.data.cursor);
-      setHasMore(response.data.hasMore);
+      cursorRef.current = response.data.cursor;
+      hasMoreRef.current = response.data.hasMore;
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
 
       setTimeout(() => {
         scrollEl.scrollTop = scrollEl.scrollHeight - prevScrollHeight + prevScrollTop;
       }, 10);
     } catch (error) {
       console.error('Ошибка при загрузке сообщений:', error);
+      isLoadingMoreRef.current = false;
       setIsLoadingMore(false);
     }
-  }, [channelId, cursor, hasMore, isLoadingMore, serverId]);
+  }, [channelId, serverId]);
 
   const appendIncomingMessage = useCallback((
     message: MessageResponse,
@@ -153,7 +170,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
 
     if (options?.forceScroll || isNearBottomRef.current) {
       clearUnreadState();
-      pendingScrollRef.current = 'smooth';
+      pendingScrollRef.current = 'auto';
       return;
     }
 
@@ -183,9 +200,43 @@ export function useChatMessages({ serverId, channelId }: Props) {
     setMessages(next);
   }, []);
 
+  const syncSenderMetadata = useCallback((
+    senderId: string,
+    updates: { senderUsername?: string; senderAvatarUrl?: string | null }
+  ) => {
+    let hasChanges = false;
+
+    const nextMessages = messagesRef.current.map((message) => {
+      if (message.senderId !== senderId) {
+        return message;
+      }
+
+      const nextUsername = updates.senderUsername ?? message.senderUsername;
+      const nextAvatarUrl = updates.senderAvatarUrl ?? message.senderAvatarUrl;
+
+      if (nextUsername === message.senderUsername && nextAvatarUrl === message.senderAvatarUrl) {
+        return message;
+      }
+
+      hasChanges = true;
+
+      return {
+        ...message,
+        senderUsername: nextUsername,
+        senderAvatarUrl: nextAvatarUrl,
+      };
+    });
+
+    if (!hasChanges) {
+      return;
+    }
+
+    messagesRef.current = nextMessages;
+    setMessages(nextMessages);
+  }, []);
+
   return {
     messages,
-    cursor,
     scrollContainerRef,
     messagesEndRef,
     isLoadingMore,
@@ -197,6 +248,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
     appendIncomingMessage,
     deleteMessageById,
     updateMessageContent,
+    syncSenderMetadata,
     scrollToBottom,
   };
 }

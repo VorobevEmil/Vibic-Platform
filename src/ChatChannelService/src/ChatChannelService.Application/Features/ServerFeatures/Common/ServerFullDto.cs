@@ -6,6 +6,7 @@ public record ServerFullDto(
     Guid Id,
     string Name,
     string? IconUrl,
+    Guid OwnerId,
     List<ServerChannelDto> Channels,
     List<ServerMemberDto> Members);
 

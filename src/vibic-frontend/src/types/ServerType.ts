@@ -13,6 +13,7 @@ export interface ServerSummaryResponse extends ServerRequest {
 export interface ServerFullResponse extends ServerRequest {
     id: string;
     iconUrl?: string | null;
+    ownerId: string;
     channels: ServerChannelResponse[];
     members: ServerMemberResponse[];
 }

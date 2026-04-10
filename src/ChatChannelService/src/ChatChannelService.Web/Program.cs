@@ -2,6 +2,7 @@ using ChatChannelService.Application;
 using ChatChannelService.Infrastructure;
 using ChatChannelService.Infrastructure.Data;
 using ChatChannelService.Web.Hubs;
+using ChatChannelService.Web.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Scalar.AspNetCore;
 using Vibic.Shared.Core;
@@ -34,6 +35,13 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApi();
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddHttpClient<ILinkPreviewService, LinkPreviewService>(client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(4);
+    }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        AllowAutoRedirect = false
+    });
     builder.Host.AddVibicMessaging();
     builder.Services.AddSignalR();
 }

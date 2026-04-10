@@ -30,7 +30,8 @@ export function useSignIn() {
       localStorage.setItem('access_token', token);
       navigate('/channels/@me');
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data || null;
+      const data = err.response?.data;
+      const msg = typeof data === 'string' ? data : data?.message ?? data?.detail ?? null;
       setError(msg || 'Неверный email или пароль.');
     } finally {
       setIsLoading(false);

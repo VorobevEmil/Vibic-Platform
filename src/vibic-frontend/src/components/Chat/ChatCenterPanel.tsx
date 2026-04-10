@@ -43,6 +43,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     appendIncomingMessage,
     deleteMessageById,
     updateMessageContent,
+    syncSenderMetadata,
     scrollToBottom,
   } = useChatMessages({ serverId, channelId });
 
@@ -129,7 +130,25 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   }, []);
 
   useEffect(() => {
-    initializeMessages();
+    if (!selfUser) {
+      return;
+    }
+
+    syncSenderMetadata(selfUser.id, {
+      senderUsername: selfUser.username,
+      senderAvatarUrl: selfUser.avatarUrl,
+    });
+  }, [selfUser?.avatarUrl, selfUser?.id, selfUser?.username, syncSenderMetadata]);
+
+  useEffect(() => {
+    initializeMessages().then(() => {
+      requestAnimationFrame(() => {
+        const scrollEl = scrollContainerRef.current;
+        if (scrollEl && scrollEl.scrollHeight <= scrollEl.clientHeight) {
+          loadMoreMessages();
+        }
+      });
+    });
   }, [initializeMessages]);
 
   useEffect(() => {
@@ -140,7 +159,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   useEffect(() => {
     const scrollEl = scrollContainerRef.current;
     if (!scrollEl) return;
-    const onScroll = () => scrollEl.scrollTop <= 0 && loadMoreMessages();
+    const onScroll = () => { if (scrollEl.scrollTop <= 100) loadMoreMessages(); };
     scrollEl.addEventListener('scroll', onScroll);
     return () => scrollEl.removeEventListener('scroll', onScroll);
   }, [loadMoreMessages, scrollContainerRef]);
@@ -159,8 +178,8 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
             messages={messages}
             typingUsername={typingUsername}
             messagesEndRef={messagesEndRef}
-            isLoadingMore={isLoadingMore}
             scrollContainerRef={scrollContainerRef}
+            isLoadingMore={isLoadingMore}
             unreadMessageId={unreadMessageId}
             unreadCount={unreadCount}
             currentUserId={selfUser?.id}

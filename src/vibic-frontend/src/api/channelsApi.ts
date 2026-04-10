@@ -1,4 +1,5 @@
 import DirectChannelResponse from '../types/channels/DirectChannelType';
+import LinkPreviewResponse from '../types/LinkPreviewType';
 import {
   ServerChannelParticipantResponse,
   ServerChannelRequest,
@@ -12,6 +13,8 @@ export const channelsApi = {
     http.get<DirectChannelResponse[]>('/channels/direct'),
   createDirectChannel: (userId: string) =>
     http.post<DirectChannelResponse | null>('/channels/direct', { userId }),
+  getLinkPreview: (url: string) =>
+    http.get<LinkPreviewResponse>('/channels/link-preview', { params: { url } }),
   getServerChannelMembers: (serverId: string, channelId: string) =>
     http.get<ServerChannelParticipantResponse[]>(`/servers/${serverId}/channels/${channelId}/members`),
   createServerChannel: (serverId: string, request: ServerChannelRequest) =>

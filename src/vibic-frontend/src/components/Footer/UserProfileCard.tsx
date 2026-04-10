@@ -19,13 +19,17 @@ export default function UserProfileCard({ onClose, onOpenSettings }: Props) {
 
     useEffect(() => {
         const handler = (e: MouseEvent) => {
+            if (isModalOpen) {
+                return;
+            }
+
             if (ref.current && !ref.current.contains(e.target as Node)) {
                 onClose();
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [onClose]);
+    }, [isModalOpen, onClose]);
 
     return (
         <div
@@ -81,17 +85,17 @@ export default function UserProfileCard({ onClose, onOpenSettings }: Props) {
                     currentAvatar={resolveAssetUrl(user!.avatarUrl)}
                     onClose={() => setIsModalOpen(false)}
                     onSave={async (file) => {
-                        if (!file) return;
-
                         try {
                             const response = await userProfilesApi.updateAvatar(file);
-                            updateSelfUser({
-                                ...user!,
-                                avatarUrl: response.data.url,
-                            });
-                            setIsModalOpen(false);
+                            updateSelfUser((currentUser) => currentUser
+                                ? {
+                                    ...currentUser,
+                                    avatarUrl: response.data.url,
+                                }
+                                : currentUser);
                         } catch (error) {
                             console.error('Ошибка при обновлении аватара:', error);
+                            throw error;
                         }
                     }}
                 />

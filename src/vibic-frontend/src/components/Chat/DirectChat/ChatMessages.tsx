@@ -3,7 +3,6 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,12 +15,11 @@ import { renderContent } from '../../../utils/renderContent';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import UserProfileModal from './UserProfileModal';
 
-const ESTIMATED_MESSAGE_HEIGHT = 88;
-const ESTIMATED_GROUPED_MESSAGE_HEIGHT = 44;
-const MIN_MESSAGE_HEIGHT = 64;
-const OVERSCAN_PX = 600;
-const UNREAD_MARKER_HEIGHT = 44;
 const GROUP_TIME_WINDOW_MS = 5 * 60 * 1000;
+const DEFAULT_GROUPED_ROW_HEIGHT = 48;
+const DEFAULT_MESSAGE_ROW_HEIGHT = 84;
+const UNREAD_DIVIDER_ESTIMATED_HEIGHT = 40;
+const VIRTUAL_OVERSCAN_PX = 720;
 
 // ── Формат цитаты в контенте сообщения ──────────────────────────────────────
 // %%REPLY|{id}|{username}|{content}%%\n{text}
@@ -49,8 +47,8 @@ interface ChatMessageProps {
   messages: MessageResponse[];
   typingUsername: string | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  isLoadingMore: boolean;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  isLoadingMore: boolean;
   unreadMessageId: string | null;
   unreadCount: number;
   currentUserId?: string;
@@ -67,7 +65,6 @@ interface QuotedSenderInfo {
 
 interface MessageRowProps {
   message: MessageResponse;
-  onHeightChange: (messageId: string, height: number) => void;
   isGrouped: boolean;
   isHighlighted: boolean;
   currentUserId?: string;
@@ -80,22 +77,118 @@ interface MessageRowProps {
   onScrollToMessage?: (messageId: string) => void;
 }
 
-// ── Хелпер бинарного поиска ──────────────────────────────────────────────────
-function upperBound(values: number[], target: number): number {
-  let low = 0;
-  let high = values.length;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    if (values[mid] <= target) low = mid + 1;
-    else high = mid;
+interface VirtualMessageItem {
+  key: string;
+  message: MessageResponse;
+  isGrouped: boolean;
+  showUnreadDivider: boolean;
+  estimatedHeight: number;
+}
+
+interface MeasuredMessageItemProps {
+  rowKey: string;
+  messageId: string;
+  onHeightChange: (rowKey: string, height: number) => void;
+  onRowRefChange: (messageId: string, element: HTMLDivElement | null) => void;
+  children: React.ReactNode;
+}
+
+function estimateRowHeight(message: MessageResponse, isGrouped: boolean, showUnreadDivider: boolean): number {
+  const { text, quote } = parseMessageContent(message.content);
+  const imageCount = (message.content.match(/%%IMG\|/g) ?? []).length;
+  const textLineEstimate = Math.max(1, Math.ceil(text.length / 52));
+
+  let estimatedHeight = isGrouped ? DEFAULT_GROUPED_ROW_HEIGHT : DEFAULT_MESSAGE_ROW_HEIGHT;
+  estimatedHeight += Math.min(textLineEstimate, 12) * 18;
+
+  if (quote) {
+    estimatedHeight += 34;
   }
-  return low;
+
+  if (imageCount > 0) {
+    estimatedHeight += imageCount * 220;
+  }
+
+  if (showUnreadDivider) {
+    estimatedHeight += UNREAD_DIVIDER_ESTIMATED_HEIGHT;
+  }
+
+  return estimatedHeight;
+}
+
+function findItemIndexByOffset(offsets: number[], targetOffset: number): number {
+  const lastItemIndex = offsets.length - 2;
+
+  if (lastItemIndex < 0) {
+    return 0;
+  }
+
+  let low = 0;
+  let high = lastItemIndex;
+
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    const itemStart = offsets[middle];
+    const itemEnd = offsets[middle + 1];
+
+    if (targetOffset < itemStart) {
+      high = middle - 1;
+      continue;
+    }
+
+    if (targetOffset >= itemEnd) {
+      low = middle + 1;
+      continue;
+    }
+
+    return middle;
+  }
+
+  return Math.max(0, Math.min(lastItemIndex, low));
+}
+
+function MeasuredMessageItem({
+  rowKey,
+  messageId,
+  onHeightChange,
+  onRowRefChange,
+  children,
+}: MeasuredMessageItemProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = containerRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    onRowRefChange(messageId, element);
+
+    const measure = () => {
+      onHeightChange(rowKey, Math.ceil(element.getBoundingClientRect().height));
+    };
+
+    measure();
+
+    const resizeObserver = new ResizeObserver(() => {
+      measure();
+    });
+
+    resizeObserver.observe(element);
+
+    return () => {
+      resizeObserver.disconnect();
+      onRowRefChange(messageId, null);
+    };
+  }, [messageId, onHeightChange, onRowRefChange, rowKey]);
+
+  return <div ref={containerRef}>{children}</div>;
 }
 
 // ── MessageRow ───────────────────────────────────────────────────────────────
 function MessageRow({
   message,
-  onHeightChange,
   isGrouped,
   isHighlighted,
   currentUserId,
@@ -107,23 +200,11 @@ function MessageRow({
   onQuoteUserClick,
   onScrollToMessage,
 }: MessageRowProps) {
-  const rowRef = useRef<HTMLDivElement | null>(null);
   const editRef = useRef<HTMLTextAreaElement | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const isOwn = currentUserId === message.senderId;
   const { text, quote } = parseMessageContent(message.content);
-
-  useLayoutEffect(() => {
-    const node = rowRef.current;
-    if (!node) return;
-    const measure = () => onHeightChange(message.id, node.getBoundingClientRect().height);
-    measure();
-    if (typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(measure);
-    ro.observe(node);
-    return () => ro.disconnect();
-  }, [message.id, onHeightChange]);
 
   useEffect(() => {
     if (isEditing && editRef.current) {
@@ -236,7 +317,6 @@ function MessageRow({
   if (isGrouped) {
     return (
       <div
-        ref={rowRef}
         data-message-id={message.id}
         onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
         className={`group relative flex flex-col pb-1 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
@@ -268,7 +348,6 @@ function MessageRow({
 
   return (
     <div
-      ref={rowRef}
       data-message-id={message.id}
       onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
       className={`group relative flex flex-col pb-4 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
@@ -321,8 +400,8 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
     messages,
     typingUsername,
     messagesEndRef,
-    isLoadingMore,
     scrollContainerRef,
+    isLoadingMore,
     unreadMessageId,
     unreadCount,
     currentUserId,
@@ -333,11 +412,13 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
   },
   ref,
 ) {
-  const heightCacheRef = useRef<Record<string, number>>({});
-  const [heightVersion, setHeightVersion] = useState(0);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(0);
   const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
+  const [virtualViewport, setVirtualViewport] = useState({ scrollTop: 0, height: 0 });
+  const [measureVersion, setMeasureVersion] = useState(0);
+  const rowHeightsRef = useRef<Record<string, number>>({});
+  const rowElementsRef = useRef(new Map<string, HTMLDivElement>());
+  const highlightStartTimeoutRef = useRef<number | null>(null);
+  const highlightEndTimeoutRef = useRef<number | null>(null);
 
   // Контекстное меню
   const [contextMenu, setContextMenu] = useState<{
@@ -366,91 +447,207 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
     return map;
   }, [messages]);
 
-  const unreadMarkerIndex = unreadMessageId
-    ? messages.findIndex(m => m.id === unreadMessageId)
-    : -1;
-
-  const handleHeightChange = useCallback((messageId: string, height: number) => {
-    const normalized = Math.max(MIN_MESSAGE_HEIGHT, Math.ceil(height));
-    const current = heightCacheRef.current[messageId];
-    if (current !== undefined && Math.abs(current - normalized) <= 1) return;
-    heightCacheRef.current[messageId] = normalized;
-    setHeightVersion(v => v + 1);
-  }, []);
-
-  useEffect(() => {
-    const ids = new Set(messages.map(m => m.id));
-    let changed = false;
-    Object.keys(heightCacheRef.current).forEach(id => {
-      if (!ids.has(id)) { delete heightCacheRef.current[id]; changed = true; }
-    });
-    if (changed) setHeightVersion(v => v + 1);
-  }, [messages]);
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-    let frameId: number | null = null;
-    const update = () => { setScrollTop(el.scrollTop); setViewportHeight(el.clientHeight); };
-    const onScroll = () => {
-      if (frameId !== null) cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => setScrollTop(el.scrollTop));
-    };
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    el.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', update);
-    return () => {
-      if (frameId !== null) cancelAnimationFrame(frameId);
-      ro.disconnect();
-      window.removeEventListener('resize', update);
-      el.removeEventListener('scroll', onScroll);
-    };
-  }, [scrollContainerRef]);
-
   const groupedFlags = useMemo<boolean[]>(() => {
     return messages.map((msg, i) => {
-      if (i === 0 || i === unreadMarkerIndex) return false;
+      if (i === 0) return false;
       // Сообщения с цитатой всегда показываются полностью
       if (REPLY_RE.test(msg.content)) return false;
       const prev = messages[i - 1];
       if (prev.senderId !== msg.senderId) return false;
       return new Date(msg.sentAt).getTime() - new Date(prev.sentAt).getTime() <= GROUP_TIME_WINDOW_MS;
     });
-  }, [messages, unreadMarkerIndex]);
+  }, [messages]);
 
-  const { offsets, totalHeight } = useMemo(() => {
-    const next = new Array<number>(messages.length + 1);
-    next[0] = 0;
-    for (let i = 0; i < messages.length; i++) {
-      const estimated = groupedFlags[i] ? ESTIMATED_GROUPED_MESSAGE_HEIGHT : ESTIMATED_MESSAGE_HEIGHT;
-      const h = heightCacheRef.current[messages[i].id] ?? estimated;
-      const marker = i === unreadMarkerIndex ? UNREAD_MARKER_HEIGHT : 0;
-      next[i + 1] = next[i] + marker + h;
+  useEffect(() => {
+    const scrollElement = scrollContainerRef.current;
+
+    if (!scrollElement) {
+      return;
     }
-    return { offsets: next, totalHeight: next[messages.length] ?? 0 };
-  }, [heightVersion, messages, unreadMarkerIndex, groupedFlags]);
 
-  const startIndex = useMemo(() => {
-    if (!messages.length) return 0;
-    return Math.max(0, Math.min(messages.length - 1, upperBound(offsets, Math.max(0, scrollTop - OVERSCAN_PX)) - 1));
-  }, [messages.length, offsets, scrollTop]);
+    let frameId = 0;
 
-  const endIndex = useMemo(() => {
-    if (!messages.length) return -1;
-    return Math.max(startIndex, Math.min(messages.length - 1, upperBound(offsets, scrollTop + viewportHeight + OVERSCAN_PX) - 1));
-  }, [messages.length, offsets, scrollTop, startIndex, viewportHeight]);
+    const syncViewport = () => {
+      frameId = 0;
+      const nextViewport = {
+        scrollTop: scrollElement.scrollTop,
+        height: scrollElement.clientHeight,
+      };
+
+      setVirtualViewport((currentViewport) => {
+        if (
+          currentViewport.scrollTop === nextViewport.scrollTop &&
+          currentViewport.height === nextViewport.height
+        ) {
+          return currentViewport;
+        }
+
+        return nextViewport;
+      });
+    };
+
+    const requestViewportSync = () => {
+      if (frameId !== 0) {
+        return;
+      }
+
+      frameId = requestAnimationFrame(syncViewport);
+    };
+
+    requestViewportSync();
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestViewportSync();
+    });
+
+    resizeObserver.observe(scrollElement);
+    scrollElement.addEventListener('scroll', requestViewportSync, { passive: true });
+
+    return () => {
+      if (frameId !== 0) {
+        cancelAnimationFrame(frameId);
+      }
+
+      resizeObserver.disconnect();
+      scrollElement.removeEventListener('scroll', requestViewportSync);
+    };
+  }, [scrollContainerRef]);
+
+  useEffect(() => {
+    return () => {
+      if (highlightStartTimeoutRef.current !== null) {
+        window.clearTimeout(highlightStartTimeoutRef.current);
+      }
+
+      if (highlightEndTimeoutRef.current !== null) {
+        window.clearTimeout(highlightEndTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const virtualItems = useMemo<VirtualMessageItem[]>(() => {
+    return messages.map((message, index) => {
+      const isGrouped = groupedFlags[index] ?? false;
+      const showUnreadDivider = message.id === unreadMessageId && unreadCount > 0;
+
+      return {
+        key: `${message.id}:${isGrouped ? 'g' : 'f'}:${showUnreadDivider ? 'u' : 'n'}`,
+        message,
+        isGrouped,
+        showUnreadDivider,
+        estimatedHeight: estimateRowHeight(message, isGrouped, showUnreadDivider),
+      };
+    });
+  }, [groupedFlags, messages, unreadCount, unreadMessageId]);
+
+  const offsets = useMemo<number[]>(() => {
+    const nextOffsets = new Array<number>(virtualItems.length + 1);
+    nextOffsets[0] = 0;
+
+    for (let index = 0; index < virtualItems.length; index += 1) {
+      const item = virtualItems[index];
+      const measuredHeight = rowHeightsRef.current[item.key] ?? item.estimatedHeight;
+
+      nextOffsets[index + 1] = nextOffsets[index] + measuredHeight;
+    }
+
+    return nextOffsets;
+  }, [measureVersion, virtualItems]);
+
+  const totalHeight = offsets[virtualItems.length] ?? 0;
+
+  const visibleRange = useMemo(() => {
+    if (virtualItems.length === 0) {
+      return { startIndex: 0, endIndex: -1 };
+    }
+
+    const visibleStartOffset = Math.max(0, virtualViewport.scrollTop - VIRTUAL_OVERSCAN_PX);
+    const visibleEndOffset = virtualViewport.scrollTop + virtualViewport.height + VIRTUAL_OVERSCAN_PX;
+
+    const startIndex = findItemIndexByOffset(offsets, visibleStartOffset);
+    const endIndex = Math.min(
+      virtualItems.length - 1,
+      findItemIndexByOffset(offsets, visibleEndOffset),
+    );
+
+    return { startIndex, endIndex };
+  }, [offsets, virtualItems.length, virtualViewport.height, virtualViewport.scrollTop]);
+
+  const visibleItems = visibleRange.endIndex >= visibleRange.startIndex
+    ? virtualItems.slice(visibleRange.startIndex, visibleRange.endIndex + 1)
+    : [];
+
+  const topSpacerHeight = offsets[visibleRange.startIndex] ?? 0;
+
+  const handleRowHeightChange = useCallback((rowKey: string, height: number) => {
+    if (height <= 0) {
+      return;
+    }
+
+    const previousHeight = rowHeightsRef.current[rowKey];
+
+    if (previousHeight === height) {
+      return;
+    }
+
+    rowHeightsRef.current[rowKey] = height;
+    setMeasureVersion((currentVersion) => currentVersion + 1);
+  }, []);
+
+  const handleRowRefChange = useCallback((messageId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      rowElementsRef.current.set(messageId, element);
+      return;
+    }
+
+    rowElementsRef.current.delete(messageId);
+  }, []);
 
   // ── scrollToMessage (через ref) ──────────────────────────────────────────
   const handleScrollToMessage = useCallback((messageId: string) => {
-    const index = messages.findIndex(m => m.id === messageId);
-    if (index < 0) return;
-    const targetOffset = offsets[index] ?? 0;
-    scrollContainerRef.current?.scrollTo({ top: targetOffset, behavior: 'smooth' });
-    setTimeout(() => setHighlightedMessageId(messageId), 350);
-    setTimeout(() => setHighlightedMessageId(null), 2350);
-  }, [messages, offsets, scrollContainerRef]);
+    const targetIndex = virtualItems.findIndex((item) => item.message.id === messageId);
+
+    if (targetIndex === -1) {
+      return;
+    }
+
+    const scrollElement = scrollContainerRef.current;
+    const itemTop = offsets[targetIndex] ?? 0;
+    const targetItem = virtualItems[targetIndex];
+    const itemHeight = rowHeightsRef.current[targetItem.key] ?? targetItem.estimatedHeight;
+
+    if (scrollElement) {
+      const centeredTop = Math.max(0, itemTop - (scrollElement.clientHeight - itemHeight) / 2);
+      scrollElement.scrollTo({ top: centeredTop, behavior: 'smooth' });
+    }
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const element = rowElementsRef.current.get(messageId)
+          ?? document.querySelector(`[data-message-id="${messageId}"]`);
+
+        if (element instanceof HTMLElement) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    });
+
+    if (highlightStartTimeoutRef.current !== null) {
+      window.clearTimeout(highlightStartTimeoutRef.current);
+    }
+
+    if (highlightEndTimeoutRef.current !== null) {
+      window.clearTimeout(highlightEndTimeoutRef.current);
+    }
+
+    highlightStartTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedMessageId(messageId);
+    }, 250);
+
+    highlightEndTimeoutRef.current = window.setTimeout(() => {
+      setHighlightedMessageId(null);
+    }, 2250);
+  }, [offsets, scrollContainerRef, virtualItems]);
 
   useImperativeHandle(ref, () => ({
     scrollToMessage: handleScrollToMessage,
@@ -478,7 +675,6 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
         label: 'Редактировать',
         icon: <Pencil className="w-4 h-4" />,
         onClick: () => {
-          // Запускаем inline edit через двойной клик — здесь просто триггер
           const el = document.querySelector(`[data-message-id="${msg.id}"]`);
           if (el) (el as HTMLElement).dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
         },
@@ -493,51 +689,56 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
     return items;
   }, [currentUserId, onDeleteMessage, onReply]);
 
-  const visibleMessages = endIndex >= startIndex ? messages.slice(startIndex, endIndex + 1) : [];
-  const topPadding = offsets[startIndex] ?? 0;
-  const bottomPadding = Math.max(0, totalHeight - (offsets[endIndex + 1] ?? 0));
-
   return (
     <>
       {isLoadingMore && (
         <div className="text-sm text-gray-400 text-center animate-pulse pb-3">Загрузка сообщений...</div>
       )}
 
-      {topPadding > 0 && <div style={{ height: topPadding }} aria-hidden="true" />}
-
-      {visibleMessages.map((msg, localIndex) => {
-        const absoluteIndex = startIndex + localIndex;
-        const isGrouped = groupedFlags[absoluteIndex] ?? false;
-        return (
-          <div key={msg.id}>
-            {msg.id === unreadMessageId && unreadCount > 0 && (
-              <div className="flex items-center gap-3 pb-3" style={{ height: UNREAD_MARKER_HEIGHT }}>
-                <div className="h-px flex-1 bg-sky-500/60" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
-                  Новые сообщения
-                </span>
-                <div className="h-px flex-1 bg-sky-500/60" />
-              </div>
-            )}
-            <MessageRow
-              message={msg}
-              onHeightChange={handleHeightChange}
-              isGrouped={isGrouped}
-              isHighlighted={highlightedMessageId === msg.id}
-              currentUserId={currentUserId}
-              senderInfoByUsername={senderInfoByUsername}
-              onDelete={onDeleteMessage}
-              onEdit={onEditMessage}
-              onContextMenu={(e, m) => setContextMenu({ x: e.clientX, y: e.clientY, message: m })}
-              onAvatarClick={(e, m) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: m.senderId, username: m.senderUsername, avatarUrl: m.senderAvatarUrl })}
-              onQuoteUserClick={(e, senderId, username, avatarUrl) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: senderId, username, avatarUrl })}
-              onScrollToMessage={handleScrollToMessage}
-            />
+      <div
+        className="relative"
+        style={{ height: totalHeight > 0 ? totalHeight : undefined, minHeight: totalHeight > 0 ? totalHeight : undefined }}
+      >
+        {visibleItems.length > 0 && (
+          <div
+            className="absolute inset-x-0 top-0"
+            style={{ transform: `translateY(${topSpacerHeight}px)` }}
+          >
+            {visibleItems.map((item) => (
+              <MeasuredMessageItem
+                key={item.key}
+                rowKey={item.key}
+                messageId={item.message.id}
+                onHeightChange={handleRowHeightChange}
+                onRowRefChange={handleRowRefChange}
+              >
+                {item.showUnreadDivider && (
+                  <div className="flex items-center gap-3 pb-3">
+                    <div className="h-px flex-1 bg-sky-500/60" />
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+                      Новые сообщения
+                    </span>
+                    <div className="h-px flex-1 bg-sky-500/60" />
+                  </div>
+                )}
+                <MessageRow
+                  message={item.message}
+                  isGrouped={item.isGrouped}
+                  isHighlighted={highlightedMessageId === item.message.id}
+                  currentUserId={currentUserId}
+                  senderInfoByUsername={senderInfoByUsername}
+                  onDelete={onDeleteMessage}
+                  onEdit={onEditMessage}
+                  onContextMenu={(e, m) => setContextMenu({ x: e.clientX, y: e.clientY, message: m })}
+                  onAvatarClick={(e, m) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: m.senderId, username: m.senderUsername, avatarUrl: m.senderAvatarUrl })}
+                  onQuoteUserClick={(e, senderId, username, avatarUrl) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: senderId, username, avatarUrl })}
+                  onScrollToMessage={handleScrollToMessage}
+                />
+              </MeasuredMessageItem>
+            ))}
           </div>
-        );
-      })}
-
-      {bottomPadding > 0 && <div style={{ height: bottomPadding }} aria-hidden="true" />}
+        )}
+      </div>
 
       {typingUsername && (
         <div className="flex items-center gap-1.5 text-xs ml-3 mt-1 mb-2">

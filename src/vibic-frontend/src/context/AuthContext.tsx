@@ -9,10 +9,15 @@ import {
   isValidUserStatus,
 } from '../utils/userStatus';
 
+type SelfUserUpdater =
+  | UserProfileType
+  | null
+  | ((currentUser: UserProfileType | null) => UserProfileType | null);
+
 interface AuthContextType {
   selfUser: UserProfileType | null;
   isLoading: boolean;
-  updateSelfUser: (user: UserProfileType) => void;
+  updateSelfUser: (updater: SelfUserUpdater) => void;
   logout: () => Promise<void>;
 }
 
@@ -114,8 +119,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const updateSelfUser = (updatedUser: UserProfileType) => {
-    setSelfUser(updatedUser);
+  const updateSelfUser = (updater: SelfUserUpdater) => {
+    setSelfUser((currentUser) => {
+      if (typeof updater === 'function') {
+        return updater(currentUser);
+      }
+
+      return updater;
+    });
   };
 
   const logout = async () => {

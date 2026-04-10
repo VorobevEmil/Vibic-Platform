@@ -35,6 +35,7 @@ public static class ServerMappingExtensions
             Id = dto.Id,
             Name = dto.Name,
             IconUrl = dto.IconUrl,
+            OwnerId = dto.OwnerId,
             Channels = dto.Channels
                 .ConvertAll(sc => sc.MapToServerChannelResponse()),
             Members = dto.Members
