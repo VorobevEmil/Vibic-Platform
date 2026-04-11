@@ -12,6 +12,8 @@ const URL_RE = /https?:\/\/[^\s)\]>]+/g;
 const TRAILING_URL_PUNCTUATION_RE = /[.,!?;:'"]+$/;
 const IMAGE_EXTENSION_RE = /\.(?:avif|bmp|gif|ico|jpe?g|png|svg|webp)(?:[?#].*)?$/i;
 const GIF_EXTENSION_RE = /\.gif(?:[?#].*)?$/i;
+const LARGE_EMOJI_ONLY_RE = /^(?:\p{Extended_Pictographic}|\p{Emoji_Component}|\u200d|\ufe0f|\s)+$/u;
+const EMOJI_SEQUENCE_RE = /(?:\p{Regional_Indicator}{2}|[#*0-9]\uFE0F?\u20E3|(?:\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*))/gu;
 const GIF_PROVIDER_HOSTS = [
   'giphy.com',
   'media.giphy.com',
@@ -72,6 +74,98 @@ function isGifProviderHost(host: string | null): boolean {
 
 function shouldHideInlineUrl(url: string): boolean {
   return isLikelyImageUrl(url) || isGifProviderHost(getHostname(url));
+}
+
+function shouldRenderLargeEmojiText(text: string): boolean {
+  const normalized = text.trim();
+
+  if (!normalized || !LARGE_EMOJI_ONLY_RE.test(normalized)) {
+    return false;
+  }
+
+  const emojiBaseCount = Array.from(normalized)
+    .filter((char) => /\p{Extended_Pictographic}/u.test(char))
+    .length;
+
+  return emojiBaseCount > 0 && emojiBaseCount <= 12;
+}
+
+function getEmojiOnlyBaseCount(text: string): number {
+  const normalized = text.trim();
+
+  if (!normalized || !LARGE_EMOJI_ONLY_RE.test(normalized)) {
+    return 0;
+  }
+
+  return Array.from(normalized.matchAll(EMOJI_SEQUENCE_RE)).length;
+}
+
+function getEmojiOnlySizeClass(text: string): string | null {
+  const emojiCount = getEmojiOnlyBaseCount(text);
+
+  if (emojiCount === 0) {
+    return null;
+  }
+
+  if (emojiCount === 1) {
+    return 'text-[4.35rem] leading-[0.92]';
+  }
+
+  if (emojiCount <= 3) {
+    return 'text-[3.4rem] leading-[0.96]';
+  }
+
+  if (emojiCount <= 6) {
+    return 'text-[2.8rem] leading-[1]';
+  }
+
+  return 'text-[2.25rem] leading-[1.04]';
+}
+
+function renderTextWithScaledEmoji(
+  text: string,
+  prefix: string,
+  emojiClassName = 'text-[1.48em]',
+): React.ReactNode[] {
+  if (!text) {
+    return [];
+  }
+
+  if (!emojiClassName) {
+    return [text];
+  }
+
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let matchIndex = 0;
+
+  for (const match of text.matchAll(EMOJI_SEQUENCE_RE)) {
+    const matchedEmoji = match[0];
+    const emojiIndex = match.index ?? 0;
+
+    if (emojiIndex > lastIndex) {
+      nodes.push(text.slice(lastIndex, emojiIndex));
+    }
+
+    nodes.push(
+      <span
+        key={`${prefix}-emoji-${matchIndex}`}
+        className={`inline-block leading-none ${emojiClassName}`}
+        style={{ verticalAlign: '-0.16em' }}
+      >
+        {matchedEmoji}
+      </span>,
+    );
+
+    lastIndex = emojiIndex + matchedEmoji.length;
+    matchIndex += 1;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes.length > 0 ? nodes : [text];
 }
 
 function shouldRenderAsMediaPreview(preview: LinkPreviewResponse, fallbackUrl: string): boolean {
@@ -496,7 +590,7 @@ function LinkPreviewList({ urls }: { urls: string[] }) {
   );
 }
 
-function parseInline(text: string, prefix: string): React.ReactNode[] {
+function parseInline(text: string, prefix: string, emojiClassName?: string): React.ReactNode[] {
   const result: React.ReactNode[] = [];
   let remaining = text;
   let offset = 0;
@@ -579,13 +673,23 @@ function parseInline(text: string, prefix: string): React.ReactNode[] {
     }
 
     if (candidates.length === 0) {
-      if (remaining) result.push(remaining);
+      if (remaining) {
+        result.push(...renderTextWithScaledEmoji(remaining, `${prefix}-tail-${offset}`, emojiClassName));
+      }
       break;
     }
 
     const earliest = candidates.reduce((a, b) => (a.index <= b.index ? a : b));
 
-    if (earliest.index > 0) result.push(remaining.slice(0, earliest.index));
+    if (earliest.index > 0) {
+      result.push(
+        ...renderTextWithScaledEmoji(
+          remaining.slice(0, earliest.index),
+          `${prefix}-seg-${offset}`,
+          emojiClassName,
+        ),
+      );
+    }
     result.push(earliest.node);
     offset += earliest.end;
     remaining = remaining.slice(earliest.end);
@@ -596,6 +700,8 @@ function parseInline(text: string, prefix: string): React.ReactNode[] {
 
 export function renderContent(text: string): React.ReactNode {
   const previewUrls = extractPreviewUrls(text);
+  const shouldUseLargeEmojiStyle = previewUrls.length === 0 && shouldRenderLargeEmojiText(text);
+  const emojiOnlySizeClass = shouldUseLargeEmojiStyle ? getEmojiOnlySizeClass(text) : null;
   const segments = text.split(FENCED_CODE_SEGMENT_RE);
   const result: React.ReactNode[] = [];
 
@@ -624,7 +730,11 @@ export function renderContent(text: string): React.ReactNode {
           const lines = part.split('\n');
           lines.forEach((line, li) => {
             if (li > 0) result.push(<br key={`br-${si}-${pi}-${li}`} />);
-            parseInline(line, `s${si}p${pi}l${li}`).forEach((node) => result.push(node));
+            parseInline(
+              line,
+              `s${si}p${pi}l${li}`,
+              shouldUseLargeEmojiStyle ? '' : 'text-[1.48em]',
+            ).forEach((node) => result.push(node));
           });
         }
       });
@@ -633,7 +743,11 @@ export function renderContent(text: string): React.ReactNode {
 
   return (
     <>
-      {result}
+      {shouldUseLargeEmojiStyle ? (
+        <span className={`inline-block tracking-[0.01em] ${emojiOnlySizeClass ?? 'text-[2.25rem] leading-[1.04]'}`}>
+          {result}
+        </span>
+      ) : result}
       <LinkPreviewList urls={previewUrls} />
     </>
   );

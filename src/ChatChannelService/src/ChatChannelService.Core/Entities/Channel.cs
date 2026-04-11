@@ -39,4 +39,43 @@ public class Channel : BaseEntity, IUpdatable
     public List<ChannelMember> ChannelMembers { get; private init; } = new();
     public List<Message> Messages { get; private init; } = new();
     public DateTime? UpdatedAt { get; private init; }
+
+    public void UpdateName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        Name = name.Trim();
+    }
+
+    public void SetVisibility(bool isPublic)
+    {
+        IsPublic = isPublic;
+    }
+
+    public void EnsureMember(ChatUser chatUser)
+    {
+        if (ChannelMembers.Any(member => member.ChatUserId == chatUser.Id))
+        {
+            return;
+        }
+
+        ChannelMembers.Add(new ChannelMember(this, chatUser));
+    }
+
+    public void SyncMembers(IEnumerable<ChatUser> chatUsers)
+    {
+        HashSet<Guid> targetUserIds = chatUsers
+            .Select(chatUser => chatUser.Id)
+            .ToHashSet();
+
+        ChannelMembers.RemoveAll(member => !targetUserIds.Contains(member.ChatUserId));
+
+        foreach (ChatUser chatUser in chatUsers)
+        {
+            EnsureMember(chatUser);
+        }
+    }
 }

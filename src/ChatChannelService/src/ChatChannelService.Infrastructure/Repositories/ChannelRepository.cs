@@ -3,6 +3,7 @@ using ChatChannelService.Application.Repositories;
 using ChatChannelService.Core.Enums;
 using ChatChannelService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Vibic.Shared.Core.Exceptions;
 using Channel = ChatChannelService.Core.Entities.Channel;
 
 namespace ChatChannelService.Infrastructure.Repositories;
@@ -71,10 +72,71 @@ public class ChannelRepository : IChannelRepository
                     x.ServerId == serverId &&
                     x.Server!.ServerMembers.Any(sm => sm.ChatUserId == userId) &&
                     (
+                        x.Server.OwnerId == userId ||
                         x.IsPublic ||
                         x.ChannelMembers.Any(y => y.ChatUserId == userId)
                     ),
                 cancellationToken);
+    }
+
+    public async Task<Channel> GetServerChannelByIdAsync(
+        Guid serverId,
+        Guid channelId,
+        CancellationToken cancellationToken = default)
+    {
+        Channel? channel = await _dbContext.Channels
+            .Include(x => x.Server)
+            .Include(x => x.ChannelMembers)
+            .ThenInclude(x => x.ChatUser)
+            .FirstOrDefaultAsync(x =>
+                    x.ServerId == serverId &&
+                    x.Id == channelId &&
+                    x.ChannelType != ChannelType.Direct,
+                cancellationToken);
+
+        if (channel == null)
+        {
+            throw new NotFoundException($"Channel with id {channelId} not found");
+        }
+
+        return channel;
+    }
+
+    public async Task<Channel> GetServerChannelByIdForOwnerAsync(
+        Guid serverId,
+        Guid channelId,
+        Guid ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        Channel? channel = await _dbContext.Channels
+            .Include(x => x.Server)
+            .ThenInclude(server => server!.ServerMembers)
+            .ThenInclude(serverMember => serverMember.ChatUser)
+            .Include(x => x.ChannelMembers)
+            .ThenInclude(x => x.ChatUser)
+            .FirstOrDefaultAsync(x =>
+                    x.ServerId == serverId &&
+                    x.Id == channelId &&
+                    x.ChannelType != ChannelType.Direct &&
+                    x.Server != null &&
+                    x.Server.OwnerId == ownerId,
+                cancellationToken);
+
+        if (channel == null)
+        {
+            throw new NotFoundException($"Channel with id {channelId} not found");
+        }
+
+        return channel;
+    }
+
+    public async Task<List<Channel>> GetServerChannelsByServerIdAsync(
+        Guid serverId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Channels
+            .Where(x => x.ServerId == serverId && x.ChannelType != ChannelType.Direct)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Channel> GetFirstChannelOfServerAsync(
@@ -101,5 +163,10 @@ public class ChannelRepository : IChannelRepository
             .Include(x => x.ChannelMembers)
             .AnyAsync(c => c.ChannelType == ChannelType.Direct && c.ChannelMembers
                 .All(cm => cm.ChatUserId == userId || cm.ChatUserId == memberUserId), cancellationToken);
+    }
+
+    public void Delete(Channel channel)
+    {
+        _dbContext.Channels.Remove(channel);
     }
 }

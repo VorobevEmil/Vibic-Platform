@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { callHubConnection } from '../../services/signalRClient';
 import { rtcConfiguration } from '../../utils/webrtcConfig';
 import CallRequestType from '../../types/CallRequestType';
@@ -14,15 +14,38 @@ export default function useCallConnection({
     onClose,
 }: UseCallConnectionProps) {
     const peerConnection = useRef<RTCPeerConnection | null>(null);
-    const localVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const streamRef = useRef<MediaStream | null>(null);
+    const remoteStreamRef = useRef<MediaStream | null>(null);
+    const localVideoElementRef = useRef<HTMLVideoElement | null>(null);
+    const remoteVideoElementRef = useRef<HTMLVideoElement | null>(null);
 
     const [isCamOn, setIsCamOn] = useState(callRequest.isCamOn ?? true);
     const { isMicOn, isHeadphonesOn } = useMedia();
     const [remoteStreamStarted, setRemoteStreamStarted] = useState(false);
     const [isRemoteCamOn, setIsRemoteCamOn] = useState(false);
     const [isRemoteMicOn, setIsRemoteMicOn] = useState(true);
+
+    const attachLocalStreamToElement = useCallback((element: HTMLVideoElement | null) => {
+        localVideoElementRef.current = element;
+
+        if (!element) {
+            return;
+        }
+
+        element.srcObject = streamRef.current;
+        element.muted = true;
+    }, []);
+
+    const attachRemoteStreamToElement = useCallback((element: HTMLVideoElement | null) => {
+        remoteVideoElementRef.current = element;
+
+        if (!element) {
+            return;
+        }
+
+        element.srcObject = remoteStreamRef.current;
+        element.muted = !isHeadphonesOn;
+    }, [isHeadphonesOn]);
 
     const setupPeerConnection = (remoteUserId: string) => {
         peerConnection.current = new RTCPeerConnection(rtcConfiguration);
@@ -32,13 +55,17 @@ export default function useCallConnection({
         });
 
         peerConnection.current!.ontrack = (event) => {
-            if (!remoteVideoRef.current) return;
-            if (!remoteVideoRef.current.srcObject) {
-                remoteVideoRef.current.srcObject = new MediaStream();
+            if (!remoteStreamRef.current) {
+                remoteStreamRef.current = new MediaStream();
             }
 
-            const remoteStream = remoteVideoRef.current.srcObject as MediaStream;
-            remoteStream.addTrack(event.track);
+            remoteStreamRef.current.addTrack(event.track);
+
+            if (remoteVideoElementRef.current) {
+                remoteVideoElementRef.current.srcObject = remoteStreamRef.current;
+                remoteVideoElementRef.current.muted = !isHeadphonesOn;
+            }
+
             setRemoteStreamStarted(true);
         };
 
@@ -76,9 +103,11 @@ export default function useCallConnection({
         peerConnection.current = null;
 
         streamRef.current?.getTracks().forEach((track) => track.stop());
+        remoteStreamRef.current?.getTracks().forEach((track) => track.stop());
+        remoteStreamRef.current = null;
 
-        if (localVideoRef.current) localVideoRef.current.srcObject = null;
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+        if (localVideoElementRef.current) localVideoElementRef.current.srcObject = null;
+        if (remoteVideoElementRef.current) remoteVideoElementRef.current.srcObject = null;
 
         onClose();
     };
@@ -114,8 +143,8 @@ export default function useCallConnection({
     }, [isMicOn]);
 
     useEffect(() => {
-        if (remoteVideoRef.current) {
-            remoteVideoRef.current.muted = !isHeadphonesOn;
+        if (remoteVideoElementRef.current) {
+            remoteVideoElementRef.current.muted = !isHeadphonesOn;
         }
     }, [isHeadphonesOn]);
 
@@ -126,7 +155,11 @@ export default function useCallConnection({
 
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             streamRef.current = stream;
-            if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+
+            if (localVideoElementRef.current) {
+                localVideoElementRef.current.srcObject = stream;
+                localVideoElementRef.current.muted = true;
+            }
 
             stream.getAudioTracks().forEach((track) => (track.enabled = isMicOn));
             stream.getVideoTracks().forEach((track) => (track.enabled = isCamOn));
@@ -183,14 +216,16 @@ export default function useCallConnection({
 
         return () => {
             streamRef.current?.getTracks().forEach((track) => track.stop());
+            remoteStreamRef.current?.getTracks().forEach((track) => track.stop());
             peerConnection.current?.close();
             peerConnection.current = null;
+            remoteStreamRef.current = null;
         };
     }, []);
 
     return {
-        localVideoRef,
-        remoteVideoRef,
+        localVideoRef: attachLocalStreamToElement,
+        remoteVideoRef: attachRemoteStreamToElement,
         isCamOn,
         isMicOn,
         isRemoteCamOn,

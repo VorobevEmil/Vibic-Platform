@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Circle, Lock, Users } from 'lucide-react';
+import { Circle } from 'lucide-react';
 import { resolveAssetUrl } from '../../api/httpClient';
 import { channelsApi } from '../../api/channelsApi';
 import { useAuthContext } from '../../context/AuthContext';
@@ -11,10 +11,7 @@ import Skeleton from '../ui/Skeleton';
 
 interface Props {
   serverId: string;
-  serverName: string;
   channelId: string;
-  channelName: string;
-  isPublic: boolean;
 }
 
 interface UserStatusSnapshot {
@@ -45,10 +42,7 @@ function getStatusRank(userStatus: number | null): number {
 
 export default function ServerChannelMembersSidebar({
   serverId,
-  serverName,
   channelId,
-  channelName,
-  isPublic,
 }: Props) {
   const { selfUser } = useAuthContext();
   const [participants, setParticipants] = useState<ServerChannelParticipantResponse[]>([]);
@@ -303,28 +297,6 @@ export default function ServerChannelMembersSidebar({
 
   return (
     <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-t border-gray-700 bg-[#2b2d31] px-4 py-5 relative">
-      <div className="mb-5 rounded-2xl border border-white/8 bg-[#23252b] px-4 py-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-white">
-          <Users className="h-4 w-4 text-sky-300" />
-          Участники канала
-        </div>
-        <div className="truncate text-sm font-medium text-gray-200">#{channelName}</div>
-        <div className="mt-1 truncate text-xs text-gray-400">{serverName}</div>
-        <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-          {!isPublic && <Lock className="h-3.5 w-3.5 text-amber-300" />}
-          <span>{isPublic ? 'Публичный канал' : 'Приватный канал'}</span>
-        </div>
-        {isLoading ? (
-          <div className="mt-2">
-            <Skeleton className="h-3 w-24 rounded-md" />
-          </div>
-        ) : (
-          <div className="mt-2 text-xs text-gray-400">
-            {onlineParticipants.length} онлайн из {enrichedParticipants.length}
-          </div>
-        )}
-      </div>
-
       {hasLoadError ? (
         <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
           Не удалось загрузить участников этого канала.

@@ -3,7 +3,14 @@ import { ChannelType } from "../enums/ChannelType";
 export interface ServerChannelRequest {
     name: string;
     channelType: ChannelType;
-    isPublic: boolean
+    isPublic: boolean;
+    memberIds?: string[];
+}
+
+export interface UpdateServerChannelRequest {
+    name: string;
+    isPublic: boolean;
+    memberIds?: string[];
 }
 
 export interface ServerChannelParticipantResponse {
@@ -11,4 +18,12 @@ export interface ServerChannelParticipantResponse {
     displayName: string;
     username: string;
     avatarUrl?: string | null;
+}
+
+export interface ServerChannelSettingsResponse {
+    id: string;
+    name: string;
+    channelType: ChannelType;
+    isPublic: boolean;
+    memberIds: string[];
 }

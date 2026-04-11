@@ -197,7 +197,7 @@ function MessageSkeletonRow({
 }) {
   if (grouped) {
     return (
-      <div className="flex items-start gap-3 px-4 py-1.5">
+      <div className="flex items-start gap-[14px] px-4 py-1.5">
         <div className="w-8 shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
           <div className={`h-4 rounded-full bg-white/[0.06] animate-pulse ${compact ? 'w-[34%]' : 'w-[48%]'}`} />
@@ -208,7 +208,7 @@ function MessageSkeletonRow({
   }
 
   return (
-    <div className="flex items-start gap-3 px-4 py-3">
+    <div className="flex items-start gap-[14px] px-4 py-3">
       <div className="h-8 w-8 shrink-0 rounded-full bg-white/[0.07] animate-pulse" />
       <div className="min-w-0 flex-1 space-y-2.5">
         <div className="flex items-center gap-2">
@@ -488,7 +488,7 @@ function MessageRow({
       >
         {actions}
         {replyReference}
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-[14px]">
           <div className="w-8 shrink-0 relative">
             <span className="absolute right-0 top-0.5 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity select-none pointer-events-none whitespace-nowrap">
               {formatTimeOnly(message.sentAt)}
@@ -515,11 +515,11 @@ function MessageRow({
       ref={rowRef}
       data-message-id={message.id}
       onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
-      className={`group relative flex flex-col pb-4 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
+      className={`group relative flex flex-col px-[18px] pt-2 pb-3 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
     >
       {actions}
       {replyReference}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-[14px]">
         <button
           type="button"
           onClick={e => onAvatarClick?.(e, message)}

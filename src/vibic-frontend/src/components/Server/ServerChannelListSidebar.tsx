@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { ServerChannelResponse } from '../../types/ServerType';
-import { useEffect, useRef, useState } from 'react';
+import { ServerChannelResponse, ServerMemberResponse } from '../../types/ServerType';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     ChevronDown,
     Hash,
@@ -8,16 +8,22 @@ import {
     UserPlus,
     MicOff,
     Settings,
+    Ellipsis,
+    Pencil,
+    Trash2,
+    Plus,
 } from 'lucide-react';
 import { channelsApi } from '../../api/channelsApi';
 import CreateChannelModal from './CreateChannelModal';
 import { ServerChannelRequest } from '../../types/channels/ServerChannelType';
 import InviteModal from './InviteModal';
 import EditServerModal from './EditServerModal';
+import EditChannelModal from './EditChannelModal';
 import { ChannelType } from '../../types/enums/ChannelType';
 import { useVoice } from '../../context/VoiceContext';
 import { resolveAssetUrl } from '../../api/httpClient';
 import Skeleton from '../ui/Skeleton';
+import ContextMenu, { ContextMenuItem } from '../Chat/DirectChat/ContextMenu';
 
 interface ServerChannelListSidebarProps {
     serverName: string;
@@ -25,13 +31,29 @@ interface ServerChannelListSidebarProps {
     serverIconUrl?: string | null;
     isOwner: boolean;
     channels: ServerChannelResponse[];
+    serverMembers: ServerMemberResponse[];
     isLoading?: boolean;
     onChannelCreated: (channel: ServerChannelResponse) => void;
+    onChannelUpdated: (channel: ServerChannelResponse) => void;
+    onChannelDeleted: (channelId: string) => Promise<void>;
     onServerUpdated: (name: string, iconFile: File | null) => Promise<void>;
     onServerDeleted: () => Promise<void>;
 }
 
-export default function ServerChannelListSidebar({ serverName, serverId, serverIconUrl, isOwner, channels, isLoading = false, onChannelCreated, onServerUpdated, onServerDeleted }: ServerChannelListSidebarProps) {
+export default function ServerChannelListSidebar({
+    serverName,
+    serverId,
+    serverIconUrl,
+    isOwner,
+    channels,
+    serverMembers,
+    isLoading = false,
+    onChannelCreated,
+    onChannelUpdated,
+    onChannelDeleted,
+    onServerUpdated,
+    onServerDeleted,
+}: ServerChannelListSidebarProps) {
     const { channelId } = useParams<{ channelId: string }>();
 
     const [textOpen, setTextOpen] = useState(true);
@@ -39,8 +61,15 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
     const [isServerMenuOpen, setIsServerMenuOpen] = useState(false);
 
     const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false);
+    const [createChannelType, setCreateChannelType] = useState<ChannelType>(ChannelType.Server);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isEditServerModalOpen, setIsEditServerModalOpen] = useState(false);
+    const [editingChannel, setEditingChannel] = useState<ServerChannelResponse | null>(null);
+    const [channelContextMenu, setChannelContextMenu] = useState<{
+        x: number;
+        y: number;
+        channel: ServerChannelResponse;
+    } | null>(null);
     const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId } = useVoice();
     const serverMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -52,9 +81,9 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
         try {
             const response = await channelsApi.createServerChannel(serverId, request);
             onChannelCreated(response.data);
-            setIsCreateChannelModalOpen(false);
         } catch (err) {
             console.error('Ошибка при создании канала', err);
+            throw err;
         }
     };
 
@@ -84,8 +113,9 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
         };
     }, [isServerMenuOpen]);
 
-    const openCreateChannelModal = () => {
+    const openCreateChannelModal = (channelType: ChannelType = ChannelType.Server) => {
         setIsServerMenuOpen(false);
+        setCreateChannelType(channelType);
         setIsCreateChannelModalOpen(true);
     };
 
@@ -98,6 +128,66 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
         setIsServerMenuOpen(false);
         setIsEditServerModalOpen(true);
     };
+
+    const openChannelContextMenu = (
+        event: Pick<MouseEvent, 'clientX' | 'clientY'> | Pick<React.MouseEvent, 'clientX' | 'clientY'>,
+        channel: ServerChannelResponse,
+    ) => {
+        if (!isOwner) {
+            return;
+        }
+
+        setChannelContextMenu({
+            x: event.clientX,
+            y: event.clientY,
+            channel,
+        });
+    };
+
+    const openChannelContextMenuFromButton = (
+        event: React.MouseEvent<HTMLButtonElement>,
+        channel: ServerChannelResponse,
+    ) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        openChannelContextMenu(
+            {
+                clientX: rect.right - 8,
+                clientY: rect.bottom + 8,
+            },
+            channel,
+        );
+    };
+
+    const channelMenuItems = useMemo<ContextMenuItem[]>(() => {
+        if (!channelContextMenu || !isOwner) {
+            return [];
+        }
+
+        return [
+            {
+                label: 'Редактировать канал',
+                icon: <Pencil className="h-4 w-4" />,
+                onClick: () => setEditingChannel(channelContextMenu.channel),
+            },
+            {
+                label: 'Удалить канал',
+                icon: <Trash2 className="h-4 w-4" />,
+                onClick: async () => {
+                    const confirmed = window.confirm(`Удалить канал "${channelContextMenu.channel.name}"? Это действие необратимо.`);
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    await onChannelDeleted(channelContextMenu.channel.id);
+                },
+                variant: 'danger',
+            },
+        ];
+    }, [channelContextMenu, isOwner, onChannelDeleted]);
 
     return (
         <div className="h-full w-64 bg-[#2B2D31] text-gray-200 border-r border-gray-700 flex flex-col overflow-y-auto py-3 px-2 space-y-4">
@@ -155,17 +245,17 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                             <UserPlus className="h-4 w-4" />
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={openCreateChannelModal}
-                            className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
-                        >
-                            <span>Создать канал</span>
-                            <Hash className="h-4 w-4" />
-                        </button>
-
                         {isOwner && (
                             <>
+                                <button
+                                    type="button"
+                                    onClick={() => openCreateChannelModal(ChannelType.Server)}
+                                    className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                                >
+                                    <span>Создать канал</span>
+                                    <Hash className="h-4 w-4" />
+                                </button>
+
                                 <div className="my-2 h-px bg-white/10" />
                                 <button
                                     type="button"
@@ -193,6 +283,17 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                         />
                         Текстовые каналы
                     </button>
+
+                    {isOwner && !isLoading && (
+                        <button
+                            type="button"
+                            onClick={() => openCreateChannelModal(ChannelType.Server)}
+                            className="rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            aria-label="Создать текстовый канал"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
 
                 {textOpen && (
@@ -205,17 +306,38 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                                 </div>
                             ))
                         ) : textChannels.map((channel) => (
-                            <Link
+                            <div
                                 key={channel.id}
-                                to={`/channels/${serverId}/${channel.id}`}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors
-                                    ${channelId === channel.id
-                                        ? 'bg-[#404249] text-white'
-                                        : 'text-gray-300 hover:bg-[#404249]'}`}
+                                onContextMenu={(event) => {
+                                    event.preventDefault();
+                                    openChannelContextMenu(event, channel);
+                                }}
+                                className="group relative"
                             >
-                                <Hash className="w-4 h-4" />
-                                <span className="truncate">{channel.name}</span>
-                            </Link>
+                                <Link
+                                    to={`/channels/${serverId}/${channel.id}`}
+                                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 pr-10 text-sm transition-colors
+                                        ${channelId === channel.id
+                                            ? 'bg-[#404249] text-white'
+                                            : 'text-gray-300 hover:bg-[#404249]'}`}
+                                >
+                                    <Hash className="w-4 h-4" />
+                                    <span className="truncate">{channel.name}</span>
+                                </Link>
+
+                                {isOwner && (
+                                    <button
+                                        type="button"
+                                        onClick={(event) => openChannelContextMenuFromButton(event, channel)}
+                                        className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white ${
+                                            channelId === channel.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                        }`}
+                                        aria-label={`Открыть меню канала ${channel.name}`}
+                                    >
+                                        <Ellipsis className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
                         ))}
                     </div>
                 )}
@@ -233,6 +355,17 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                         />
                         Голосовые каналы
                     </button>
+
+                    {isOwner && !isLoading && (
+                        <button
+                            type="button"
+                            onClick={() => openCreateChannelModal(ChannelType.Voice)}
+                            className="rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            aria-label="Создать голосовой канал"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
 
                 {voiceOpen && (
@@ -249,16 +382,36 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
                                 ?? (currentChannelId === channel.id ? voiceUsers : []);
 
                             return (
-                                <div key={channel.id}>
+                                <div
+                                    key={channel.id}
+                                    onContextMenu={(event) => {
+                                        event.preventDefault();
+                                        openChannelContextMenu(event, channel);
+                                    }}
+                                    className="group"
+                                >
                                     <div
                                         onClick={async () => await joinChannel(channel.id, serverId)}
-                                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors cursor-pointer
+                                        className={`relative flex items-center gap-2 rounded-md px-3 py-1.5 pr-10 text-sm transition-colors cursor-pointer
                                             ${channelId === channel.id
                                                 ? 'bg-[#404249] text-white'
                                                 : 'text-gray-300 hover:bg-[#404249]'}`}
                                     >
                                         <Volume2 className="w-4 h-4" />
                                         <span className="truncate">{channel.name}</span>
+
+                                        {isOwner && (
+                                            <button
+                                                type="button"
+                                                onClick={(event) => openChannelContextMenuFromButton(event, channel)}
+                                                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white ${
+                                                    channelId === channel.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                }`}
+                                                aria-label={`Открыть меню канала ${channel.name}`}
+                                            >
+                                                <Ellipsis className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {usersInChannel.length > 0 && (
@@ -295,7 +448,9 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
             <CreateChannelModal
                 isOpen={isCreateChannelModalOpen}
                 onClose={() => setIsCreateChannelModalOpen(false)}
+                serverMembers={serverMembers}
                 onCreate={createServer}
+                initialChannelType={createChannelType}
             />
 
             <InviteModal
@@ -306,11 +461,46 @@ export default function ServerChannelListSidebar({ serverName, serverId, serverI
 
             {isEditServerModalOpen && (
                 <EditServerModal
+                    serverId={serverId}
                     currentName={serverName}
                     currentIconUrl={serverIconUrl}
+                    channels={channels}
+                    serverMembers={serverMembers}
                     onClose={() => setIsEditServerModalOpen(false)}
                     onSave={onServerUpdated}
                     onDelete={onServerDeleted}
+                    onUpdateChannel={async (channelId, name, isPublic, memberIds) => {
+                        const response = await channelsApi.updateServerChannel(serverId, channelId, { name, isPublic, memberIds });
+                        onChannelUpdated(response.data);
+                    }}
+                    onDeleteChannel={async (channelId) => {
+                        await onChannelDeleted(channelId);
+                    }}
+                />
+            )}
+
+            {editingChannel && (
+                <EditChannelModal
+                    serverId={serverId}
+                    channel={editingChannel}
+                    serverMembers={serverMembers}
+                    onClose={() => setEditingChannel(null)}
+                    onSave={async (name, isPublic, memberIds) => {
+                        const response = await channelsApi.updateServerChannel(serverId, editingChannel.id, { name, isPublic, memberIds });
+                        onChannelUpdated(response.data);
+                    }}
+                    onDelete={async () => {
+                        await onChannelDeleted(editingChannel.id);
+                    }}
+                />
+            )}
+
+            {channelContextMenu && channelMenuItems.length > 0 && (
+                <ContextMenu
+                    x={channelContextMenu.x}
+                    y={channelContextMenu.y}
+                    items={channelMenuItems}
+                    onClose={() => setChannelContextMenu(null)}
                 />
             )}
         </div>

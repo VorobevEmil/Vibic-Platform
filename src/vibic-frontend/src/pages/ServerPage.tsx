@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import ServerChannelListSidebar from "../components/Server/ServerChannelListSidebar";
 import { useEffect, useRef, useState } from "react";
 import { serversApi } from "../api/serversApi";
+import { channelsApi } from "../api/channelsApi";
 import { ServerFullResponse } from "../types/ServerType";
 import ChatCenterPanel from "../components/Chat/ChatCenterPanel";
 import { ChannelType } from "../types/enums/ChannelType";
@@ -75,10 +76,7 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
             <ServerChannelMembersSidebar
                 key={`${serverId}:${channelId}`}
                 serverId={serverId}
-                serverName={server.name}
                 channelId={channelId}
-                channelName={currentChannel.name}
-                isPublic={currentChannel.isPublic}
             />
         );
     }, [channelId, currentChannel, server, serverId, setSidebar]);
@@ -117,6 +115,52 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
         }
     };
 
+    const handleChannelUpdated = (updatedChannel: ServerFullResponse['channels'][number]) => {
+        setServer((currentServer) => {
+            if (!currentServer) {
+                return currentServer;
+            }
+
+            return {
+                ...currentServer,
+                channels: currentServer.channels.map((channel) =>
+                    channel.id === updatedChannel.id ? updatedChannel : channel),
+            };
+        });
+
+        window.dispatchEvent(new CustomEvent('server-list-changed'));
+    };
+
+    const handleChannelDeleted = async (deletedChannelId: string) => {
+        await channelsApi.deleteServerChannel(serverId, deletedChannelId);
+
+        let nextChannelId: string | null = null;
+
+        setServer((currentServer) => {
+            if (!currentServer) {
+                return currentServer;
+            }
+
+            const remainingChannels = currentServer.channels.filter((channel) => channel.id !== deletedChannelId);
+            const preferredNextChannel = remainingChannels.find((channel) => channel.channelType === ChannelType.Server && channel.isPublic)
+                ?? remainingChannels[0]
+                ?? null;
+
+            nextChannelId = preferredNextChannel?.id ?? null;
+
+            return {
+                ...currentServer,
+                channels: remainingChannels,
+            };
+        });
+
+        if (channelId === deletedChannelId && nextChannelId) {
+            navigate(`/channels/${serverId}/${nextChannelId}`, { replace: true });
+        }
+
+        window.dispatchEvent(new CustomEvent('server-list-changed'));
+    };
+
     return (
         <>
             <ServerChannelListSidebar
@@ -125,10 +169,15 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
                 serverIconUrl={server?.iconUrl}
                 isOwner={!!selfUser && !!server && server.ownerId === selfUser.id}
                 channels={server?.channels ?? []}
+                serverMembers={server?.members ?? []}
                 isLoading={!server}
                 onChannelCreated={(channel) => {
                     if (!server) return;
                     setServer({ ...server, channels: [...server.channels, channel] });
+                }}
+                onChannelUpdated={handleChannelUpdated}
+                onChannelDeleted={async (deletedChannelId) => {
+                    await handleChannelDeleted(deletedChannelId);
                 }}
                 onServerUpdated={handleServerUpdate}
                 onServerDeleted={handleServerDelete}

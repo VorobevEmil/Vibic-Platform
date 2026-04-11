@@ -11,6 +11,7 @@ import { ChannelType } from '../../types/enums/ChannelType';
 import MessageResponse from '../../types/MessageType';
 import { messagesApi } from '../../api/messagesApi';
 import { filesApi } from '../../api/filesApi';
+import { getDirectCallSlotId } from '../Call/directCallSlot';
 
 interface ChatCenterPanelProps {
   channelType: ChannelType;
@@ -236,13 +237,17 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   }, [loadMoreMessages, scrollContainerRef]);
 
   return (
-    <div className="relative flex flex-col flex-1 h-full bg-[#313338]">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col bg-[#313338]">
 
-      <div>
+      <div className="shrink-0">
         {children}
       </div>
 
-      <div className="flex-1 overflow-y-auto" ref={scrollContainerRef}>
+      {channelType === ChannelType.Direct && (
+        <div id={getDirectCallSlotId(channelId)} className="shrink-0" />
+      )}
+
+      <div className="min-h-0 flex-1 overflow-y-auto" ref={scrollContainerRef}>
         <div className="max-w-3xl mx-auto px-4 py-3">
           <ChatMessages
             ref={chatMessagesRef}

@@ -1,6 +1,7 @@
 import ServerSidebar from '../components/Layout/ServerSidebar';
 import RightSidebar from '../components/Layout/RightSidebar';
 import CallListener from '../components/Call/CallListener';
+import PersistentDirectCallHost from '../components/Call/PersistentDirectCallHost';
 import { MediaProvider } from '../context/MediaContext';
 import FooterProfilePanel from '../components/Layout/FooterProfilePanel';
 import VoiceProvider from '../components/Server/VoiceProvider';
@@ -44,10 +45,9 @@ export default function AppShell({ children }: AppShellProps) {
           <CallProvider>
             <VoiceProvider>
               <CallListener />
+              <PersistentDirectCallHost />
               <ServerSidebar />
-
               {children}
-
               <RightSidebar />
               <FooterProfilePanel />
             </VoiceProvider>

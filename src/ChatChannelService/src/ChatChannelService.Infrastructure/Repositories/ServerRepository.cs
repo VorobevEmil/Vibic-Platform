@@ -44,6 +44,19 @@ public class ServerRepository : IServerRepository
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        Server? ownedServer = await _dbContext.Servers
+            .Include(x => x.ServerMembers)
+            .ThenInclude(sm => sm.ChatUser)
+            .Include(x => x.Channels)
+            .FirstOrDefaultAsync(
+                x => x.Id == id && x.OwnerId == userId && x.ServerMembers.Any(sm => sm.ChatUserId == userId),
+                cancellationToken: cancellationToken);
+
+        if (ownedServer != null)
+        {
+            return ownedServer;
+        }
+
         Server? server = await _dbContext.Servers
             .Include(x => x.ServerMembers)
             .ThenInclude(sm => sm.ChatUser)

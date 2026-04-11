@@ -4,11 +4,13 @@ import IncomingCallModal from './IncomingCallModal';
 import { useNavigate } from 'react-router-dom';
 import IncomingCallType from '../../types/IncomingCallType';
 import CallRequestType from '../../types/CallRequestType';
+import { useCallContext } from '../../context/CallContext';
 
 
 export default function CallListener() {
     const [incomingCall, setIncomingCall] = useState<IncomingCallType | null>(null);
     const navigate = useNavigate();
+    const { startDirectCall } = useCallContext();
 
     useEffect(() => {
         const startListening = async () => {
@@ -45,12 +47,10 @@ export default function CallListener() {
                 isInitiator: false,
             };
 
+            startDirectCall(callData);
 
             navigate(`/channels/@me/${incomingCall.channelId}`, {
-                state: {
-                    isIncomingCall: true,
-                    callData
-                },
+                replace: false,
             });
 
             setIncomingCall(null);

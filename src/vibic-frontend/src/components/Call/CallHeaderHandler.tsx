@@ -1,10 +1,7 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import CallRequestType from "../../types/CallRequestType";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import useDirectChannel from "../../hooks/chat/useDirectChannel";
 import { useAuthContext } from "../../context/AuthContext";
 import { Phone, Settings, Video } from "lucide-react";
-import CallPanel from "./CallPanel";
 import { useCallContext } from "../../context/CallContext";
 import { resolveAssetUrl } from "../../api/httpClient";
 import Skeleton from "../ui/Skeleton";
@@ -14,23 +11,32 @@ interface Props {
 }
 
 export default function CallHeaderHandler({ channelId }: Props) {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const state = location.state as { isIncomingCall?: boolean; callData?: CallRequestType; } | null;
     const { selfUser } = useAuthContext();
-    const [isCalling, setIsCalling] = useState(false);
-    const [callRequest, setCallRequest] = useState<CallRequestType | null>(null);
-    const { setCallActive } = useCallContext();
+    const { activeCallRequest, isCallActive, startDirectCall } = useCallContext();
     const { peerUser, isLoading } = useDirectChannel(
         {
             channelId: channelId,
             localUserId: selfUser?.id
         });
 
-    const handleStartCall = (startWithCam: boolean) => {
-        if (!peerUser || !selfUser) return;
+    const isCurrentChannelCall = activeCallRequest?.channelId === channelId;
+    const isCallControlsDisabled = isCallActive && !isCurrentChannelCall;
+    const callTooltipLabel = useMemo(() => {
+        if (isCurrentChannelCall) {
+            return 'Звонок уже активен';
+        }
 
-        setCallRequest({
+        if (isCallControlsDisabled) {
+            return 'Сначала завершите текущий звонок';
+        }
+
+        return '';
+    }, [isCallControlsDisabled, isCurrentChannelCall]);
+
+    const handleStartCall = (startWithCam: boolean) => {
+        if (!peerUser || !selfUser || isCallActive) return;
+
+        startDirectCall({
             peerUserId: peerUser.id,
             peerUsername: peerUser.username,
             peerAvatarUrl: resolveAssetUrl(peerUser.avatarUrl) ?? peerUser.avatarUrl,
@@ -40,24 +46,10 @@ export default function CallHeaderHandler({ channelId }: Props) {
             isInitiator: true,
             isCamOn: startWithCam,
         });
-
-        setIsCalling(true);
     };
 
-    useEffect(() => {
-        if (state?.isIncomingCall && state.callData) {
-            setIsCalling(true);
-            setCallRequest(state.callData);
-            navigate(location.pathname, { replace: true, state: {} });
-        }
-    }, [state]);
-
-    useEffect(() => {
-        setCallActive(isCalling);
-    }, [isCalling, setCallActive]);
-
     return (
-        <div>
+        <div className="shrink-0">
             <div className="h-14 px-4 flex items-center justify-between border-b border-[#1e1f22]">
                 <div className="flex items-center gap-3">
                     {isLoading ? (
@@ -69,19 +61,36 @@ export default function CallHeaderHandler({ channelId }: Props) {
                         <>
                             <img src={resolveAssetUrl(peerUser.avatarUrl)} className="w-8 h-8 rounded-full" />
                             <span className="font-bold text-white text-lg">{peerUser.displayName}</span>
+                            {isCurrentChannelCall && (
+                                <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-300">
+                                    В звонке
+                                </span>
+                            )}
                         </>
                     ) : null}
                 </div>
                 <div className="flex gap-4 text-gray-300">
-                    <Phone className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall(false)} />
-                    <Video className="hover:text-white cursor-pointer w-5 h-5" onClick={() => handleStartCall(true)} />
+                    <button
+                        type="button"
+                        onClick={() => handleStartCall(false)}
+                        disabled={isCallControlsDisabled || isCurrentChannelCall}
+                        title={callTooltipLabel || 'Начать голосовой звонок'}
+                        className="transition disabled:cursor-not-allowed disabled:text-gray-500"
+                    >
+                        <Phone className="hover:text-white cursor-pointer w-5 h-5" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleStartCall(true)}
+                        disabled={isCallControlsDisabled || isCurrentChannelCall}
+                        title={callTooltipLabel || 'Начать видеозвонок'}
+                        className="transition disabled:cursor-not-allowed disabled:text-gray-500"
+                    >
+                        <Video className="hover:text-white cursor-pointer w-5 h-5" />
+                    </button>
                     <Settings className="hover:text-white cursor-pointer w-5 h-5" />
                 </div>
             </div>
-
-            {isCalling && callRequest && (
-                <CallPanel onClose={() => setIsCalling(false)} callRequest={callRequest} />
-            )}
         </div>
     )
 }

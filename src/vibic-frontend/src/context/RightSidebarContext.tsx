@@ -1,4 +1,6 @@
-import React, { ReactNode, createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
+const RIGHT_SIDEBAR_VISIBILITY_STORAGE_KEY = 'vibic.right-sidebar-visible';
 
 interface RightSidebarContextType {
   sidebar: ReactNode | null;
@@ -21,18 +23,35 @@ export const useRightSidebarContext = (): RightSidebarContextType => {
 
 export const RightSidebarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebar, setSidebarState] = useState<ReactNode | null>(null);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === 'undefined') {
+      return true;
+    }
+
+    const storedValue = window.localStorage.getItem(RIGHT_SIDEBAR_VISIBILITY_STORAGE_KEY);
+
+    if (storedValue === null) {
+      return true;
+    }
+
+    return storedValue === 'true';
+  });
 
   const setSidebar = useCallback((next: ReactNode | null) => {
     setSidebarState(next);
-    if (next !== null) {
-      setIsVisible(true);
-    }
   }, []);
 
   const toggleVisibility = useCallback(() => {
     setIsVisible((v) => !v);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(RIGHT_SIDEBAR_VISIBILITY_STORAGE_KEY, String(isVisible));
+  }, [isVisible]);
 
   const value = useMemo<RightSidebarContextType>(() => ({
     sidebar,

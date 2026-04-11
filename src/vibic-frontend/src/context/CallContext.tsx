@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import CallRequestType from '../types/CallRequestType';
 
 interface CallContextType {
   isCallActive: boolean;
-  setCallActive: (active: boolean) => void;
+  activeCallRequest: CallRequestType | null;
+  startDirectCall: (request: CallRequestType) => void;
+  clearDirectCall: () => void;
   registerEndCall: (fn: (() => void) | null) => void;
   endCall: () => void;
 }
@@ -16,19 +19,44 @@ export const useCallContext = (): CallContextType => {
 };
 
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isCallActive, setIsCallActive] = useState(false);
+  const [activeCallRequest, setActiveCallRequest] = useState<CallRequestType | null>(null);
   const endCallRef = useRef<(() => void) | null>(null);
 
+  const startDirectCall = useCallback((request: CallRequestType) => {
+    setActiveCallRequest((currentRequest) => {
+      if (!currentRequest) {
+        return request;
+      }
+
+      const isSameCall =
+        currentRequest.channelId === request.channelId
+        && currentRequest.peerUserId === request.peerUserId;
+
+      return isSameCall ? { ...currentRequest, ...request } : currentRequest;
+    });
+  }, []);
+
+  const clearDirectCall = useCallback(() => {
+    setActiveCallRequest(null);
+    endCallRef.current = null;
+  }, []);
+
+  const registerEndCall = useCallback((fn: (() => void) | null) => {
+    endCallRef.current = fn;
+  }, []);
+
+  const endCall = useCallback(() => {
+    endCallRef.current?.();
+  }, []);
+
   const value = useMemo<CallContextType>(() => ({
-    isCallActive,
-    setCallActive: setIsCallActive,
-    registerEndCall: (fn) => {
-      endCallRef.current = fn;
-    },
-    endCall: () => {
-      endCallRef.current?.();
-    },
-  }), [isCallActive]);
+    isCallActive: activeCallRequest !== null,
+    activeCallRequest,
+    startDirectCall,
+    clearDirectCall,
+    registerEndCall,
+    endCall,
+  }), [activeCallRequest, clearDirectCall, endCall, registerEndCall, startDirectCall]);
 
   return (
     <CallContext.Provider value={value}>

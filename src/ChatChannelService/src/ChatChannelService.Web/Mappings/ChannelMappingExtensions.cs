@@ -44,4 +44,16 @@ public static class ChannelMappingExtensions
             IsPublic = dto.IsPublic
         };
     }
+
+    public static ServerChannelSettingsResponse MapToServerChannelSettingsResponse(this ServerChannelSettingsDto dto)
+    {
+        return new ServerChannelSettingsResponse
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            ChannelType = dto.ChannelType,
+            IsPublic = dto.IsPublic,
+            MemberIds = dto.MemberIds
+        };
+    }
 }
