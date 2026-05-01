@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [selfUser, setSelfUser] = useState<UserProfileType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const selfUserId = selfUser?.id;
 
   useEffect(() => {
     const loadUser = async () => {
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('access_token');
 
-    if (!selfUser || !token) {
+    if (!selfUserId || !token) {
       return;
     }
 
@@ -111,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       presenceHubConnection.off('UserStatusChanged', handleStatusChanged);
     };
-  }, [selfUser?.id]);
+  }, [selfUserId]);
 
   useEffect(() => {
     return () => {

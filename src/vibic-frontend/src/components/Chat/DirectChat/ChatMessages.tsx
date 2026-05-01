@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -21,6 +22,7 @@ const DEFAULT_GROUPED_ROW_HEIGHT = 48;
 const DEFAULT_MESSAGE_ROW_HEIGHT = 84;
 const UNREAD_DIVIDER_ESTIMATED_HEIGHT = 40;
 const VIRTUAL_OVERSCAN_PX = 720;
+const BOTTOM_STICKINESS_THRESHOLD_PX = 220;
 
 // ── Формат цитаты в контенте сообщения ──────────────────────────────────────
 // %%REPLY|{id}|{username}|{content}%%\n{text}
@@ -581,6 +583,10 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
   const [virtualViewport, setVirtualViewport] = useState({ scrollTop: 0, height: 0 });
   const [measureVersion, setMeasureVersion] = useState(0);
   const rowHeightsRef = useRef<Record<string, number>>({});
+  const virtualItemsRef = useRef<VirtualMessageItem[]>([]);
+  const offsetsRef = useRef<number[]>([]);
+  const pendingScrollAdjustmentRef = useRef(0);
+  const pendingStickToBottomRef = useRef(false);
   const rowElementsRef = useRef(new Map<string, HTMLDivElement>());
   const highlightStartTimeoutRef = useRef<number | null>(null);
   const highlightEndTimeoutRef = useRef<number | null>(null);
@@ -706,6 +712,8 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
   }, [groupedFlags, messages, unreadCount, unreadMessageId]);
 
   const offsets = useMemo<number[]>(() => {
+    void measureVersion;
+
     const nextOffsets = new Array<number>(virtualItems.length + 1);
     nextOffsets[0] = 0;
 
@@ -720,6 +728,8 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
   }, [measureVersion, virtualItems]);
 
   const totalHeight = offsets[virtualItems.length] ?? 0;
+  virtualItemsRef.current = virtualItems;
+  offsetsRef.current = offsets;
 
   const visibleRange = useMemo(() => {
     if (virtualItems.length === 0) {
@@ -749,15 +759,62 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
       return;
     }
 
-    const previousHeight = rowHeightsRef.current[rowKey];
+    const currentVirtualItems = virtualItemsRef.current;
+    const currentOffsets = offsetsRef.current;
+    const itemIndex = currentVirtualItems.findIndex((item) => item.key === rowKey);
+    const item = itemIndex >= 0 ? currentVirtualItems[itemIndex] : null;
+    const previousHeight = rowHeightsRef.current[rowKey] ?? item?.estimatedHeight;
 
     if (previousHeight === height) {
       return;
     }
 
+    const heightDelta = previousHeight === undefined ? 0 : height - previousHeight;
+    const scrollElement = scrollContainerRef.current;
+
+    if (scrollElement && item && heightDelta !== 0) {
+      const distanceFromBottom = scrollElement.scrollHeight
+        - scrollElement.scrollTop
+        - scrollElement.clientHeight;
+      const isNearBottom = distanceFromBottom <= BOTTOM_STICKINESS_THRESHOLD_PX;
+      const itemTop = currentOffsets[itemIndex] ?? 0;
+      const itemBottom = itemTop + previousHeight;
+
+      if (isNearBottom) {
+        pendingStickToBottomRef.current = true;
+      } else if (itemBottom <= scrollElement.scrollTop) {
+        pendingScrollAdjustmentRef.current += heightDelta;
+      }
+    }
+
     rowHeightsRef.current[rowKey] = height;
     setMeasureVersion((currentVersion) => currentVersion + 1);
-  }, []);
+  }, [scrollContainerRef]);
+
+  useLayoutEffect(() => {
+    const scrollElement = scrollContainerRef.current;
+
+    if (!scrollElement) {
+      return;
+    }
+
+    const pendingAdjustment = pendingScrollAdjustmentRef.current;
+    const shouldStickToBottom = pendingStickToBottomRef.current;
+
+    if (pendingAdjustment === 0 && !shouldStickToBottom) {
+      return;
+    }
+
+    pendingScrollAdjustmentRef.current = 0;
+    pendingStickToBottomRef.current = false;
+
+    if (shouldStickToBottom) {
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+      return;
+    }
+
+    scrollElement.scrollTop += pendingAdjustment;
+  }, [measureVersion, scrollContainerRef]);
 
   const handleRowRefChange = useCallback((messageId: string, element: HTMLDivElement | null) => {
     if (element) {

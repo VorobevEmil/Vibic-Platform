@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
 import { SignUpRequest } from '../../types/auth/SignUpType';
+import { getAuthErrorMessage } from './getAuthErrorMessage';
 
 export function useSignUp() {
   const navigate = useNavigate();
@@ -23,8 +24,8 @@ export function useSignUp() {
     try {
       await authApi.signUp(signUpRequest);
       navigate('/sign-in?registered=1');
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data || null;
+    } catch (err: unknown) {
+      const msg = getAuthErrorMessage(err);
       setError(msg || 'Не удалось создать аккаунт. Попробуйте позже.');
     } finally {
       setIsLoading(false);

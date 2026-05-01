@@ -64,7 +64,7 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
             title: server.name,
             iconUrl: resolveAssetUrl(server.iconUrl),
         });
-    }, [server, serverId, joinServer, setHeader]);
+    }, [server, serverId, joinServer, leaveServer, setHeader]);
 
     useEffect(() => {
         if (!server || !channelId || !currentChannel) {

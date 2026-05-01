@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
 import { SignInRequest } from '../../types/auth/SignInType';
+import { getAuthErrorMessage } from './getAuthErrorMessage';
 
 export function useSignIn() {
   const navigate = useNavigate();
@@ -29,9 +30,8 @@ export function useSignIn() {
 
       localStorage.setItem('access_token', token);
       navigate('/channels/@me');
-    } catch (err: any) {
-      const data = err.response?.data;
-      const msg = typeof data === 'string' ? data : data?.message ?? data?.detail ?? null;
+    } catch (err: unknown) {
+      const msg = getAuthErrorMessage(err);
       setError(msg || 'Неверный email или пароль.');
     } finally {
       setIsLoading(false);

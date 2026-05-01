@@ -20,25 +20,48 @@ export const useCallContext = (): CallContextType => {
 
 export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [activeCallRequest, setActiveCallRequest] = useState<CallRequestType | null>(null);
+  const activeCallRequestRef = useRef<CallRequestType | null>(null);
+  const pendingCallRequestRef = useRef<CallRequestType | null>(null);
   const endCallRef = useRef<(() => void) | null>(null);
 
   const startDirectCall = useCallback((request: CallRequestType) => {
-    setActiveCallRequest((currentRequest) => {
-      if (!currentRequest) {
-        return request;
-      }
+    const currentRequest = activeCallRequestRef.current;
 
-      const isSameCall =
-        currentRequest.channelId === request.channelId
-        && currentRequest.peerUserId === request.peerUserId;
+    if (!currentRequest) {
+      activeCallRequestRef.current = request;
+      setActiveCallRequest(request);
+      return;
+    }
 
-      return isSameCall ? { ...currentRequest, ...request } : currentRequest;
-    });
+    const isSameCall =
+      currentRequest.channelId === request.channelId
+      && currentRequest.peerUserId === request.peerUserId;
+
+    if (isSameCall) {
+      const mergedRequest = { ...currentRequest, ...request };
+      activeCallRequestRef.current = mergedRequest;
+      setActiveCallRequest(mergedRequest);
+      return;
+    }
+
+    pendingCallRequestRef.current = request;
+
+    if (endCallRef.current) {
+      endCallRef.current();
+      return;
+    }
+
+    pendingCallRequestRef.current = null;
+    activeCallRequestRef.current = request;
+    setActiveCallRequest(request);
   }, []);
 
   const clearDirectCall = useCallback(() => {
-    setActiveCallRequest(null);
+    const nextRequest = pendingCallRequestRef.current;
+    pendingCallRequestRef.current = null;
     endCallRef.current = null;
+    activeCallRequestRef.current = nextRequest;
+    setActiveCallRequest(nextRequest);
   }, []);
 
   const registerEndCall = useCallback((fn: (() => void) | null) => {
@@ -46,8 +69,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const endCall = useCallback(() => {
-    endCallRef.current?.();
-  }, []);
+    pendingCallRequestRef.current = null;
+
+    if (endCallRef.current) {
+      endCallRef.current();
+      return;
+    }
+
+    clearDirectCall();
+  }, [clearDirectCall]);
 
   const value = useMemo<CallContextType>(() => ({
     isCallActive: activeCallRequest !== null,

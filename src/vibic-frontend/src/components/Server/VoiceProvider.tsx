@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { VoiceContext, VoiceUser } from '../../context/VoiceContext';
+import { ActiveVoiceSession, VoiceContext, VoiceUser } from '../../context/VoiceContext';
 import { callHubConnection } from '../../services/signalRClient';
 import { rtcConfiguration } from '../../utils/webrtcConfig';
 import { useAuthContext } from '../../context/AuthContext';
 import { useMedia } from '../../context/MediaContext';
+import { useCallContext } from '../../context/CallContext';
 
 interface Props {
     children: React.ReactNode;
@@ -12,21 +13,26 @@ interface Props {
 export default function VoiceProvider({ children }: Props) {
     const peersRef = useRef<Map<string, RTCPeerConnection>>(new Map());
     const streamRef = useRef<MediaStream | null>(null);
+    const pendingIceCandidatesRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
     const [voiceUsers, setVoiceUsers] = useState<VoiceUser[]>([]);
     const [voiceUsersByChannel, setVoiceUsersByChannel] = useState<Record<string, VoiceUser[]>>({});
     const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
+    const [activeVoiceSession, setActiveVoiceSession] = useState<ActiveVoiceSession | null>(null);
     const { selfUser } = useAuthContext();
     const { isMicOn, isHeadphonesOn } = useMedia();
+    const { isCallActive, endCall } = useCallContext();
     const isMicOnRef = useRef(isMicOn);
     isMicOnRef.current = isMicOn;
-    const currentServerRef = useRef<string | null>(null);
+    const subscribedServerRef = useRef<string | null>(null);
     const voiceChannelIdsRef = useRef<string[]>([]);
     const lastJoinKeyRef = useRef<string | null>(null);
     const currentChannelIdRef = useRef<string | null>(null);
+    const activeVoiceSessionRef = useRef<ActiveVoiceSession | null>(null);
 
     currentChannelIdRef.current = currentChannelId;
+    activeVoiceSessionRef.current = activeVoiceSession;
 
-    const ensureConnected = async () => {
+    const ensureConnected = useCallback(async () => {
         if (callHubConnection.state === 'Connected') return;
 
         if (callHubConnection.state === 'Disconnected') {
@@ -46,9 +52,53 @@ export default function VoiceProvider({ children }: Props) {
                 }
             }, 100);
         });
-    };
+    }, []);
 
-    const createPeerConnection = (remoteUserId: string): RTCPeerConnection => {
+    const queueIceCandidate = useCallback((remoteUserId: string, candidate: RTCIceCandidateInit) => {
+        const pendingCandidates = pendingIceCandidatesRef.current.get(remoteUserId) ?? [];
+        pendingCandidates.push(candidate);
+        pendingIceCandidatesRef.current.set(remoteUserId, pendingCandidates);
+    }, []);
+
+    const flushIceCandidates = useCallback(async (remoteUserId: string, pc: RTCPeerConnection) => {
+        if (pc.signalingState === 'closed' || !pc.remoteDescription) {
+            return;
+        }
+
+        const pendingCandidates = pendingIceCandidatesRef.current.get(remoteUserId);
+        if (!pendingCandidates?.length) {
+            return;
+        }
+
+        pendingIceCandidatesRef.current.delete(remoteUserId);
+        for (const candidate of pendingCandidates) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (error) {
+                console.warn('Failed to add queued voice ICE candidate', error);
+            }
+        }
+    }, []);
+
+    const removeRemoteAudio = useCallback((remoteUserId: string) => {
+        const audio = document.getElementById(`audio-${remoteUserId}`);
+        if (audio) audio.remove();
+    }, []);
+
+    const clearVoiceSignalingHandlers = useCallback(() => {
+        callHubConnection.off('VoiceChannelUsers');
+        callHubConnection.off('UserJoinedVoice');
+        callHubConnection.off('UserLeftVoice');
+        callHubConnection.off('VoiceUserMicStatusChanged');
+        callHubConnection.off('ReceiveVoiceOffer');
+        callHubConnection.off('ReceiveVoiceAnswer');
+        callHubConnection.off('ReceiveVoiceIceCandidate');
+    }, []);
+
+    const createPeerConnection = useCallback((remoteUserId: string): RTCPeerConnection => {
+        peersRef.current.get(remoteUserId)?.close();
+        removeRemoteAudio(remoteUserId);
+
         const pc = new RTCPeerConnection(rtcConfiguration);
 
         streamRef.current?.getTracks().forEach((track) => {
@@ -61,7 +111,8 @@ export default function VoiceProvider({ children }: Props) {
                 callHubConnection.invoke('SendIceCandidate', {
                     toUserId: remoteUserId,
                     candidate: event.candidate,
-                });
+                    scope: 'voice',
+                }).catch(console.error);
             }
         };
 
@@ -75,185 +126,222 @@ export default function VoiceProvider({ children }: Props) {
                 audio = document.createElement('audio');
                 audio.id = `audio-${remoteUserId}`;
                 audio.autoplay = true;
-                audio.controls = true;
                 audio.style.display = 'none';
                 document.body.appendChild(audio);
             }
             audio.srcObject = stream;
+            audio.muted = !isHeadphonesOn;
         };
 
         peersRef.current.set(remoteUserId, pc);
         return pc;
-    };
+    }, [isHeadphonesOn, removeRemoteAudio]);
+
+    const sendVoiceOffer = useCallback(async (remoteUserId: string, displayName?: string) => {
+        const pc = createPeerConnection(remoteUserId);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+
+        await callHubConnection.invoke('SendOffer', {
+            toUserId: remoteUserId,
+            offer,
+            scope: 'voice',
+        });
+
+        if (displayName) {
+            console.log(`📤 Offer отправлен пользователю: ${displayName}`);
+        }
+    }, [createPeerConnection]);
 
     // leaveChannel определена первой, чтобы joinChannel могла её использовать
     const leaveChannel = useCallback(async () => {
-        if (currentChannelIdRef.current) {
-            await callHubConnection.invoke('LeaveVoiceChannel');
+        if (currentChannelIdRef.current && callHubConnection.state === 'Connected') {
+            try {
+                await callHubConnection.invoke('LeaveVoiceChannel');
+            } catch (error) {
+                console.warn('Failed to notify server about leaving voice channel', error);
+            }
         }
 
+        clearVoiceSignalingHandlers();
         setVoiceUsers([]);
         setCurrentChannelId(null);
 
         peersRef.current.forEach((pc, userId) => {
             pc.close();
-            const video = document.getElementById(`video-${userId}`);
-            if (video) video.remove();
+            removeRemoteAudio(userId);
         });
 
         peersRef.current.clear();
+        pendingIceCandidatesRef.current.clear();
 
         const localVideo = document.getElementById('video-local');
         if (localVideo) localVideo.remove();
 
         streamRef.current?.getTracks().forEach((t) => t.stop());
         streamRef.current = null;
-    }, []); // стабильная ссылка — читает currentChannelId через ref
+        activeVoiceSessionRef.current = null;
+        setActiveVoiceSession(null);
+    }, [clearVoiceSignalingHandlers, removeRemoteAudio]); // стабильная ссылка — читает currentChannelId через ref
 
-    const joinChannel = useCallback(async (channelId: string, serverId: string) => {
+    const joinChannel = useCallback(async (channelId: string, serverId: string, channelName?: string | null) => {
         if (currentChannelIdRef.current === channelId) return;
+        if (!selfUser) return;
 
-        await leaveChannel();
-        setCurrentChannelId(channelId);
-        currentServerRef.current = serverId;
+        try {
+            if (isCallActive) {
+                endCall();
+            }
 
-        if (!streamRef.current) {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            stream.getAudioTracks().forEach((track) => {
-                track.enabled = isMicOnRef.current;
+            await leaveChannel();
+
+            if (!streamRef.current) {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getAudioTracks().forEach((track) => {
+                    track.enabled = isMicOnRef.current;
+                });
+                streamRef.current = stream;
+            }
+
+            await ensureConnected();
+
+            setCurrentChannelId(channelId);
+            const nextVoiceSession = { serverId, channelId, channelName };
+            activeVoiceSessionRef.current = nextVoiceSession;
+            setActiveVoiceSession(nextVoiceSession);
+
+            clearVoiceSignalingHandlers();
+
+            callHubConnection.on('VoiceChannelUsers', async (users: VoiceUser[]) => {
+                console.log('🟢 Получены пользователи канала:', users);
+                setVoiceUsers(users);
+
+                for (const user of users) {
+                    if (!selfUser || user.userId === selfUser.id) continue;
+
+                    const isInitiator = selfUser.id > user.userId;
+                    if (!isInitiator) continue;
+
+                    try {
+                        await sendVoiceOffer(user.userId, user.displayName);
+                    } catch (error) {
+                        console.error(`Failed to send voice offer to ${user.displayName}`, error);
+                    }
+                }
             });
-            streamRef.current = stream;
-        }
 
-        await ensureConnected();
+            callHubConnection.on('UserJoinedVoice', async (user: VoiceUser) => {
+                if (!selfUser || user.userId === selfUser.id) return;
 
-        callHubConnection.off('VoiceChannelUsers');
-        callHubConnection.off('UserJoinedVoice');
-        callHubConnection.off('UserLeftVoice');
-        callHubConnection.off('ReceiveOffer');
-        callHubConnection.off('ReceiveAnswer');
-        callHubConnection.off('ReceiveIceCandidate');
-
-        callHubConnection.on('VoiceChannelUsers', async (users: VoiceUser[]) => {
-            console.log('🟢 Получены пользователи канала:', users);
-            setVoiceUsers(users);
-
-            for (const user of users) {
-                if (!selfUser || user.userId === selfUser.id) continue;
+                console.log(`👋 Новый пользователь: ${user.displayName}`);
+                setVoiceUsers(prev => [...prev.filter(u => u.userId !== user.userId), user]);
 
                 const isInitiator = selfUser.id > user.userId;
-                if (!isInitiator) continue;
+                if (!isInitiator) return;
 
-                const pc = createPeerConnection(user.userId);
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-
-                await callHubConnection.invoke('SendOffer', {
-                    toUserId: user.userId,
-                    offer,
-                });
-
-                console.log(`📤 Offer отправлен пользователю: ${user.displayName}`);
-            }
-        });
-
-        callHubConnection.on('UserJoinedVoice', async (user: VoiceUser) => {
-            if (!selfUser || user.userId === selfUser.id) return;
-
-            console.log(`👋 Новый пользователь: ${user.displayName}`);
-            setVoiceUsers(prev => [...prev.filter(u => u.userId !== user.userId), user]);
-
-            const isInitiator = selfUser.id > user.userId;
-            if (!isInitiator) return;
-
-            const pc = createPeerConnection(user.userId);
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-
-            await callHubConnection.invoke('SendOffer', {
-                toUserId: user.userId,
-                offer,
-            });
-
-            console.log(`📤 Offer отправлен (по UserJoinedVoice) пользователю: ${user.displayName}`);
-        });
-
-        callHubConnection.on('VoiceUserMicStatusChanged', (userId: string, isMicOn: boolean) => {
-            setVoiceUsers(prev => prev.map(u => u.userId === userId ? { ...u, isMicOn } : u));
-        });
-
-        callHubConnection.on('UserLeftVoice', (userId: string) => {
-            console.log(`👋 Пользователь покинул канал: ${userId}`);
-            setVoiceUsers(prev => prev.filter(u => u.userId !== userId));
-
-            const pc = peersRef.current.get(userId);
-            if (pc) {
-                pc.close();
-                peersRef.current.delete(userId);
-            }
-
-            const audio = document.getElementById(`audio-${userId}`);
-            if (audio) audio.remove();
-        });
-
-        callHubConnection.on('ReceiveOffer', async (fromUserId: string, offer) => {
-            console.log(`[ReceiveOffer] from: ${fromUserId}, selfUser: ${selfUser?.id}`);
-
-            let pc = peersRef.current.get(fromUserId);
-            if (!pc) {
-                pc = createPeerConnection(fromUserId);
-            }
-
-            await pc.setRemoteDescription(new RTCSessionDescription(offer));
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-
-            await callHubConnection.invoke('SendAnswer', {
-                toUserId: fromUserId,
-                answer,
-            });
-        });
-
-        callHubConnection.on('ReceiveAnswer', async (fromUserId: string, answer) => {
-            console.log('📥 Получен Answer от:', fromUserId);
-
-            let pc = peersRef.current.get(fromUserId);
-            if (!pc) {
-                console.warn('⚠️ PeerConnection не найден — создаём вручную');
-                pc = createPeerConnection(fromUserId);
-            }
-
-            if (pc.signalingState === 'closed') {
-                console.warn('⚠️ Соединение уже закрыто, игнорируем Answer');
-                return;
-            }
-
-            try {
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-                console.log('✅ Answer применён');
-            } catch (err) {
-                console.error('❌ Ошибка установки Answer:', err);
-            }
-        });
-
-        callHubConnection.on('ReceiveIceCandidate', async (fromUserId: string, candidate) => {
-            console.log('📥 Получен ICE-кандидат от:', fromUserId);
-            const pc = peersRef.current.get(fromUserId);
-            if (pc) {
                 try {
-                    await pc.addIceCandidate(new RTCIceCandidate(candidate)).then(() => {
-                        console.log("✅ ICE-кандидат успешно добавлен");
-                    }).catch(err => {
-                        console.error("❌ Ошибка ICE-кандидата:", err);
+                    await sendVoiceOffer(user.userId, user.displayName);
+                } catch (error) {
+                    console.error(`Failed to send voice offer to joined user ${user.displayName}`, error);
+                }
+            });
+
+            callHubConnection.on('VoiceUserMicStatusChanged', (userId: string, isMicOn: boolean) => {
+                setVoiceUsers(prev => prev.map(u => u.userId === userId ? { ...u, isMicOn } : u));
+            });
+
+            callHubConnection.on('UserLeftVoice', (userId: string) => {
+                console.log(`👋 Пользователь покинул канал: ${userId}`);
+                setVoiceUsers(prev => prev.filter(u => u.userId !== userId));
+
+                const pc = peersRef.current.get(userId);
+                if (pc) {
+                    pc.close();
+                    peersRef.current.delete(userId);
+                }
+
+                pendingIceCandidatesRef.current.delete(userId);
+                removeRemoteAudio(userId);
+            });
+
+            callHubConnection.on('ReceiveVoiceOffer', async (fromUserId: string, offer) => {
+                console.log(`[ReceiveOffer] from: ${fromUserId}, selfUser: ${selfUser?.id}`);
+
+                const pc = createPeerConnection(fromUserId);
+
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                    await flushIceCandidates(fromUserId, pc);
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+
+                    await callHubConnection.invoke('SendAnswer', {
+                        toUserId: fromUserId,
+                        answer,
+                        scope: 'voice',
                     });
+                } catch (error) {
+                    console.error('Failed to handle voice offer', error);
+                }
+            });
+
+            callHubConnection.on('ReceiveVoiceAnswer', async (fromUserId: string, answer) => {
+                console.log('📥 Получен Answer от:', fromUserId);
+
+                const pc = peersRef.current.get(fromUserId);
+                if (!pc || !pc.localDescription) {
+                    console.warn('⚠️ PeerConnection или localDescription не найден — игнорируем Answer');
+                    return;
+                }
+
+                if (pc.signalingState === 'closed') {
+                    console.warn('⚠️ Соединение уже закрыто, игнорируем Answer');
+                    return;
+                }
+
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                    await flushIceCandidates(fromUserId, pc);
+                    console.log('✅ Answer применён');
+                } catch (err) {
+                    console.error('❌ Ошибка установки Answer:', err);
+                }
+            });
+
+            callHubConnection.on('ReceiveVoiceIceCandidate', async (fromUserId: string, candidate) => {
+                console.log('📥 Получен ICE-кандидат от:', fromUserId);
+                const pc = peersRef.current.get(fromUserId);
+                if (!pc || pc.signalingState === 'closed' || !pc.remoteDescription) {
+                    queueIceCandidate(fromUserId, candidate as RTCIceCandidateInit);
+                    return;
+                }
+
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    console.log('✅ ICE-кандидат успешно добавлен');
                 } catch (err) {
                     console.warn('❌ Ошибка ICE-кандидата:', err);
                 }
-            }
-        });
+            });
 
-        await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser?.id, selfUser?.displayName, selfUser?.avatarUrl, isMicOnRef.current);
-    }, [selfUser, leaveChannel]);
+            await callHubConnection.invoke('JoinVoiceChannel', channelId, serverId, selfUser.id, selfUser.displayName, selfUser.avatarUrl, isMicOnRef.current);
+        } catch (error) {
+            console.error('Failed to join voice channel', error);
+            await leaveChannel();
+        }
+    }, [
+        createPeerConnection,
+        endCall,
+        ensureConnected,
+        flushIceCandidates,
+        isCallActive,
+        leaveChannel,
+        queueIceCandidate,
+        removeRemoteAudio,
+        clearVoiceSignalingHandlers,
+        selfUser,
+        sendVoiceOffer,
+    ]);
 
     const joinServer = useCallback(async (serverId: string, voiceChannelIds: string[]) => {
         const joinKey = `${serverId}|${voiceChannelIds.join(',')}`;
@@ -268,7 +356,7 @@ export default function VoiceProvider({ children }: Props) {
             return;
         }
 
-        currentServerRef.current = serverId;
+        subscribedServerRef.current = serverId;
         voiceChannelIdsRef.current = voiceChannelIds;
         lastJoinKeyRef.current = joinKey;
 
@@ -278,12 +366,12 @@ export default function VoiceProvider({ children }: Props) {
             const data = await callHubConnection.invoke<Record<string, VoiceUser[]>>('GetVoiceUsers', voiceChannelIds);
             setVoiceUsersByChannel(data);
         }
-    }, []);
+    }, [ensureConnected]);
 
     const leaveServer = useCallback(async (serverId: string) => {
         await callHubConnection.invoke('LeaveServer', serverId);
-        if (currentServerRef.current === serverId) {
-            currentServerRef.current = null;
+        if (subscribedServerRef.current === serverId) {
+            subscribedServerRef.current = null;
         }
         voiceChannelIdsRef.current = [];
         lastJoinKeyRef.current = null;
@@ -314,16 +402,29 @@ export default function VoiceProvider({ children }: Props) {
     useEffect(() => {
         return () => {
             leaveChannel();
-            callHubConnection.stop();
         };
     }, [leaveChannel]);
 
     useEffect(() => {
         const handleReconnected = async () => {
-            if (!currentServerRef.current) return;
-
             try {
-                await callHubConnection.invoke('JoinServer', currentServerRef.current);
+                if (activeVoiceSessionRef.current && selfUser) {
+                    const voiceSession = activeVoiceSessionRef.current;
+
+                    await callHubConnection.invoke(
+                        'JoinVoiceChannel',
+                        voiceSession.channelId,
+                        voiceSession.serverId,
+                        selfUser.id,
+                        selfUser.displayName,
+                        selfUser.avatarUrl,
+                        isMicOnRef.current,
+                    );
+                }
+
+                if (!subscribedServerRef.current) return;
+
+                await callHubConnection.invoke('JoinServer', subscribedServerRef.current);
                 if (voiceChannelIdsRef.current.length > 0) {
                     const data = await callHubConnection.invoke<Record<string, VoiceUser[]>>(
                         'GetVoiceUsers',
@@ -341,7 +442,7 @@ export default function VoiceProvider({ children }: Props) {
         return () => {
             callHubConnection.off('reconnected', handleReconnected);
         };
-    }, []);
+    }, [selfUser]);
 
     useEffect(() => {
         const handleUserJoined = (channelId: string, user: VoiceUser) => {
@@ -388,7 +489,8 @@ export default function VoiceProvider({ children }: Props) {
         voiceUsers,
         voiceUsersByChannel,
         currentChannelId,
-    }), [joinChannel, leaveChannel, joinServer, leaveServer, voiceUsers, voiceUsersByChannel, currentChannelId]);
+        activeVoiceSession,
+    }), [joinChannel, leaveChannel, joinServer, leaveServer, voiceUsers, voiceUsersByChannel, currentChannelId, activeVoiceSession]);
 
     return (
         <VoiceContext.Provider value={contextValue}>

@@ -6,6 +6,8 @@ import { ServerSummaryResponse } from '../../types/ServerType';
 import { serversApi } from '../../api/serversApi';
 import { resolveAssetUrl } from '../../api/httpClient';
 import Skeleton from '../ui/Skeleton';
+import { useVoice } from '../../context/VoiceContext';
+import { useCallContext } from '../../context/CallContext';
 
 
 export default function ServerSidebar() {
@@ -13,6 +15,8 @@ export default function ServerSidebar() {
     const [servers, setServers] = useState<ServerSummaryResponse[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const { serverId } = useParams<{ serverId: string }>();
+    const { activeVoiceSession } = useVoice();
+    const { activeCallRequest } = useCallContext();
 
     const createServer = async (name: string, iconFile: File | null) => {
         try {
@@ -48,15 +52,20 @@ export default function ServerSidebar() {
             {/* Home / DM button */}
             <Link
                 to="/channels/@me"
-                className="group relative flex items-center justify-center w-12 h-12 rounded-2xl hover:rounded-3xl bg-[#313338] hover:bg-indigo-600 transition-all duration-200 overflow-hidden"
+                className={`group relative flex items-center justify-center w-12 h-12 rounded-2xl hover:rounded-3xl bg-[#313338] hover:bg-indigo-600 transition-all duration-200 overflow-hidden ${
+                    activeCallRequest ? 'ring-2 ring-sky-400/70 ring-offset-2 ring-offset-[#1e1f22]' : ''
+                }`}
             >
                 <img
                     src="/vibic_logo.svg"
                     alt="Vibic"
                     className="w-6 h-6 object-contain"
                 />
+                {activeCallRequest && (
+                    <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-[#313338] bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.14)]" />
+                )}
                 <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
-                    Личные сообщения
+                    {activeCallRequest ? 'Личный звонок активен' : 'Личные сообщения'}
                 </span>
             </Link>
 
@@ -72,10 +81,13 @@ export default function ServerSidebar() {
                 ))
             ) : servers.map((server) => {
                 const isActive = server.id === serverId;
+                const hasActiveVoiceCall = activeVoiceSession?.serverId === server.id;
                 return (
                     <div key={server.id} className="group relative flex items-center">
                         {/* Active indicator */}
-                        <div className={`absolute -left-3 w-1 rounded-r-full bg-white transition-all duration-200 ${isActive ? 'h-8' : 'h-0 group-hover:h-5'}`} />
+                        <div className={`absolute -left-3 w-1 rounded-r-full transition-all duration-200 ${
+                            hasActiveVoiceCall ? 'h-10 bg-emerald-400' : `bg-white ${isActive ? 'h-8' : 'h-0 group-hover:h-5'}`
+                        }`} />
 
                         <Link
                             to={`/channels/${server.id}/${server.channelId}`}
@@ -83,7 +95,9 @@ export default function ServerSidebar() {
                                 isActive
                                     ? 'rounded-2xl'
                                     : 'rounded-3xl hover:rounded-2xl'
-                            } ${!server.iconUrl ? 'bg-indigo-600 hover:bg-indigo-500' : ''}`}
+                            } ${!server.iconUrl ? 'bg-indigo-600 hover:bg-indigo-500' : ''} ${
+                                hasActiveVoiceCall ? 'ring-2 ring-emerald-400/70 ring-offset-2 ring-offset-[#1e1f22]' : ''
+                            }`}
                         >
                             {server.iconUrl ? (
                                 <img
@@ -96,10 +110,13 @@ export default function ServerSidebar() {
                                     {server.name.charAt(0).toUpperCase()}
                                 </span>
                             )}
+                            {hasActiveVoiceCall && (
+                                <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-[#313338] bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.14)]" />
+                            )}
                         </Link>
 
                         <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
-                            {server.name}
+                            {hasActiveVoiceCall ? `${server.name} · голосовой канал активен` : server.name}
                         </span>
                     </div>
                 );

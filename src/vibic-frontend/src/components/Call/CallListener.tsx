@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import IncomingCallType from '../../types/IncomingCallType';
 import CallRequestType from '../../types/CallRequestType';
 import { useCallContext } from '../../context/CallContext';
+import { useVoice } from '../../context/VoiceContext';
 
 
 export default function CallListener() {
     const [incomingCall, setIncomingCall] = useState<IncomingCallType | null>(null);
     const navigate = useNavigate();
     const { startDirectCall } = useCallContext();
+    const { activeVoiceSession, leaveChannel } = useVoice();
 
     useEffect(() => {
         const startListening = async () => {
@@ -46,6 +48,10 @@ export default function CallListener() {
                 ...incomingCall,
                 isInitiator: false,
             };
+
+            if (activeVoiceSession) {
+                await leaveChannel();
+            }
 
             startDirectCall(callData);
 

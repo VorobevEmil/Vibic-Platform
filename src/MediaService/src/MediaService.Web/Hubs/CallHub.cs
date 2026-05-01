@@ -8,6 +8,23 @@ namespace MediaService.Web.Hubs;
 [Authorize]
 public class CallHub : Hub
 {
+    private const string VoiceScope = "voice";
+
+    private static bool IsVoiceScope(string? scope)
+        => string.Equals(scope, VoiceScope, StringComparison.OrdinalIgnoreCase);
+
+    private async Task SendToUserAsync(string userId, string method, params object?[] args)
+    {
+        IReadOnlyList<string> connectionIds = CallConnectionRegistry.GetConnectionIds(userId);
+
+        if (connectionIds.Count == 0)
+        {
+            return;
+        }
+
+        await Clients.Clients(connectionIds).SendCoreAsync(method, args);
+    }
+
     public override Task OnConnectedAsync()
     {
         if (string.IsNullOrWhiteSpace(Context.UserIdentifier))
@@ -27,7 +44,7 @@ public class CallHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         string userId = Context.UserIdentifier!;
-        CallConnectionRegistry.Remove(userId);
+        CallConnectionRegistry.Remove(userId, Context.ConnectionId);
 
         VoiceChannelManager.RemoveUser(Context.ConnectionId, userId, out string? channelId, out string? serverId, out VoiceUser? user);
 
@@ -82,6 +99,27 @@ public class CallHub : Hub
             IsMicOn = isMicOn
         };
 
+        VoiceChannelManager.RemoveUser(
+            Context.ConnectionId,
+            resolvedUserId,
+            out string? previousChannelId,
+            out string? previousServerId,
+            out VoiceUser? previousUser);
+
+        if (previousChannelId != null)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, previousChannelId);
+
+            if (previousUser != null)
+            {
+                await Clients.Group(previousChannelId).SendAsync("UserLeftVoice", previousUser.UserId);
+                if (!string.IsNullOrWhiteSpace(previousServerId))
+                {
+                    await Clients.Group($"server:{previousServerId}").SendAsync("VoiceChannelUserLeft", previousChannelId, previousUser.UserId);
+                }
+            }
+        }
+
         VoiceChannelManager.AddUser(Context.ConnectionId, channelId, serverId, user);
         await Groups.AddToGroupAsync(Context.ConnectionId, channelId);
 
@@ -116,10 +154,10 @@ public class CallHub : Hub
 
     public async Task CallUser(CallUserRequest request)
     {
-        string? targetConnectionId = CallConnectionRegistry.GetConnectionId(request.PeerUserId);
-        if (targetConnectionId != null)
+        IReadOnlyList<string> targetConnectionIds = CallConnectionRegistry.GetConnectionIds(request.PeerUserId);
+        if (targetConnectionIds.Count != 0)
         {
-            await Clients.Client(targetConnectionId).SendAsync("IncomingCall", new
+            await Clients.Clients(targetConnectionIds).SendAsync("IncomingCall", new
             {
                 PeerUserId = Context.UserIdentifier,
                 request.PeerUsername,
@@ -141,51 +179,27 @@ public class CallHub : Hub
         string receiverId = Context.UserIdentifier!;
 
         // Добавить подключение в группу вызова
-        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
-        if (peerUserConnection is null)
-        {
-            return;
-        }
-
         Console.WriteLine(
             $"✅ Пользователь {receiverId} принял звонок от пользователя {peerUserId} (канал: {channelId})");
 
-        await Clients.Client(peerUserConnection).SendAsync("CallAccepted", receiverId, channelId);
+        await SendToUserAsync(peerUserId, "CallAccepted", receiverId, channelId);
     }
 
     public async Task RejectCall(string peerUserId)
     {
-        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
-        if (peerUserConnection is null)
-        {
-            return;
-        }
-
-        await Clients.Client(peerUserConnection).SendAsync("CallRejected");
+        await SendToUserAsync(peerUserId, "CallRejected");
     }
 
     public async Task CancelCall(string peerUserId, bool isAcceptedCall)
     {
         string method = isAcceptedCall ? "CancelAcceptedCall" : "CancelIncomingCall";
 
-        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(peerUserId);
-        if (peerUserConnection is null)
-        {
-            return;
-        }
-
-        await Clients.Client(peerUserConnection).SendAsync(method);
+        await SendToUserAsync(peerUserId, method);
     }
 
     public async Task NotifyCameraStatusChanged(string toUserId, bool isCamOn)
     {
-        string? peerUserConnection = CallConnectionRegistry.GetConnectionId(toUserId);
-        if (peerUserConnection is null)
-        {
-            return;
-        }
-
-        await Clients.Client(peerUserConnection).SendAsync("PeerCameraStatusChanged", isCamOn);
+        await SendToUserAsync(toUserId, "PeerCameraStatusChanged", isCamOn);
     }
 
     public async Task NotifyVoiceMicStatusChanged(bool isMicOn)
@@ -208,36 +222,27 @@ public class CallHub : Hub
 
     public async Task NotifyMicStatusChanged(string toUserId, bool isMicOn)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(toUserId);
-        if (connectionId is null) return;
-
-        await Clients.Client(connectionId).SendAsync("PeerMicStatusChanged", isMicOn);
+        await SendToUserAsync(toUserId, "PeerMicStatusChanged", isMicOn);
     }
 
     public async Task SendOffer(SendOfferRequest request)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
-        if (connectionId is null) return;
-
         Console.WriteLine("Оффер получен");
-        await Clients.Client(connectionId).SendAsync("ReceiveOffer", Context.UserIdentifier, request.Offer);
+        string eventName = IsVoiceScope(request.Scope) ? "ReceiveVoiceOffer" : "ReceiveOffer";
+        await SendToUserAsync(request.ToUserId, eventName, Context.UserIdentifier, request.Offer);
     }
 
     public async Task SendAnswer(SendAnswerRequest request)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
-        if (connectionId is null) return;
-
         Console.WriteLine("Ответ получен");
-        await Clients.Client(connectionId).SendAsync("ReceiveAnswer", Context.UserIdentifier, request.Answer);
+        string eventName = IsVoiceScope(request.Scope) ? "ReceiveVoiceAnswer" : "ReceiveAnswer";
+        await SendToUserAsync(request.ToUserId, eventName, Context.UserIdentifier, request.Answer);
     }
 
     public async Task SendIceCandidate(SendIceCandidateRequest request)
     {
-        string? connectionId = CallConnectionRegistry.GetConnectionId(request.ToUserId);
-        if (connectionId is null) return;
-
         Console.WriteLine("Кандидаты получены");
-        await Clients.Client(connectionId).SendAsync("ReceiveIceCandidate", Context.UserIdentifier, request.Candidate);
+        string eventName = IsVoiceScope(request.Scope) ? "ReceiveVoiceIceCandidate" : "ReceiveIceCandidate";
+        await SendToUserAsync(request.ToUserId, eventName, Context.UserIdentifier, request.Candidate);
     }
 }

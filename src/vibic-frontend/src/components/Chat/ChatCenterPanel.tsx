@@ -29,6 +29,9 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   const { selfUser } = useAuthContext();
   const location = useLocation();
   const navigate = useNavigate();
+  const selfUserId = selfUser?.id;
+  const selfUsername = selfUser?.username;
+  const selfAvatarUrl = selfUser?.avatarUrl;
   const [inputValue, setInputValue] = useState('');
   const [replyTo, setReplyTo] = useState<MessageResponse | null>(null);
   const chatMessagesRef = useRef<ChatMessagesRef>(null);
@@ -40,7 +43,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   const { peerUser } = useDirectChannel({
     serverId: serverId,
     channelId: channelId,
-    localUserId: selfUser?.id,
+    localUserId: selfUserId,
   });
 
   const {
@@ -63,9 +66,9 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
 
   const handleIncomingMessage = useCallback((message: MessageResponse) => {
     appendIncomingMessage(message, {
-      forceScroll: message.senderId === selfUser?.id,
+      forceScroll: message.senderId === selfUserId,
     });
-  }, [appendIncomingMessage, selfUser?.id]);
+  }, [appendIncomingMessage, selfUserId]);
 
   const { sendMessage, connected, typingUsername } = useSignalRChannel(
     channelId,
@@ -157,15 +160,15 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   }, []);
 
   useEffect(() => {
-    if (!selfUser) {
+    if (!selfUserId) {
       return;
     }
 
-    syncSenderMetadata(selfUser.id, {
-      senderUsername: selfUser.username,
-      senderAvatarUrl: selfUser.avatarUrl,
+    syncSenderMetadata(selfUserId, {
+      senderUsername: selfUsername ?? '',
+      senderAvatarUrl: selfAvatarUrl,
     });
-  }, [selfUser?.avatarUrl, selfUser?.id, selfUser?.username, syncSenderMetadata]);
+  }, [selfAvatarUrl, selfUserId, selfUsername, syncSenderMetadata]);
 
   useEffect(() => {
     initializeMessages().then(() => {
@@ -176,7 +179,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
         }
       });
     });
-  }, [initializeMessages]);
+  }, [initializeMessages, loadMoreMessages, scrollContainerRef]);
 
   useEffect(() => {
     // Сбрасываем ответ при смене канала

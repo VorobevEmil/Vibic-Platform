@@ -15,7 +15,7 @@ function SignInPage() {
       showToast('success', 'Аккаунт создан!', 'Теперь вы можете войти.');
       setSearchParams({});
     }
-  }, []);
+  }, [searchParams, setSearchParams, showToast]);
 
   return (
     <AuthLayout

@@ -45,6 +45,8 @@ export default function ServerChannelMembersSidebar({
   channelId,
 }: Props) {
   const { selfUser } = useAuthContext();
+  const selfUserId = selfUser?.id;
+  const selfUserStatus = selfUser?.userStatus;
   const [participants, setParticipants] = useState<ServerChannelParticipantResponse[]>([]);
   const [statusesById, setStatusesById] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -59,15 +61,15 @@ export default function ServerChannelMembersSidebar({
   } | null>(null);
 
   useEffect(() => {
-    if (!selfUser) {
+    if (!selfUserId || selfUserStatus === undefined) {
       return;
     }
 
     setStatusesById((currentStatuses) => ({
       ...currentStatuses,
-      [selfUser.id]: selfUser.userStatus,
+      [selfUserId]: selfUserStatus,
     }));
-  }, [selfUser?.id, selfUser?.userStatus]);
+  }, [selfUserId, selfUserStatus]);
 
   useEffect(() => {
     let isCancelled = false;

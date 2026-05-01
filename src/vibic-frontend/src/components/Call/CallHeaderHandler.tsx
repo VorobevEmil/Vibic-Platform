@@ -5,6 +5,7 @@ import { Phone, Settings, Video } from "lucide-react";
 import { useCallContext } from "../../context/CallContext";
 import { resolveAssetUrl } from "../../api/httpClient";
 import Skeleton from "../ui/Skeleton";
+import { useVoice } from "../../context/VoiceContext";
 
 interface Props {
     channelId: string;
@@ -13,6 +14,7 @@ interface Props {
 export default function CallHeaderHandler({ channelId }: Props) {
     const { selfUser } = useAuthContext();
     const { activeCallRequest, isCallActive, startDirectCall } = useCallContext();
+    const { activeVoiceSession, leaveChannel } = useVoice();
     const { peerUser, isLoading } = useDirectChannel(
         {
             channelId: channelId,
@@ -20,21 +22,24 @@ export default function CallHeaderHandler({ channelId }: Props) {
         });
 
     const isCurrentChannelCall = activeCallRequest?.channelId === channelId;
-    const isCallControlsDisabled = isCallActive && !isCurrentChannelCall;
     const callTooltipLabel = useMemo(() => {
         if (isCurrentChannelCall) {
             return 'Звонок уже активен';
         }
 
-        if (isCallControlsDisabled) {
-            return 'Сначала завершите текущий звонок';
+        if (isCallActive || activeVoiceSession) {
+            return 'Текущий звонок будет завершён';
         }
 
         return '';
-    }, [isCallControlsDisabled, isCurrentChannelCall]);
+    }, [activeVoiceSession, isCallActive, isCurrentChannelCall]);
 
-    const handleStartCall = (startWithCam: boolean) => {
-        if (!peerUser || !selfUser || isCallActive) return;
+    const handleStartCall = async (startWithCam: boolean) => {
+        if (!peerUser || !selfUser || isCurrentChannelCall) return;
+
+        if (activeVoiceSession) {
+            await leaveChannel();
+        }
 
         startDirectCall({
             peerUserId: peerUser.id,
@@ -73,7 +78,7 @@ export default function CallHeaderHandler({ channelId }: Props) {
                     <button
                         type="button"
                         onClick={() => handleStartCall(false)}
-                        disabled={isCallControlsDisabled || isCurrentChannelCall}
+                        disabled={isCurrentChannelCall}
                         title={callTooltipLabel || 'Начать голосовой звонок'}
                         className="transition disabled:cursor-not-allowed disabled:text-gray-500"
                     >
@@ -82,7 +87,7 @@ export default function CallHeaderHandler({ channelId }: Props) {
                     <button
                         type="button"
                         onClick={() => handleStartCall(true)}
-                        disabled={isCallControlsDisabled || isCurrentChannelCall}
+                        disabled={isCurrentChannelCall}
                         title={callTooltipLabel || 'Начать видеозвонок'}
                         className="transition disabled:cursor-not-allowed disabled:text-gray-500"
                     >

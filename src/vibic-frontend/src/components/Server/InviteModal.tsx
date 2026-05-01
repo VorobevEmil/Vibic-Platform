@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link2 } from 'lucide-react';
 import { invitesApi } from '../../api/invitesApi';
 import Skeleton from '../ui/Skeleton';
@@ -14,13 +14,7 @@ export default function InviteModal({ isOpen, onClose, serverId }: InviteModalPr
     const [copied, setCopied] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    useEffect(() => {
-        if (isOpen) {
-            generateInvite();
-        }
-    }, [isOpen]);
-
-    const generateInvite = async () => {
+    const generateInvite = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await invitesApi.createInvite(serverId);
@@ -31,7 +25,13 @@ export default function InviteModal({ isOpen, onClose, serverId }: InviteModalPr
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [serverId]);
+
+    useEffect(() => {
+        if (isOpen) {
+            void generateInvite();
+        }
+    }, [generateInvite, isOpen]);
 
     const handleCopy = async () => {
         try {

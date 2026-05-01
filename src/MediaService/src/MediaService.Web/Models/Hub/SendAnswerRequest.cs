@@ -1,3 +1,3 @@
 namespace MediaService.Web.Models.Hub;
 
-public record SendAnswerRequest(string ToUserId, object Answer);
+public record SendAnswerRequest(string ToUserId, object Answer, string? Scope = null);

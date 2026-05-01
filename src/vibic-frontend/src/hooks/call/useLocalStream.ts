@@ -26,7 +26,7 @@ export default function useLocalStream(videoRef: React.RefObject<HTMLVideoElemen
         return () => {
             streamRef.current?.getTracks().forEach((track) => track.stop());
         };
-    }, []);
+    }, [videoRef]);
 
     return streamRef;
 }

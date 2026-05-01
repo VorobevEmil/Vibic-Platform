@@ -7,14 +7,21 @@ export interface VoiceUser {
     isMicOn: boolean;
 }
 
+export interface ActiveVoiceSession {
+    serverId: string;
+    channelId: string;
+    channelName?: string | null;
+}
+
 export interface VoiceContextType {
-    joinChannel: (channelId: string, serverId: string) => void;
+    joinChannel: (channelId: string, serverId: string, channelName?: string | null) => void;
     joinServer: (serverId: string, voiceChannelIds: string[]) => void;
     leaveServer: (serverId: string) => void;
     leaveChannel: () => void;
     voiceUsers: VoiceUser[];
     voiceUsersByChannel: Record<string, VoiceUser[]>;
     currentChannelId: string | null;
+    activeVoiceSession: ActiveVoiceSession | null;
 }
 
 export const VoiceContext = createContext<VoiceContextType | null>(null);

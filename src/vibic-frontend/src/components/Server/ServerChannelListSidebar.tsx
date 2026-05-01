@@ -70,7 +70,7 @@ export default function ServerChannelListSidebar({
         y: number;
         channel: ServerChannelResponse;
     } | null>(null);
-    const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId } = useVoice();
+    const { joinChannel, voiceUsers, voiceUsersByChannel, currentChannelId, activeVoiceSession } = useVoice();
     const serverMenuRef = useRef<HTMLDivElement | null>(null);
 
     const textChannels = channels?.filter((c) => c.channelType === ChannelType.Server);
@@ -378,6 +378,7 @@ export default function ServerChannelListSidebar({
                                 </div>
                             ))
                         ) : voiceChannels.map((channel) => {
+                            const isActiveVoiceChannel = activeVoiceSession?.channelId === channel.id;
                             const usersInChannel = voiceUsersByChannel[channel.id]
                                 ?? (currentChannelId === channel.id ? voiceUsers : []);
 
@@ -391,21 +392,26 @@ export default function ServerChannelListSidebar({
                                     className="group"
                                 >
                                     <div
-                                        onClick={async () => await joinChannel(channel.id, serverId)}
+                                        onClick={() => void joinChannel(channel.id, serverId, channel.name)}
                                         className={`relative flex items-center gap-2 rounded-md px-3 py-1.5 pr-10 text-sm transition-colors cursor-pointer
-                                            ${channelId === channel.id
-                                                ? 'bg-[#404249] text-white'
-                                                : 'text-gray-300 hover:bg-[#404249]'}`}
+                                            ${isActiveVoiceChannel
+                                                ? 'bg-emerald-500/12 text-emerald-100 ring-1 ring-emerald-400/25'
+                                                : channelId === channel.id
+                                                    ? 'bg-[#404249] text-white'
+                                                    : 'text-gray-300 hover:bg-[#404249]'}`}
                                     >
-                                        <Volume2 className="w-4 h-4" />
+                                        <Volume2 className={`w-4 h-4 ${isActiveVoiceChannel ? 'text-emerald-300' : ''}`} />
                                         <span className="truncate">{channel.name}</span>
+                                        {isActiveVoiceChannel && (
+                                            <span className="ml-auto mr-5 h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
+                                        )}
 
                                         {isOwner && (
                                             <button
                                                 type="button"
                                                 onClick={(event) => openChannelContextMenuFromButton(event, channel)}
                                                 className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white ${
-                                                    channelId === channel.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                                                    channelId === channel.id || isActiveVoiceChannel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                 }`}
                                                 aria-label={`Открыть меню канала ${channel.name}`}
                                             >
