@@ -61,6 +61,18 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
     },
     {
+      "DownstreamPathTemplate": "/messages/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chatchannelservice",
+          "Port": 7138
+        }
+      ],
+      "UpstreamPathTemplate": "/messages/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
+    },
+    {
       "DownstreamPathTemplate": "/invites",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -238,6 +250,66 @@
         }
       ],
       "UpstreamPathTemplate": "/hubs/presence/{everything}",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/notifications",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 7210
+        }
+      ],
+      "UpstreamPathTemplate": "/notifications",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/notifications/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 7210
+        }
+      ],
+      "UpstreamPathTemplate": "/notifications/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/notifications/negotiate",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 7210
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/notifications/negotiate",
+      "UpstreamHttpMethod": [ "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/notifications",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 7210
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/notifications",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/notifications/{everything}",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "notificationservice",
+          "Port": 7210
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/notifications/{everything}",
       "UpstreamHttpMethod": [ "GET" ]
     }
   ]

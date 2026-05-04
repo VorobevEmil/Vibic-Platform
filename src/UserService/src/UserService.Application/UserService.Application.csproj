@@ -12,11 +12,11 @@
     
     <ItemGroup>
       <ProjectReference Include="..\UserService.Core\UserService.Core.csproj" />
-      <ProjectReference Include="..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\Vibic.Shared.Messaging.csproj" />
     </ItemGroup>
-    
+
     <ItemGroup>
-        <PackageReference Include="Vibic.Shared.Core" Version="10.0.1" />
+        <PackageReference Include="Vibic.Shared.Core" Version="10.0.2" />
+        <PackageReference Include="Vibic.Shared.Messaging" Version="10.0.2" />
         <PackageReference Include="MediatR" Version="14.0.0" />
     </ItemGroup>
 

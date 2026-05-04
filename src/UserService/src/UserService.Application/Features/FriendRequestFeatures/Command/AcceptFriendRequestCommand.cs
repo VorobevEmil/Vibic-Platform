@@ -2,7 +2,9 @@ using MediatR;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
 using Vibic.Shared.Core.Exceptions;
+using Vibic.Shared.EF.Entities;
 using Vibic.Shared.EF.Interfaces;
+using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace UserService.Application.Features.FriendRequestFeatures.Command;
 
@@ -41,6 +43,16 @@ public class AcceptFriendRequestCommandHandler : IRequestHandler<AcceptFriendReq
 
         await _userFriendRepository.CreateAsync(userFriend1, cancellationToken);
         await _userFriendRepository.CreateAsync(userFriend2, cancellationToken);
+
+        var @event = new FriendRequestAcceptedEvent(
+            friendRequest.Id,
+            friendRequest.SenderId,
+            friendRequest.ReceiverId,
+            friendRequest.Receiver.DisplayName,
+            friendRequest.ReceiverId);
+        
+        var outboxMessage = OutboxMessage.Create(@event);
+        await _unitOfWork.OutboxRepository.AddAsync(outboxMessage, cancellationToken);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

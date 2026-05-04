@@ -4,19 +4,19 @@ ARG NUGET_GITHUB_TOKEN
 
 WORKDIR /src
 
-COPY MediaService.sln ./
-COPY src/MediaService.Application/MediaService.Application.csproj ./src/MediaService.Application/
-COPY src/MediaService.Core/MediaService.Core.csproj ./src/MediaService.Core/
-COPY src/MediaService.Infrastructure/MediaService.Infrastructure.csproj ./src/MediaService.Infrastructure/
-COPY src/MediaService.Web/MediaService.Web.csproj ./src/MediaService.Web/
+COPY src/MediaService/MediaService.sln ./src/MediaService/
+COPY src/MediaService/src/MediaService.Application/MediaService.Application.csproj ./src/MediaService/src/MediaService.Application/
+COPY src/MediaService/src/MediaService.Core/MediaService.Core.csproj ./src/MediaService/src/MediaService.Core/
+COPY src/MediaService/src/MediaService.Infrastructure/MediaService.Infrastructure.csproj ./src/MediaService/src/MediaService.Infrastructure/
+COPY src/MediaService/src/MediaService.Web/MediaService.Web.csproj ./src/MediaService/src/MediaService.Web/
 
 RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
     --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
-    && dotnet restore src/MediaService.Web/MediaService.Web.csproj
+    && dotnet restore src/MediaService/src/MediaService.Web/MediaService.Web.csproj
 
 COPY . .
 
-WORKDIR /src/src/MediaService.Web
+WORKDIR /src/src/MediaService/src/MediaService.Web
 RUN dotnet publish -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

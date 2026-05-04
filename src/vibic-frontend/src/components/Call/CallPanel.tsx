@@ -1,5 +1,5 @@
 import type { Ref } from 'react';
-import { Mic, MicOff, PhoneOff, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Video, VideoOff, Monitor, MonitorOff } from 'lucide-react';
 import { useAuthContext } from '../../context/AuthContext';
 import CallRequestType from '../../types/CallRequestType';
 import { useMedia } from '../../context/MediaContext';
@@ -14,8 +14,11 @@ interface CallPanelProps {
   isMicOn: boolean;
   isRemoteCamOn: boolean;
   isRemoteMicOn: boolean;
+  isRemoteScreenSharing: boolean;
   remoteStreamStarted: boolean;
+  isScreenSharing: boolean;
   toggleCam: () => void;
+  toggleScreenShare: () => void;
   closeCall: (byUser: boolean) => void;
 }
 
@@ -28,8 +31,11 @@ export default function CallPanel({
   isMicOn,
   isRemoteCamOn,
   isRemoteMicOn,
+  isRemoteScreenSharing,
   remoteStreamStarted,
+  isScreenSharing,
   toggleCam,
+  toggleScreenShare,
   closeCall,
 }: CallPanelProps) {
   const { selfUser } = useAuthContext();
@@ -74,13 +80,20 @@ export default function CallPanel({
               </div>
             )}
 
-            {remoteStreamStarted && !isRemoteCamOn && (
+            {remoteStreamStarted && !isRemoteCamOn && !isRemoteScreenSharing && (
               <div className="absolute inset-0 flex items-center justify-center bg-[#1b1d24]">
                 <img
                   src={resolveAssetUrl(remoteAvatarUrl)}
                   alt="avatar"
                   className="h-24 w-24 rounded-full border-2 border-white/80 object-cover shadow-lg"
                 />
+              </div>
+            )}
+
+            {isRemoteScreenSharing && (
+              <div className="absolute top-4 right-4 z-10 flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/20 px-3 py-1.5 text-xs font-medium text-blue-300 backdrop-blur">
+                <Monitor className="h-3.5 w-3.5" />
+                <span>Демонстрация экрана</span>
               </div>
             )}
 
@@ -136,42 +149,58 @@ export default function CallPanel({
               ) : (
                 <VideoOff className="h-3.5 w-3.5 text-rose-400" />
               )}
+              {isScreenSharing && (
+                <Monitor className="h-3.5 w-3.5 text-blue-400" />
+              )}
             </div>
           </div>
         </div>
 
-        <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-[#0f1117]/85 px-4 py-3 shadow-2xl backdrop-blur">
-          <button
-            type="button"
-            onClick={() => setIsMicOn((prev) => !prev)}
-            className={`rounded-full p-3 transition ${
-              isMicOn ? 'bg-white/8 text-white hover:bg-white/14' : 'bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
-            }`}
-            aria-label={isMicOn ? 'Выключить микрофон' : 'Включить микрофон'}
-          >
-            {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-          </button>
+          <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/10 bg-[#0f1117]/85 px-4 py-3 shadow-2xl backdrop-blur">
+            <button
+              type="button"
+              onClick={() => setIsMicOn((prev) => !prev)}
+              className={`rounded-full p-3 transition ${
+                isMicOn ? 'bg-white/8 text-white hover:bg-white/14' : 'bg-rose-500/20 text-rose-200 hover:bg-rose-500/30'
+              }`}
+              aria-label={isMicOn ? 'Выключить микрофон' : 'Включить микрофон'}
+            >
+              {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+            </button>
 
-          <button
-            type="button"
-            onClick={toggleCam}
-            className={`rounded-full p-3 transition ${
-              isCamOn ? 'bg-white/8 text-white hover:bg-white/14' : 'bg-amber-500/20 text-amber-100 hover:bg-amber-500/30'
-            }`}
-            aria-label={isCamOn ? 'Выключить камеру' : 'Включить камеру'}
-          >
-            {isCamOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-          </button>
+            <button
+              type="button"
+              onClick={toggleCam}
+              className={`rounded-full p-3 transition ${
+                isCamOn ? 'bg-white/8 text-white hover:bg-white/14' : 'bg-amber-500/20 text-amber-100 hover:bg-amber-500/30'
+              }`}
+              aria-label={isCamOn ? 'Выключить камеру' : 'Включить камеру'}
+            >
+              {isCamOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => closeCall(true)}
-            className="rounded-full bg-rose-500 p-3 text-white transition hover:bg-rose-400"
-            aria-label="Завершить звонок"
-          >
-            <PhoneOff className="h-5 w-5" />
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={toggleScreenShare}
+              className={`rounded-full p-3 transition ${
+                isScreenSharing 
+                  ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' 
+                  : 'bg-white/8 text-gray-400 hover:bg-white/14 hover:text-white'
+              }`}
+              aria-label={isScreenSharing ? 'Остановить демонстрацию' : 'Начать демонстрацию экрана'}
+            >
+              {isScreenSharing ? <MonitorOff className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => closeCall(true)}
+              className="rounded-full bg-rose-500 p-3 text-white transition hover:bg-rose-400"
+              aria-label="Завершить звонок"
+            >
+              <PhoneOff className="h-5 w-5" />
+            </button>
+          </div>
       </div>
     </div>
   );

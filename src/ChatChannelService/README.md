@@ -1,6 +1,6 @@
 # ChatChannelService
 
-ChatChannelService manages servers, direct channels, server channels, invite flows, paginated messages, and the SignalR chat hub.
+ChatChannelService manages servers, direct channels, server channels, invite flows, paginated messages, message reactions, and the SignalR chat hub.
 
 ## Port
 
@@ -12,8 +12,10 @@ ChatChannelService manages servers, direct channels, server channels, invite flo
 - Create direct channels
 - Create server channels
 - Read direct and server-channel messages with cursor pagination
+- Add and remove emoji reactions on messages
 - Create and resolve invite links
 - Expose the `/hubs/chat` SignalR hub
+- Publish `MessageCreatedEvent` to RabbitMQ for direct messages and all server-channel members
 - Consume user-created and avatar-updated events from RabbitMQ
 - Upload server icons through FileService
 - Build user avatar URLs from UserService
@@ -34,9 +36,19 @@ ChatChannelService manages servers, direct channels, server channels, invite flo
 | `POST /servers/{serverId}/channels` | Create a server channel |
 | `GET /channels/{channelId}/messages` | Get direct-channel messages |
 | `GET /servers/{serverId}/channels/{channelId}/messages` | Get server-channel messages |
+| `POST /messages/{messageId}/reactions` | Add a reaction to a message |
+| `DELETE /messages/{messageId}/reactions?emoji=` | Remove a reaction from a message |
 | `GET /invites/{inviteCode}` | Resolve invite metadata |
 | `POST /invites/{inviteCode}` | Join a server by invite |
 | `/hubs/chat` | SignalR chat hub |
+
+## SignalR events
+
+| Event | Direction | Description |
+|---|---|---|
+| `ReceiveMessage` | Server → Client | New message in a channel |
+| `MessageReactionUpdated` | Server → Client | Reactions on a message changed; carries the full updated message |
+| `TypingStatus` | Server → Client | User is typing |
 
 ## Dependencies
 

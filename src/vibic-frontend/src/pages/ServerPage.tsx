@@ -183,7 +183,7 @@ function ServerPageContent({ serverId, channelId }: { serverId: string; channelI
                 onServerDeleted={handleServerDelete}
             />
             {channelId ? (
-                <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId}>
+                <ChatCenterPanel channelType={ChannelType.Server} serverId={serverId} channelId={channelId} serverMembers={server?.members ?? []}>
                     <div className="h-12 px-4 flex items-center justify-between border-b border-[#1e1f22]">
                         {server ? (
                             <h1 className="text-lg font-bold text-white"># {currentChannel?.name ?? 'Unknown Channel'}</h1>

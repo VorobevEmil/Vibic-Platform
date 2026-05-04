@@ -68,7 +68,7 @@ export default function AvatarUploadModal({ currentAvatar, onClose, onSave }: Pr
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
-      <div className="bg-[#2b2d31] rounded-lg p-6 w-[400px] text-white relative">
+      <div className="bg-[#171b27] rounded-lg p-6 w-[400px] text-white relative">
         <button
           onClick={onClose}
           disabled={isSaving}

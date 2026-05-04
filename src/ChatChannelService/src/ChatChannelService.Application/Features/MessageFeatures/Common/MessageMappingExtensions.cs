@@ -8,6 +8,9 @@ public static class MessageMappingExtensions
 {
     public static MessageDto MapToDto(this Message message, IConfiguration configuration)
     {
+        var reactions = message.Reactions.ConvertAll(r => 
+            new ReactionDto(r.Id, r.Emoji, r.UserId, r.CreatedAt));
+            
         return new MessageDto(
             message.Id,
             message.Channel.Id,
@@ -16,6 +19,7 @@ public static class MessageMappingExtensions
             message.Sender.Username,
             configuration.BuildUserAvatarUrl(message.Sender.AvatarUrl),
             message.CreatedAt,
-            message.UpdatedAt);
+            message.UpdatedAt,
+            reactions);
     }
 }

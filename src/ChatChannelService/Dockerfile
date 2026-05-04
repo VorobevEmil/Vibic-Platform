@@ -10,7 +10,6 @@ COPY src/ChatChannelService/src/ChatChannelService.Core/ChatChannelService.Core.
 COPY src/ChatChannelService/src/ChatChannelService.Infrastructure/ChatChannelService.Infrastructure.csproj ./src/ChatChannelService/src/ChatChannelService.Infrastructure/
 COPY src/ChatChannelService/src/ChatChannelService.Shared/ChatChannelService.Shared.csproj ./src/ChatChannelService/src/ChatChannelService.Shared/
 COPY src/ChatChannelService/src/ChatChannelService.Web/ChatChannelService.Web.csproj ./src/ChatChannelService/src/ChatChannelService.Web/
-COPY ["src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/Vibic.Shared.Messaging.csproj", "./src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/"]
 
 RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
     --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \

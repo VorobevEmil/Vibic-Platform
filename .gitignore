@@ -27,11 +27,13 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
+bin\\Debug/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
 Properties/
 publish/
+CLAUDE.md
 
 # Visual Studio cache/options directory
 .vs/

@@ -61,6 +61,18 @@
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
     },
     {
+      "DownstreamPathTemplate": "/messages/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 7138
+        }
+      ],
+      "UpstreamPathTemplate": "/messages/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "PATCH", "DELETE" ]
+    },
+    {
       "DownstreamPathTemplate": "/invites",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

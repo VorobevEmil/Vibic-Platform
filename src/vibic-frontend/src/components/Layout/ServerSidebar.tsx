@@ -47,36 +47,36 @@ export default function ServerSidebar() {
     }, []);
 
     return (
-        <div className="w-[72px] flex flex-col items-center py-3 gap-2 bg-[#1e1f22] border-r border-white/[0.05]">
+        <div className="w-[68px] flex flex-col items-center py-3 gap-2 bg-[#0a0c12] border-r border-white/[0.04]">
 
             {/* Home / DM button */}
             <Link
                 to="/channels/@me"
-                className={`group relative flex items-center justify-center w-12 h-12 rounded-2xl hover:rounded-3xl bg-[#313338] hover:bg-indigo-600 transition-all duration-200 overflow-hidden ${
-                    activeCallRequest ? 'ring-2 ring-sky-400/70 ring-offset-2 ring-offset-[#1e1f22]' : ''
+                className={`group relative flex items-center justify-center w-11 h-11 rounded-[14px] hover:rounded-2xl bg-[#171b27] hover:bg-indigo-600 transition-all duration-200 overflow-hidden ${
+                    activeCallRequest ? 'ring-2 ring-sky-400/60 ring-offset-2 ring-offset-[#0a0c12]' : ''
                 }`}
             >
                 <img
                     src="/vibic_logo.svg"
                     alt="Vibic"
-                    className="w-6 h-6 object-contain"
+                    className="w-5 h-5 object-contain"
                 />
                 {activeCallRequest && (
-                    <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-[#313338] bg-sky-400 shadow-[0_0_0_4px_rgba(56,189,248,0.14)]" />
+                    <span className="absolute bottom-1 right-1 h-2 w-2 rounded-full border-2 border-[#0a0c12] bg-sky-400 shadow-[0_0_0_3px_rgba(56,189,248,0.14)]" />
                 )}
-                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-[#0a0c12] border border-white/[0.08] text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-2xl">
                     {activeCallRequest ? 'Личный звонок активен' : 'Личные сообщения'}
                 </span>
             </Link>
 
             {/* Separator */}
-            <div className="w-8 h-px bg-white/10 my-1" />
+            <div className="w-7 h-px bg-white/[0.08] my-0.5" />
 
             {/* Server list */}
             {isLoading ? (
                 Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="flex items-center">
-                        <Skeleton className="h-12 w-12 rounded-3xl" />
+                        <Skeleton className="h-11 w-11 rounded-2xl" />
                     </div>
                 ))
             ) : servers.map((server) => {
@@ -85,18 +85,18 @@ export default function ServerSidebar() {
                 return (
                     <div key={server.id} className="group relative flex items-center">
                         {/* Active indicator */}
-                        <div className={`absolute -left-3 w-1 rounded-r-full transition-all duration-200 ${
-                            hasActiveVoiceCall ? 'h-10 bg-emerald-400' : `bg-white ${isActive ? 'h-8' : 'h-0 group-hover:h-5'}`
+                        <div className={`absolute -left-3 w-[3px] rounded-r-full transition-all duration-300 ${
+                            hasActiveVoiceCall ? 'h-9 bg-emerald-400' : `bg-white ${isActive ? 'h-7' : 'h-0 group-hover:h-5'}`
                         }`} />
 
                         <Link
                             to={`/channels/${server.id}/${server.channelId}`}
-                            className={`relative w-12 h-12 flex items-center justify-center overflow-hidden transition-all duration-200 ${
+                            className={`relative w-11 h-11 flex items-center justify-center overflow-hidden transition-all duration-200 ${
                                 isActive
-                                    ? 'rounded-2xl'
-                                    : 'rounded-3xl hover:rounded-2xl'
+                                    ? 'rounded-[14px]'
+                                    : 'rounded-2xl hover:rounded-[14px]'
                             } ${!server.iconUrl ? 'bg-indigo-600 hover:bg-indigo-500' : ''} ${
-                                hasActiveVoiceCall ? 'ring-2 ring-emerald-400/70 ring-offset-2 ring-offset-[#1e1f22]' : ''
+                                hasActiveVoiceCall ? 'ring-2 ring-emerald-400/60 ring-offset-2 ring-offset-[#0a0c12]' : ''
                             }`}
                         >
                             {server.iconUrl ? (
@@ -111,11 +111,11 @@ export default function ServerSidebar() {
                                 </span>
                             )}
                             {hasActiveVoiceCall && (
-                                <span className="absolute bottom-1 right-1 h-2.5 w-2.5 rounded-full border-2 border-[#313338] bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.14)]" />
+                                <span className="absolute bottom-0.5 right-0.5 h-2 w-2 rounded-full border-2 border-[#0a0c12] bg-emerald-400" />
                             )}
                         </Link>
 
-                        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                        <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-[#0a0c12] border border-white/[0.08] text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-2xl">
                             {hasActiveVoiceCall ? `${server.name} · голосовой канал активен` : server.name}
                         </span>
                     </div>
@@ -125,11 +125,11 @@ export default function ServerSidebar() {
             {/* Add server */}
             <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="group relative w-12 h-12 rounded-3xl hover:rounded-2xl bg-[#313338] hover:bg-green-600 text-green-500 hover:text-white flex items-center justify-center transition-all duration-200"
+                className="group relative w-11 h-11 rounded-2xl hover:rounded-[14px] bg-[#171b27] hover:bg-emerald-600/80 text-emerald-500 hover:text-white flex items-center justify-center transition-all duration-200"
                 title="Создать сервер"
             >
-                <Plus className="w-5 h-5" />
-                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1 bg-black text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-xl">
+                <Plus className="w-4.5 h-4.5" />
+                <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 px-2.5 py-1.5 bg-[#0a0c12] border border-white/[0.08] text-white text-xs font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-2xl">
                     Создать сервер
                 </span>
             </button>

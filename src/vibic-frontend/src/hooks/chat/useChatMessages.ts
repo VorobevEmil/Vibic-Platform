@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { messagesApi } from '../../api/messagesApi';
+import { reactionsApi } from '../../api/reactionsApi';
 import MessageResponse from '../../types/MessageType';
 
 interface Props {
@@ -31,6 +32,22 @@ export function useChatMessages({ serverId, channelId }: Props) {
   const clearUnreadState = useCallback(() => {
     setUnreadMessageId(null);
     setUnreadCount(0);
+  }, []);
+
+  const addReaction = useCallback(async (messageId: string, emoji: string) => {
+    try {
+      await reactionsApi.addReaction(messageId, emoji);
+    } catch (error) {
+      console.error('Failed to add reaction:', error);
+    }
+  }, []);
+
+  const removeReaction = useCallback(async (messageId: string, emoji: string) => {
+    try {
+      await reactionsApi.removeReaction(messageId, emoji);
+    } catch (error) {
+      console.error('Failed to remove reaction:', error);
+    }
   }, []);
 
   const scrollContainerToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
@@ -285,12 +302,13 @@ export function useChatMessages({ serverId, channelId }: Props) {
   return {
     messages,
     isInitializing,
-    scrollContainerRef,
-    messagesEndRef,
     isLoadingMore,
     isNearBottom,
     unreadMessageId,
     unreadCount,
+    scrollContainerRef,
+    messagesEndRef,
+    messagesRef,
     loadMoreMessages,
     initializeMessages,
     appendIncomingMessage,
@@ -298,5 +316,7 @@ export function useChatMessages({ serverId, channelId }: Props) {
     replaceMessage,
     syncSenderMetadata,
     scrollToBottom,
+    addReaction,
+    removeReaction,
   };
 }

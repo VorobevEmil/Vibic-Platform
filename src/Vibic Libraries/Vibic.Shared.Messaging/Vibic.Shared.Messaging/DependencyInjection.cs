@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
+using Vibic.Shared.Messaging.Contracts.Chat;
 using Vibic.Shared.Messaging.Contracts.Users;
 using Vibic.Shared.Messaging.Outbox;
 using Vibic.Shared.Messaging.Topology;
@@ -84,6 +85,10 @@ public static class DependencyInjection
             opts.PublishMessage<CreateUserProfileEvent>().ToRabbitExchange(VibicExchanges.UserProfileCreated);
             opts.PublishMessage<CreateUserChatEvent>().ToRabbitExchange(VibicExchanges.UserChatCreated);
             opts.PublishMessage<UpdateUserAvatarEvent>().ToRabbitExchange(VibicExchanges.UserAvatarUpdated);
+            opts.PublishMessage<FriendRequestCreatedEvent>().ToRabbitExchange(VibicExchanges.FriendRequestCreated);
+            opts.PublishMessage<FriendRequestAcceptedEvent>().ToRabbitExchange(VibicExchanges.FriendRequestAccepted);
+            opts.PublishMessage<MessageCreatedEvent>().ToRabbitExchange(VibicExchanges.MessageCreated);
+            opts.PublishMessage<ServerInviteCreatedEvent>().ToRabbitExchange(VibicExchanges.ServerInviteCreated);
 
             // ── Handler discovery ─────────────────────────────────────────────
             if (appAssembly is not null)
@@ -144,6 +149,10 @@ public static class DependencyInjection
             (typeof(CreateUserProfileEvent), VibicExchanges.UserProfileCreated),
             (typeof(CreateUserChatEvent),    VibicExchanges.UserChatCreated),
             (typeof(UpdateUserAvatarEvent),  VibicExchanges.UserAvatarUpdated),
+            (typeof(FriendRequestCreatedEvent), VibicExchanges.FriendRequestCreated),
+            (typeof(FriendRequestAcceptedEvent), VibicExchanges.FriendRequestAccepted),
+            (typeof(MessageCreatedEvent), VibicExchanges.MessageCreated),
+            (typeof(ServerInviteCreatedEvent), VibicExchanges.ServerInviteCreated),
         ];
 
         return

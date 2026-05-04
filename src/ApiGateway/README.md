@@ -14,18 +14,21 @@ ApiGateway is the Ocelot-based entry point used by the frontend. It forwards RES
 | `/auth/sign-up` | OAuthServer (`7154`) |
 | `/servers/*` | ChatChannelService (`7138`) |
 | `/channels/*` | ChatChannelService (`7138`) |
+| `/messages/*` | ChatChannelService (`7138`) |
 | `/invites/*` | ChatChannelService (`7138`) |
 | `/user-profiles/*` | UserService (`7155`) |
 | `/friends*` | UserService (`7155`) |
 | `/files/*` | FileService (`7205`) |
+| `/notifications/*` | NotificationService (`7210`) |
 | `/hubs/chat` | ChatChannelService (`7138`) |
 | `/hubs/call` | MediaService (`7139`) |
+| `/hubs/presence` | UserService (`7155`) |
+| `/hubs/notifications` | NotificationService (`7210`) |
 
 Not proxied at the moment:
 
 - OAuthServer `/connect/*`
 - OAuthServer `/settings/applications`
-- UserService `/hubs/presence`
 
 ## Configuration
 

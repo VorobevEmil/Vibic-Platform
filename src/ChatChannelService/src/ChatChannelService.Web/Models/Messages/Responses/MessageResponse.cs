@@ -1,3 +1,5 @@
+using ChatChannelService.Application.Features.MessageFeatures.Common;
+
 namespace ChatChannelService.Web.Models.Messages.Responses;
 
 public class MessageResponse
@@ -11,4 +13,5 @@ public class MessageResponse
     public required DateTime SentAt { get; init; }
     public required bool IsEdited { get; init; }
     public DateTime? UpdatedAt { get; init; }
+    public List<ReactionDto> Reactions { get; init; } = [];
 }

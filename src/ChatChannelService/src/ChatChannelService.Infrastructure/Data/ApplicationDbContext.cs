@@ -1,6 +1,7 @@
 using ChatChannelService.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Vibic.Shared.EF;
+using Vibic.Shared.EF.Entities;
 
 namespace ChatChannelService.Infrastructure.Data;
 
@@ -17,4 +18,6 @@ public class ApplicationDbContext : SharedDbContext
     public DbSet<Server> Servers => Set<Server>();
     public DbSet<ServerMember> ServerMembers => Set<ServerMember>();
     public DbSet<Invite> Invites { get; set; }
+    public DbSet<Reaction> Reactions { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 }

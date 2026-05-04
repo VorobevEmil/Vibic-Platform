@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ServerChannelResponse, ServerMemberResponse } from '../../types/ServerType';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+    BellOff,
     ChevronDown,
     Hash,
     Volume2,
@@ -13,6 +14,7 @@ import {
     Trash2,
     Plus,
 } from 'lucide-react';
+import { useUnreadContext } from '../../context/UnreadContext';
 import { channelsApi } from '../../api/channelsApi';
 import CreateChannelModal from './CreateChannelModal';
 import { ServerChannelRequest } from '../../types/channels/ServerChannelType';
@@ -55,6 +57,7 @@ export default function ServerChannelListSidebar({
     onServerDeleted,
 }: ServerChannelListSidebarProps) {
     const { channelId } = useParams<{ channelId: string }>();
+    const { unreadCounts, toggleMute, isMuted } = useUnreadContext();
 
     const [textOpen, setTextOpen] = useState(true);
     const [voiceOpen, setVoiceOpen] = useState(true);
@@ -190,17 +193,20 @@ export default function ServerChannelListSidebar({
     }, [channelContextMenu, isOwner, onChannelDeleted]);
 
     return (
-        <div className="h-full w-64 bg-[#2B2D31] text-gray-200 border-r border-gray-700 flex flex-col overflow-y-auto py-3 px-2 space-y-4">
+        <div className="h-full w-64 bg-[#171b27] text-gray-200 border-r border-white/[0.05] flex flex-col overflow-y-auto py-3 px-2 space-y-4">
 
-            {/* Заголовок сервера */}
+            {/* Server header */}
             <div className="relative" ref={serverMenuRef}>
-                <div className="flex items-center gap-2 px-2">
+                <div className="flex items-center gap-2 px-1">
                     <button
                         type="button"
                         disabled={isLoading}
                         onClick={() => setIsServerMenuOpen((current) => !current)}
-                        className={`flex min-w-0 flex-1 items-center justify-between rounded-md px-3 py-2 text-left transition-colors ${isServerMenuOpen ? 'bg-[#404249] text-white' : 'hover:bg-[#3A3C41] text-white'
-                            }`}
+                        className={`flex min-w-0 flex-1 items-center justify-between rounded-xl px-3 py-2.5 text-left transition-all duration-150 ${
+                            isServerMenuOpen
+                                ? 'bg-[#252c3f] text-white'
+                                : 'hover:bg-[#1c2032] text-white'
+                        }`}
                     >
                         {isLoading ? (
                             <div className="flex w-full items-center justify-between gap-3">
@@ -209,10 +215,10 @@ export default function ServerChannelListSidebar({
                             </div>
                         ) : (
                             <>
-                                <span className="truncate text-[15px] font-semibold">
+                                <span className="truncate text-[14px] font-semibold tracking-tight">
                                     {serverName}
                                 </span>
-                                <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isServerMenuOpen ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-[#6b7292] transition-transform duration-200 ${isServerMenuOpen ? 'rotate-180' : ''}`} />
                             </>
                         )}
                     </button>
@@ -222,24 +228,24 @@ export default function ServerChannelListSidebar({
                             type="button"
                             disabled={isLoading}
                             onClick={openInviteModal}
-                            className="rounded-md p-2 text-gray-300 transition-colors hover:bg-[#3A3C41] hover:text-white"
+                            className="rounded-lg p-2 text-[#555c78] transition-all duration-150 hover:bg-[#1c2032] hover:text-[#c8cce0]"
                         >
                             {isLoading ? <Skeleton className="h-4 w-4 rounded-full" /> : <UserPlus className="h-4 w-4" />}
                         </button>
-                        <span className="pointer-events-none absolute right-0 top-full mt-1
+                        <span className="pointer-events-none absolute right-0 top-full mt-1.5
                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
-                            bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap z-50 shadow-lg">
-                            Пригласить на сервер
+                            bg-[#0a0c12] border border-white/[0.08] text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50 shadow-2xl">
+                            Пригласить
                         </span>
                     </div>
                 </div>
 
                 {isServerMenuOpen && (
-                    <div className="absolute inset-x-2 top-full z-30 mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#1f2126] p-2 shadow-[0_18px_50px_rgba(0,0,0,0.35)]">
+                    <div className="absolute inset-x-1 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-white/[0.07] bg-[#0f1219] p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.5)] animate-fade-slide-down">
                         <button
                             type="button"
                             onClick={openInviteModal}
-                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                            className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-[#8b90a8] transition-all duration-150 hover:bg-[#1c2032] hover:text-white"
                         >
                             <span>Пригласить на сервер</span>
                             <UserPlus className="h-4 w-4" />
@@ -250,17 +256,17 @@ export default function ServerChannelListSidebar({
                                 <button
                                     type="button"
                                     onClick={() => openCreateChannelModal(ChannelType.Server)}
-                                    className="mt-1 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                                    className="mt-0.5 flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-[#8b90a8] transition-all duration-150 hover:bg-[#1c2032] hover:text-white"
                                 >
                                     <span>Создать канал</span>
                                     <Hash className="h-4 w-4" />
                                 </button>
 
-                                <div className="my-2 h-px bg-white/10" />
+                                <div className="my-1.5 h-px bg-white/[0.06]" />
                                 <button
                                     type="button"
                                     onClick={openEditServerModal}
-                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-gray-200 transition hover:bg-[#2b2d31] hover:text-white"
+                                    className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-[#8b90a8] transition-all duration-150 hover:bg-[#1c2032] hover:text-white"
                                 >
                                     <span>Настройки сервера</span>
                                     <Settings className="h-4 w-4" />
@@ -271,33 +277,33 @@ export default function ServerChannelListSidebar({
                 )}
             </div>
 
-            {/* Текстовые каналы */}
-            <div className="space-y-1">
-                <div className="flex items-center justify-between px-2 text-xs font-semibold uppercase text-gray-400">
+            {/* Text channels */}
+            <div className="space-y-0.5">
+                <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#3d4465]">
                     <button
                         onClick={() => setTextOpen(!textOpen)}
-                        className="flex items-center gap-2 hover:text-white transition-colors"
+                        className="flex items-center gap-1.5 hover:text-[#8b90a8] transition-colors"
                     >
                         <ChevronDown
-                            className={`w-4 h-4 transform transition-transform ${textOpen ? '' : '-rotate-90'}`}
+                            className={`w-3 h-3 transform transition-transform duration-200 ${textOpen ? '' : '-rotate-90'}`}
                         />
-                        Текстовые каналы
+                        Текстовые
                     </button>
 
                     {isOwner && !isLoading && (
                         <button
                             type="button"
                             onClick={() => openCreateChannelModal(ChannelType.Server)}
-                            className="rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            className="rounded-md p-1 text-[#3d4465] transition-all duration-150 hover:bg-white/[0.06] hover:text-[#8b90a8]"
                             aria-label="Создать текстовый канал"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
 
                 {textOpen && (
-                    <div className="space-y-1 mt-1">
+                    <div className="space-y-0.5 mt-0.5">
                         {showChannelSkeleton ? (
                             Array.from({ length: 4 }).map((_, index) => (
                                 <div key={index} className="flex items-center gap-2 px-3 py-1.5">
@@ -305,71 +311,97 @@ export default function ServerChannelListSidebar({
                                     <Skeleton className="h-4 w-28 rounded-md" />
                                 </div>
                             ))
-                        ) : textChannels.map((channel) => (
-                            <div
-                                key={channel.id}
-                                onContextMenu={(event) => {
-                                    event.preventDefault();
-                                    openChannelContextMenu(event, channel);
-                                }}
-                                className="group relative"
-                            >
-                                <Link
-                                    to={`/channels/${serverId}/${channel.id}`}
-                                    className={`flex items-center gap-2 rounded-md px-3 py-1.5 pr-10 text-sm transition-colors
-                                        ${channelId === channel.id
-                                            ? 'bg-[#404249] text-white'
-                                            : 'text-gray-300 hover:bg-[#404249]'}`}
-                                >
-                                    <Hash className="w-4 h-4" />
-                                    <span className="truncate">{channel.name}</span>
-                                </Link>
+                        ) : textChannels.map((channel) => {
+                            const isActive = channelId === channel.id;
+                            const muted = isMuted(channel.id);
+                            const unread = unreadCounts[channel.id] ?? 0;
+                            const hasUnread = unread > 0 && !muted;
 
-                                {isOwner && (
-                                    <button
-                                        type="button"
-                                        onClick={(event) => openChannelContextMenuFromButton(event, channel)}
-                                        className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white ${
-                                            channelId === channel.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                                        }`}
-                                        aria-label={`Открыть меню канала ${channel.name}`}
+                            return (
+                                <div
+                                    key={channel.id}
+                                    onContextMenu={(event) => {
+                                        event.preventDefault();
+                                        openChannelContextMenu(event, channel);
+                                    }}
+                                    className="group relative"
+                                >
+                                    <Link
+                                        to={`/channels/${serverId}/${channel.id}`}
+                                        className={`flex items-center gap-2 rounded-lg px-3 py-1.5 pr-9 text-sm transition-all duration-150
+                                            ${isActive
+                                                ? 'bg-[#252c3f] text-white'
+                                                : hasUnread
+                                                    ? 'text-white hover:bg-[#1c2032]'
+                                                    : 'text-[#6b7292] hover:bg-[#1c2032] hover:text-[#c8cce0]'}`}
                                     >
-                                        <Ellipsis className="h-4 w-4" />
-                                    </button>
-                                )}
-                            </div>
-                        ))}
+                                        <Hash className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-indigo-400' : hasUnread ? 'text-indigo-400/70' : 'text-[#3d4465]'}`} />
+                                        <span className={`truncate flex-1 ${hasUnread && !isActive ? 'font-semibold' : ''}`}>
+                                            {channel.name}
+                                        </span>
+                                        {hasUnread && !isActive && (
+                                            <span className="min-w-[18px] h-[18px] rounded-full bg-indigo-500 text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none ml-1 shrink-0">
+                                                {unread > 99 ? '99+' : unread}
+                                            </span>
+                                        )}
+                                    </Link>
+
+                                    <div className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 ${isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-all duration-150`}>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMute(channel.id); }}
+                                            className={`rounded-md p-1 transition-all duration-150 ${
+                                                muted ? 'text-[#555c78] hover:text-white' : 'text-[#555c78] hover:text-white hover:bg-white/[0.08]'
+                                            }`}
+                                            title={muted ? 'Включить уведомления' : 'Отключить уведомления'}
+                                        >
+                                            <BellOff className="h-3.5 w-3.5" />
+                                        </button>
+                                        {isOwner && (
+                                            <button
+                                                type="button"
+                                                onClick={(event) => openChannelContextMenuFromButton(event, channel)}
+                                                className="rounded-md p-1 text-[#555c78] transition-all duration-150 hover:bg-white/[0.08] hover:text-white"
+                                                aria-label={`Открыть меню канала ${channel.name}`}
+                                            >
+                                                <Ellipsis className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
 
-            {/* Голосовые каналы */}
-            <div className="space-y-1">
-                <div className="flex items-center justify-between px-2 text-xs font-semibold uppercase text-gray-400">
+            {/* Voice channels */}
+            <div className="space-y-0.5">
+                <div className="flex items-center justify-between px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-[#3d4465]">
                     <button
                         onClick={() => setVoiceOpen(!voiceOpen)}
-                        className="flex items-center gap-2 hover:text-white transition-colors"
+                        className="flex items-center gap-1.5 hover:text-[#8b90a8] transition-colors"
                     >
                         <ChevronDown
-                            className={`w-4 h-4 transform transition-transform ${voiceOpen ? '' : '-rotate-90'}`}
+                            className={`w-3 h-3 transform transition-transform duration-200 ${voiceOpen ? '' : '-rotate-90'}`}
                         />
-                        Голосовые каналы
+                        Голосовые
                     </button>
 
                     {isOwner && !isLoading && (
                         <button
                             type="button"
                             onClick={() => openCreateChannelModal(ChannelType.Voice)}
-                            className="rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            className="rounded-md p-1 text-[#3d4465] transition-all duration-150 hover:bg-white/[0.06] hover:text-[#8b90a8]"
                             aria-label="Создать голосовой канал"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-3.5 w-3.5" />
                         </button>
                     )}
                 </div>
 
                 {voiceOpen && (
-                    <div className="space-y-1 mt-1">
+                    <div className="space-y-0.5 mt-0.5">
                         {showChannelSkeleton ? (
                             Array.from({ length: 2 }).map((_, index) => (
                                 <div key={index} className="flex items-center gap-2 px-3 py-1.5">
@@ -393,37 +425,37 @@ export default function ServerChannelListSidebar({
                                 >
                                     <div
                                         onClick={() => void joinChannel(channel.id, serverId, channel.name)}
-                                        className={`relative flex items-center gap-2 rounded-md px-3 py-1.5 pr-10 text-sm transition-colors cursor-pointer
+                                        className={`relative flex items-center gap-2 rounded-lg px-3 py-1.5 pr-9 text-sm transition-all duration-150 cursor-pointer
                                             ${isActiveVoiceChannel
-                                                ? 'bg-emerald-500/12 text-emerald-100 ring-1 ring-emerald-400/25'
+                                                ? 'bg-emerald-500/10 text-emerald-200 ring-1 ring-emerald-400/20'
                                                 : channelId === channel.id
-                                                    ? 'bg-[#404249] text-white'
-                                                    : 'text-gray-300 hover:bg-[#404249]'}`}
+                                                    ? 'bg-[#252c3f] text-white'
+                                                    : 'text-[#6b7292] hover:bg-[#1c2032] hover:text-[#c8cce0]'}`}
                                     >
-                                        <Volume2 className={`w-4 h-4 ${isActiveVoiceChannel ? 'text-emerald-300' : ''}`} />
+                                        <Volume2 className={`w-3.5 h-3.5 shrink-0 ${isActiveVoiceChannel ? 'text-emerald-400' : 'text-[#3d4465]'}`} />
                                         <span className="truncate">{channel.name}</span>
                                         {isActiveVoiceChannel && (
-                                            <span className="ml-auto mr-5 h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
+                                            <span className="ml-auto mr-5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.15)]" />
                                         )}
 
                                         {isOwner && (
                                             <button
                                                 type="button"
                                                 onClick={(event) => openChannelContextMenuFromButton(event, channel)}
-                                                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-400 transition hover:bg-white/10 hover:text-white ${
+                                                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-[#555c78] transition-all duration-150 hover:bg-white/[0.08] hover:text-white ${
                                                     channelId === channel.id || isActiveVoiceChannel ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                                                 }`}
                                                 aria-label={`Открыть меню канала ${channel.name}`}
                                             >
-                                                <Ellipsis className="h-4 w-4" />
+                                                <Ellipsis className="h-3.5 w-3.5" />
                                             </button>
                                         )}
                                     </div>
 
                                     {usersInChannel.length > 0 && (
-                                        <div className="pl-4 space-y-0.5 text-xs text-gray-400">
+                                        <div className="pl-4 space-y-0.5 mt-0.5">
                                             {usersInChannel.map((user) => (
-                                                <div key={user.userId} className="flex items-center gap-2 px-2 py-1 rounded-md transition-colors hover:bg-[#404249] hover:text-gray-200 cursor-pointer">
+                                                <div key={user.userId} className="flex items-center gap-2 px-2 py-1 rounded-md transition-all duration-150 hover:bg-[#1c2032] text-[#555c78] hover:text-[#8b90a8] cursor-pointer">
                                                     {user.avatarUrl ? (
                                                         <img
                                                             src={resolveAssetUrl(user.avatarUrl)}
@@ -431,13 +463,13 @@ export default function ServerChannelListSidebar({
                                                             className="w-4 h-4 rounded-full object-cover shrink-0"
                                                         />
                                                     ) : (
-                                                        <span className="w-4 h-4 rounded-full bg-[#3c3e45] text-[10px] flex items-center justify-center shrink-0">
+                                                        <span className="w-4 h-4 rounded-full bg-[#252a3d] text-[10px] flex items-center justify-center shrink-0">
                                                             {user.displayName.charAt(0)}
                                                         </span>
                                                     )}
-                                                    <span className="truncate flex-1">{user.displayName}</span>
+                                                    <span className="truncate flex-1 text-xs">{user.displayName}</span>
                                                     {user.isMicOn === false && (
-                                                        <MicOff className="w-3 h-3 shrink-0 text-red-400" />
+                                                        <MicOff className="w-3 h-3 shrink-0 text-red-400/70" />
                                                     )}
                                                 </div>
                                             ))}
@@ -450,7 +482,7 @@ export default function ServerChannelListSidebar({
                 )}
             </div>
 
-            {/* Модалки */}
+            {/* Modals */}
             <CreateChannelModal
                 isOpen={isCreateChannelModalOpen}
                 onClose={() => setIsCreateChannelModalOpen(false)}

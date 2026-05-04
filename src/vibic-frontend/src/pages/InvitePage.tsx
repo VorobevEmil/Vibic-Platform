@@ -40,7 +40,7 @@ export default function InvitePage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#1e1f22] flex flex-col items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0e1016] flex flex-col items-center justify-center px-4 relative overflow-hidden">
             {/* Ambient blobs */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 <div className="absolute -top-48 -left-24 w-[480px] h-[480px] rounded-full bg-indigo-600/[0.12] blur-3xl" />
@@ -57,7 +57,7 @@ export default function InvitePage() {
                 </div>
 
                 {/* Card */}
-                <div className="bg-[#25262b] border border-white/[0.07] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5)] overflow-hidden">
+                <div className="bg-[#13161f] border border-white/[0.07] rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.5)] overflow-hidden">
                     {/* Banner */}
                     <div className="h-24 bg-gradient-to-br from-indigo-600/40 via-violet-600/30 to-transparent relative">
                         <div className="absolute inset-0 bg-[url('/vibic_logo.svg')] bg-center bg-no-repeat opacity-5 bg-[length:120px]" />

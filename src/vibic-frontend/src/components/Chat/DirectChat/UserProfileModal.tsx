@@ -382,7 +382,7 @@ export default function UserProfileModal({
         {showInvitePanel && (
           <div className="mb-3 border-t border-white/10 pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">Ссылка-приглашение</p>
-            <div className="flex items-center gap-2 bg-[#2b2d31] rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-[#171b27] rounded-xl px-3 py-2">
               {inviteUrl === null ? (
                 <>
                   <div className="flex-1 space-y-2">
@@ -413,7 +413,7 @@ export default function UserProfileModal({
         {/* Написать сообщение */}
         {!isSelf && (
           <div className={`border-t border-white/10 pt-3 ${!bio && !showInvitePanel ? 'mt-1' : ''}`}>
-            <div className="flex items-center gap-2 bg-[#2b2d31] rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-[#171b27] rounded-xl px-3 py-2">
               <input
                 type="text"
                 value={messageText}

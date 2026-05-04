@@ -27,4 +27,6 @@ public class Message : BaseEntity, IUpdatable, ISoftDeletable
     }
     public bool IsDeleted { get; init; }
     public DateTime? DeletedAt { get; init; }
+    
+    public List<Reaction> Reactions { get; private init; } = new();
 }

@@ -89,7 +89,7 @@ export default function CreateChannelModal({
                 <div className="mb-4">
                     <p className="text-sm text-gray-400 mb-2">Тип Канала</p>
                     <div className="space-y-2">
-                        <label className={`flex items-center gap-2 p-3 rounded cursor-pointer ${type === ChannelType.Server ? 'bg-[#404249] text-white' : 'bg-[#1E1F22] text-gray-400'}`}>
+                        <label className={`flex items-center gap-2 p-3 rounded cursor-pointer ${type === ChannelType.Server ? 'bg-[#252c3f] text-white' : 'bg-[#1E1F22] text-gray-400'}`}>
                             <input type="radio" name="type" className="accent-blue-500" checked={type === ChannelType.Server} onChange={() => setType(ChannelType.Server)} />
                             <Hash className="w-5 h-5" />
                             <div>
@@ -98,7 +98,7 @@ export default function CreateChannelModal({
                             </div>
                         </label>
 
-                        <label className={`flex items-center gap-2 p-3 rounded cursor-pointer ${type === ChannelType.Voice ? 'bg-[#404249] text-white' : 'bg-[#1E1F22] text-gray-400'}`}>
+                        <label className={`flex items-center gap-2 p-3 rounded cursor-pointer ${type === ChannelType.Voice ? 'bg-[#252c3f] text-white' : 'bg-[#1E1F22] text-gray-400'}`}>
                             <input type="radio" name="type" className="accent-blue-500" checked={type === ChannelType.Voice} onChange={() => setType(ChannelType.Voice)} />
                             <Volume2 className="w-5 h-5" />
                             <div>

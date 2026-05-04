@@ -16,4 +16,10 @@ public static class VibicExchanges
     public const string UserProfileCreated = "vibic.user.profile-created";
     public const string UserChatCreated    = "vibic.user.chat-created";
     public const string UserAvatarUpdated  = "vibic.user.avatar-updated";
+    public const string FriendRequestCreated = "vibic.user.friend-request-created";
+    public const string FriendRequestAccepted = "vibic.user.friend-request-accepted";
+
+    // ── Chat Domain ────────────────────────────────────────────────────────────
+    public const string MessageCreated = "vibic.chat.message-created";
+    public const string ServerInviteCreated = "vibic.chat.invite-created";
 }

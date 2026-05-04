@@ -17,7 +17,8 @@ public static class MessageMappingExtensions
             SenderAvatarUrl = messageDto.SenderAvatarUrl,
             SentAt = messageDto.SentAt,
             IsEdited = messageDto.UpdatedAt.HasValue,
-            UpdatedAt = messageDto.UpdatedAt
+            UpdatedAt = messageDto.UpdatedAt,
+            Reactions = messageDto.Reactions
         };
     }
 }

@@ -8,5 +8,6 @@ public record MessageDto(
     string SenderUsername,
     string SenderAvatarUrl,
     DateTime SentAt,
-    DateTime? UpdatedAt
+    DateTime? UpdatedAt,
+    List<ReactionDto> Reactions
 );

@@ -8,6 +8,8 @@ interface CallContextType {
   clearDirectCall: () => void;
   registerEndCall: (fn: (() => void) | null) => void;
   endCall: () => void;
+  leaveCurrentSession: () => void;
+  quickDisconnect: () => void;
 }
 
 const CallContext = createContext<CallContextType | null>(null);
@@ -34,8 +36,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const isSameCall =
-      currentRequest.channelId === request.channelId
-      && currentRequest.peerUserId === request.peerUserId;
+      currentRequest.channelId === request.channelId &&
+      currentRequest.peerUserId === request.peerUserId;
 
     if (isSameCall) {
       const mergedRequest = { ...currentRequest, ...request };
@@ -79,6 +81,23 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearDirectCall();
   }, [clearDirectCall]);
 
+  const leaveCurrentSession = useCallback(() => {
+    if (endCallRef.current) {
+      endCallRef.current();
+    }
+  }, []);
+
+  const quickDisconnect = useCallback(() => {
+    // Быстрое отключение от текущего канала/звонка
+    if (endCallRef.current) {
+      endCallRef.current();
+    } else if (activeCallRequestRef.current) {
+      // Если есть активный звонок, завершаем его
+      activeCallRequestRef.current = null;
+      setActiveCallRequest(null);
+    }
+  }, []);
+
   const value = useMemo<CallContextType>(() => ({
     isCallActive: activeCallRequest !== null,
     activeCallRequest,
@@ -86,7 +105,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearDirectCall,
     registerEndCall,
     endCall,
-  }), [activeCallRequest, clearDirectCall, endCall, registerEndCall, startDirectCall]);
+    leaveCurrentSession,
+    quickDisconnect,
+  }), [activeCallRequest, clearDirectCall, endCall, startDirectCall, leaveCurrentSession, quickDisconnect, registerEndCall]);
 
   return (
     <CallContext.Provider value={value}>

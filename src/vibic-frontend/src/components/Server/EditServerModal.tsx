@@ -97,7 +97,7 @@ export default function EditServerModal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#2b2d31] p-6 text-white shadow-2xl">
+        <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/10 bg-[#171b27] p-6 text-white shadow-2xl">
           <button
             type="button"
             onClick={onClose}
@@ -120,7 +120,7 @@ export default function EditServerModal({
                   <>
                     <label
                       htmlFor="iconUpload"
-                      className="relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-white/15 transition hover:bg-[#1e1f22]"
+                      className="relative flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-white/15 transition hover:bg-[#0e1016]"
                     >
                       {currentIconUrl ? (
                         <img
@@ -161,7 +161,7 @@ export default function EditServerModal({
                 <input
                   type="text"
                   placeholder="Название сервера"
-                  className="w-full rounded-xl bg-[#1e1f22] p-2.5 text-sm text-white outline-none ring-1 ring-transparent transition focus:ring-indigo-500/60"
+                  className="w-full rounded-xl bg-[#0e1016] p-2.5 text-sm text-white outline-none ring-1 ring-transparent transition focus:ring-indigo-500/60"
                   value={serverName}
                   onChange={(event) => setServerName(event.target.value)}
                 />

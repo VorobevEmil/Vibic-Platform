@@ -45,14 +45,14 @@ export default function SearchUserOverlay({ channels, onUpdateChannel, isOpen, o
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-[#2b2d31] text-white w-full max-w-xl rounded-lg p-6 shadow-lg">
+      <div className="bg-[#171b27] text-white w-full max-w-xl rounded-lg p-6 shadow-lg">
         <h2 className="text-center mb-4 text-lg">Поиск серверов, каналов или ЛС</h2>
 
         <input
           type="text"
           autoFocus
           placeholder="Куда отправимся?"
-          className="w-full mb-4 px-4 py-2 rounded bg-[#1e1f22] placeholder-gray-400 text-sm"
+          className="w-full mb-4 px-4 py-2 rounded bg-[#0e1016] placeholder-gray-400 text-sm"
           value={searchChannel}
           onChange={(e) => setSearchChannel(e.target.value)}
         />
@@ -60,7 +60,7 @@ export default function SearchUserOverlay({ channels, onUpdateChannel, isOpen, o
         <div className="space-y-2 max-h-60 overflow-y-auto">
           {isLoading && searchChannel.trim() !== '' ? (
             Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="flex items-center gap-3 rounded-xl bg-[#3c3e45] px-3 py-2.5">
+              <div key={index} className="flex items-center gap-3 rounded-xl bg-[#252a3d] px-3 py-2.5">
                 <Skeleton className="h-8 w-8 rounded-full" />
                 <div className="flex-1 space-y-2">
                   <Skeleton className="h-3.5 w-24 rounded-md" />

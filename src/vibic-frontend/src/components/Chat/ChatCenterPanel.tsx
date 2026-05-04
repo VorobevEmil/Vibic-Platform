@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import useDirectChannel from '../../hooks/chat/useDirectChannel';
 import useSignalRChannel from '../../hooks/chat/useSignalRChannel';
 import { useChatMessages } from '../../hooks/chat/useChatMessages';
-import ChatMessages, { ChatMessagesRef } from './DirectChat/ChatMessages';
+import ChatMessages from './DirectChat/ChatMessages';
 import ChatInput from './DirectChat/ChatInput';
 import { chatHubConnection } from '../../services/signalRClient';
 import { useAuthContext } from '../../context/AuthContext';
@@ -12,11 +12,15 @@ import MessageResponse from '../../types/MessageType';
 import { messagesApi } from '../../api/messagesApi';
 import { filesApi } from '../../api/filesApi';
 import { getDirectCallSlotId } from '../Call/directCallSlot';
+import { useCallContext } from '../../context/CallContext';
+import { useUnreadContext } from '../../context/UnreadContext';
+import { ServerMemberResponse } from '../../types/ServerType';
 
 interface ChatCenterPanelProps {
   channelType: ChannelType;
   serverId?: string;
   channelId: string;
+  serverMembers?: ServerMemberResponse[];
   children?: React.ReactNode;
 }
 
@@ -25,8 +29,10 @@ interface DirectMessageLocationState {
   autoSendDirectMessage?: boolean;
 }
 
-export default function ChatCenterPanel({ channelType, serverId, channelId, children }: ChatCenterPanelProps) {
+export default function ChatCenterPanel({ channelType, serverId, channelId, serverMembers, children }: ChatCenterPanelProps) {
   const { selfUser } = useAuthContext();
+  const { quickDisconnect } = useCallContext();
+  const { markRead } = useUnreadContext();
   const location = useLocation();
   const navigate = useNavigate();
   const selfUserId = selfUser?.id;
@@ -34,7 +40,6 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   const selfAvatarUrl = selfUser?.avatarUrl;
   const [inputValue, setInputValue] = useState('');
   const [replyTo, setReplyTo] = useState<MessageResponse | null>(null);
-  const chatMessagesRef = useRef<ChatMessagesRef>(null);
   const pendingDirectMessageRef = useRef<string | null>(null);
   const isAutoSendingDirectMessageRef = useRef(false);
 
@@ -60,8 +65,10 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     appendIncomingMessage,
     deleteMessageById,
     replaceMessage,
-    syncSenderMetadata,
     scrollToBottom,
+    addReaction,
+    removeReaction,
+    syncSenderMetadata,
   } = useChatMessages({ serverId, channelId });
 
   const handleIncomingMessage = useCallback((message: MessageResponse) => {
@@ -70,11 +77,16 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     });
   }, [appendIncomingMessage, selfUserId]);
 
+  const handleReactionUpdated = useCallback((message: MessageResponse) => {
+    replaceMessage(message);
+  }, [replaceMessage]);
+
   const { sendMessage, connected, typingUsername } = useSignalRChannel(
     channelId,
     handleIncomingMessage,
     deleteMessageById,
     replaceMessage,
+    handleReactionUpdated,
   );
 
   const clearDirectMessageState = useCallback(() => {
@@ -155,10 +167,6 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
     }
   }, [channelId, replaceMessage, serverId]);
 
-  const handleReply = useCallback((message: MessageResponse) => {
-    setReplyTo(message);
-  }, []);
-
   useEffect(() => {
     if (!selfUserId) {
       return;
@@ -184,22 +192,29 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   useEffect(() => {
     // Сбрасываем ответ при смене канала
     setReplyTo(null);
-  }, [channelId]);
+    markRead(channelId);
+  }, [channelId, markRead]);
 
   useEffect(() => {
     if (channelType !== ChannelType.Direct) {
       pendingDirectMessageRef.current = null;
       isAutoSendingDirectMessageRef.current = false;
+      
+      // Быстрое отключение от канала при навигации по серверам
+      if (channelType === ChannelType.Server) {
+        quickDisconnect();
+      }
+      
       return;
     }
 
-    const pendingMessage = directMessageState?.autoSendDirectMessage
+    const pendingMessage = directMessageState?.pendingDirectMessage
       ? directMessageState.pendingDirectMessage?.trim()
       : '';
 
     pendingDirectMessageRef.current = pendingMessage || null;
     isAutoSendingDirectMessageRef.current = false;
-  }, [channelId, channelType, directMessageState?.autoSendDirectMessage, directMessageState?.pendingDirectMessage]);
+  }, [channelId, channelType, directMessageState?.autoSendDirectMessage, directMessageState?.pendingDirectMessage, quickDisconnect]);
 
   useEffect(() => {
     if (channelType !== ChannelType.Direct || !connected || !selfUser) {
@@ -240,7 +255,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
   }, [loadMoreMessages, scrollContainerRef]);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col bg-[#313338]">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col bg-[#1c2032]">
 
       <div className="shrink-0">
         {children}
@@ -252,22 +267,23 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
 
       <div className="min-h-0 flex-1 overflow-y-auto" ref={scrollContainerRef}>
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <ChatMessages
-            ref={chatMessagesRef}
-            messages={messages}
-            isInitializing={isInitializing}
-            typingUsername={typingUsername}
-            messagesEndRef={messagesEndRef}
-            scrollContainerRef={scrollContainerRef}
-            isLoadingMore={isLoadingMore}
-            unreadMessageId={unreadMessageId}
-            unreadCount={unreadCount}
-            currentUserId={selfUser?.id}
-            serverId={serverId}
-            onDeleteMessage={handleDeleteMessage}
-            onEditMessage={handleEditMessage}
-            onReply={handleReply}
-          />
+        <ChatMessages
+          messages={messages}
+          isInitializing={isInitializing}
+          typingUsername={typingUsername}
+          messagesEndRef={messagesEndRef}
+          scrollContainerRef={scrollContainerRef}
+          isLoadingMore={isLoadingMore}
+          unreadMessageId={unreadMessageId}
+          unreadCount={unreadCount}
+          currentUserId={selfUserId}
+          serverId={serverId}
+          onDeleteMessage={handleDeleteMessage}
+          onEditMessage={handleEditMessage}
+          onReply={setReplyTo}
+          onAddReaction={addReaction}
+          onRemoveReaction={removeReaction}
+        />
         </div>
       </div>
 
@@ -292,6 +308,7 @@ export default function ChatCenterPanel({ channelType, serverId, channelId, chil
           placeholder={serverId ? 'Написать' : (peerUser ? `Написать @${peerUser.displayName}` : 'Написать сообщение')}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
+          serverMembers={serverMembers}
         />
       </div>
     </div>

@@ -10,7 +10,7 @@ export default function Skeleton({ className }: SkeletonProps) {
   return (
     <div
       className={joinClasses(
-        'animate-pulse rounded-xl bg-white/[0.08]',
+        'animate-pulse rounded-xl bg-white/[0.05]',
         className,
       )}
       aria-hidden="true"

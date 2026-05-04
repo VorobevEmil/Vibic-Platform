@@ -32,7 +32,7 @@ function SignInPage() {
     >
       <form className="space-y-5" onSubmit={handleSignIn}>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Email
           </label>
           <input
@@ -46,7 +46,7 @@ function SignInPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Пароль
           </label>
           <input

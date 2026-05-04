@@ -43,22 +43,22 @@ export default function ContextMenu({ x, y, items, onClose }: ContextMenuProps) 
     <div
       ref={menuRef}
       style={{ position: 'fixed', left: adjustedX, top: adjustedY, zIndex: 9999 }}
-      className="bg-[#1e1f23] border border-white/10 rounded-lg shadow-2xl py-1 min-w-[160px] select-none"
+      className="bg-[#0f1219] border border-white/[0.08] rounded-xl shadow-2xl shadow-black/50 py-1.5 min-w-[168px] select-none animate-scale-in"
     >
       {items.map((item, i) =>
         item.label === '---' ? (
-          <div key={i} className="my-1 mx-2 h-px bg-white/10" />
+          <div key={i} className="my-1.5 mx-2 h-px bg-white/[0.07]" />
         ) : (
           <button
             key={i}
             type="button"
             disabled={item.disabled}
             onClick={() => { item.onClick(); onClose(); }}
-            className={`w-full flex items-center gap-2.5 px-3 py-1.5 text-sm transition-colors text-left rounded-sm mx-0.5
+            className={`w-full flex items-center gap-2.5 mx-1 px-2.5 py-1.5 text-sm transition-all duration-100 text-left rounded-lg
               ${item.disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
               ${item.variant === 'danger'
-                ? 'text-red-400 hover:bg-red-500/10'
-                : 'text-gray-200 hover:bg-white/[0.08]'
+                ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300'
+                : 'text-[#c8cce0] hover:bg-white/[0.07] hover:text-white'
               }`}
           >
             {item.icon && <span className="w-4 h-4 shrink-0 flex items-center justify-center">{item.icon}</span>}

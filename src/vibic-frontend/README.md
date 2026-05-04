@@ -7,6 +7,9 @@ The Vibic frontend is a React single-page application for authentication, direct
 - Sign up and sign in flows
 - Direct-message channels with real-time updates
 - Servers with text channels and voice channels
+- Emoji reactions on messages with real-time sync
+- In-app notification panel with unread badge
+- Accept or reject friend requests directly from the notification panel
 - 1-to-1 audio/video calls with microphone and camera controls
 - Incoming call modal with ringtone playback
 - Friend discovery and request management

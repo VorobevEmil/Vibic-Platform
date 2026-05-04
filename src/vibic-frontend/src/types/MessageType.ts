@@ -1,3 +1,5 @@
+import { ReactionType } from '../api/reactionsApi';
+
 interface MessageResponse {
     id: string;
     channelId: string;
@@ -8,6 +10,7 @@ interface MessageResponse {
     sentAt: Date;
     isEdited?: boolean;
     updatedAt?: string | null;
+    reactions?: ReactionType[];
 }
 
 export default MessageResponse;

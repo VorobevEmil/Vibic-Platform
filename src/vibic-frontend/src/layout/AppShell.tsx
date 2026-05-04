@@ -8,6 +8,7 @@ import VoiceProvider from '../components/Server/VoiceProvider';
 import { CallProvider } from '../context/CallContext';
 import { useHeaderContext } from '../context/HeaderContext';
 import { resolveAssetUrl } from '../api/httpClient';
+import { UnreadProvider } from '../context/UnreadContext';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -37,22 +38,24 @@ function HeaderBar() {
 
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <div className="bg-[#1e1f22] text-white h-screen overflow-hidden flex flex-col">
+    <div className="bg-[#0e1016] text-white h-screen overflow-hidden flex flex-col">
       <HeaderBar />
 
       <div className="flex flex-1 overflow-hidden">
-        <MediaProvider>
-          <CallProvider>
-            <VoiceProvider>
-              <CallListener />
-              <PersistentDirectCallHost />
-              <ServerSidebar />
-              {children}
-              <RightSidebar />
-              <FooterProfilePanel />
-            </VoiceProvider>
-          </CallProvider>
-        </MediaProvider>
+        <UnreadProvider>
+          <MediaProvider>
+            <CallProvider>
+              <VoiceProvider>
+                <CallListener />
+                <PersistentDirectCallHost />
+                <ServerSidebar />
+                {children}
+                <RightSidebar />
+                <FooterProfilePanel />
+              </VoiceProvider>
+            </CallProvider>
+          </MediaProvider>
+        </UnreadProvider>
       </div>
     </div>
   );

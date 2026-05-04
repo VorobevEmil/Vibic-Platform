@@ -9,7 +9,6 @@ COPY src/OAuthServer/src/OAuthServer.Application/OAuthServer.Application.csproj 
 COPY src/OAuthServer/src/OAuthServer.Core/OAuthServer.Core.csproj ./src/OAuthServer/src/OAuthServer.Core/
 COPY src/OAuthServer/src/OAuthServer.Infrastructure/OAuthServer.Infrastructure.csproj ./src/OAuthServer/src/OAuthServer.Infrastructure/
 COPY src/OAuthServer/src/OAuthServer.Web/OAuthServer.Web.csproj ./src/OAuthServer/src/OAuthServer.Web/
-COPY ["src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/Vibic.Shared.Messaging.csproj", "./src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/"]
 
 RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
     --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \

@@ -46,7 +46,7 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-            <div className="bg-[#2b2d31] text-white p-6 rounded-lg shadow-lg w-[400px] relative">
+            <div className="bg-[#171b27] text-white p-6 rounded-lg shadow-lg w-[400px] relative">
                 <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-white">
                     <X className="w-5 h-5" />
                 </button>
@@ -59,7 +59,7 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
                 <div className="flex flex-col items-center mb-4">
                     {!imageSrc ? (
                         <>
-                            <label htmlFor="iconUpload" className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center cursor-pointer hover:bg-[#1e1f22]">
+                            <label htmlFor="iconUpload" className="w-24 h-24 border-2 border-dashed rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0e1016]">
                                 <UploadCloud className="w-6 h-6 text-gray-400" />
                             </label>
                             <input
@@ -88,7 +88,7 @@ export default function CreateServerModal({ onClose, onCreate }: CreateServerMod
                 <input
                     type="text"
                     placeholder="Название сервера"
-                    className="w-full p-2 rounded-md bg-[#1e1f22] text-white placeholder-gray-400 mb-4 outline-none"
+                    className="w-full p-2 rounded-md bg-[#0e1016] text-white placeholder-gray-400 mb-4 outline-none"
                     value={serverName}
                     onChange={(e) => setServerName(e.target.value)}
                 />

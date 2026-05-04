@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { chatHubConnection } from '../../services/signalRClient';
+import { chatMessageBus } from '../../services/chatMessageBus';
 import MessageResponse from '../../types/MessageType';
 import SendMessageRequest from '../../types/signalR/sendMessageRequest';
 
@@ -8,19 +9,21 @@ export default function useSignalRChannel(
     onReceiveMessage: (message: MessageResponse) => void,
     onMessageDeleted?: (messageId: string) => void,
     onMessageEdited?: (message: MessageResponse) => void,
+    onReactionUpdated?: (message: MessageResponse) => void,
 ) {
     const [connected, setConnected] = useState(false);
     const [typingUsername, setTypingUsername] = useState<string | null>(null);
 
-    const prevChannelIdRef = useRef<string | null>(null);
     const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const onReceiveMessageRef = useRef(onReceiveMessage);
     const onMessageDeletedRef = useRef(onMessageDeleted);
     const onMessageEditedRef = useRef(onMessageEdited);
+    const onReactionUpdatedRef = useRef(onReactionUpdated);
 
     useEffect(() => { onReceiveMessageRef.current = onReceiveMessage; }, [onReceiveMessage]);
     useEffect(() => { onMessageDeletedRef.current = onMessageDeleted; }, [onMessageDeleted]);
     useEffect(() => { onMessageEditedRef.current = onMessageEdited; }, [onMessageEdited]);
+    useEffect(() => { onReactionUpdatedRef.current = onReactionUpdated; }, [onReactionUpdated]);
 
     useEffect(() => {
         const connect = async () => {
@@ -33,16 +36,9 @@ export default function useSignalRChannel(
                     console.log('✅ SignalR connected');
                 }
 
-                chatHubConnection.off('ReceiveMessage');
+                // UserTyping is per-channel — managed directly on the hub
                 chatHubConnection.off('UserTyping');
-                chatHubConnection.off('MessageDeleted');
-                chatHubConnection.off('MessageEdited');
-
-                chatHubConnection.on('ReceiveMessage', (msg: MessageResponse) => {
-                    onReceiveMessageRef.current(msg);
-                });
-
-                chatHubConnection.on('UserTyping', (channelIdFromServer, username) => {
+                chatHubConnection.on('UserTyping', (channelIdFromServer: string, username: string) => {
                     if (channelIdFromServer === channelId) {
                         setTypingUsername(username);
                         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -50,22 +46,10 @@ export default function useSignalRChannel(
                     }
                 });
 
-                chatHubConnection.on('MessageDeleted', (payload: { messageId: string; channelId: string }) => {
-                    if (payload.channelId === channelId) onMessageDeletedRef.current?.(payload.messageId);
-                });
-
-                chatHubConnection.on('MessageEdited', (message: MessageResponse) => {
-                    if (message.channelId === channelId) onMessageEditedRef.current?.(message);
-                });
-
-                if (prevChannelIdRef.current && prevChannelIdRef.current !== channelId) {
-                    await chatHubConnection.invoke('LeaveChannel', prevChannelIdRef.current);
-                    console.log(`🚪 Left channel: ${prevChannelIdRef.current}`);
-                }
-
+                // Join channel — don't leave previous channel so background channels
+                // stay subscribed for unread tracking
                 await chatHubConnection.invoke('JoinChannel', channelId);
                 console.log(`✅ Joined channel: ${channelId}`);
-                prevChannelIdRef.current = channelId;
                 setConnected(true);
             } catch (err) {
                 setConnected(false);
@@ -73,14 +57,36 @@ export default function useSignalRChannel(
             }
         };
 
+        // Subscribe to the shared message bus (filtered by channelId)
+        const unsubMsg = chatMessageBus.onMessage((msg) => {
+            if (msg.channelId === channelId) {
+                onReceiveMessageRef.current(msg);
+            }
+        });
+        const unsubDeleted = chatMessageBus.onDeleted((payload) => {
+            if (payload.channelId === channelId) {
+                onMessageDeletedRef.current?.(payload.messageId);
+            }
+        });
+        const unsubEdited = chatMessageBus.onEdited((msg) => {
+            if (msg.channelId === channelId) {
+                onMessageEditedRef.current?.(msg);
+            }
+        });
+        const unsubReaction = chatMessageBus.onReactionUpdated((msg) => {
+            if (msg.channelId === channelId) {
+                onReactionUpdatedRef.current?.(msg);
+            }
+        });
+
         connect();
 
         return () => {
-            chatHubConnection.off('ReceiveMessage');
+            unsubMsg();
+            unsubDeleted();
+            unsubEdited();
+            unsubReaction();
             chatHubConnection.off('UserTyping');
-            chatHubConnection.off('MessageDeleted');
-            chatHubConnection.off('MessageEdited');
-
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             setConnected(false);
         };

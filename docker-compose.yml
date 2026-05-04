@@ -50,8 +50,8 @@ services:
   fileservice:
     image: fileservice
     build:
-      context: ./src/FileService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/FileService/Dockerfile
       args:
         NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
     ports:
@@ -67,8 +67,8 @@ services:
   mediaservice:
     image: mediaservice
     build:
-      context: ./src/MediaService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./src/MediaService/Dockerfile
       args:
         NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
     ports:
@@ -114,6 +114,23 @@ services:
         condition: service_healthy
     volumes:
       - ./configs/appsettings.userservice.json:/app/appsettings.json:ro
+
+  notificationservice:
+    image: notificationservice
+    build:
+      context: .
+      dockerfile: ./src/NotificationService/Dockerfile
+      args:
+        NUGET_GITHUB_TOKEN: ${NUGET_GITHUB_TOKEN}
+    ports:
+      - "7210:7210"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./configs/appsettings.notificationservice.json:/app/appsettings.json:ro
 
   rabbitmq:
     image: rabbitmq:management-alpine

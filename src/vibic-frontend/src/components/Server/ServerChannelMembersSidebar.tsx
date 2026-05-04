@@ -298,7 +298,7 @@ export default function ServerChannelMembersSidebar({
   };
 
   return (
-    <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-t border-gray-700 bg-[#2b2d31] px-4 py-5 relative">
+    <aside className="w-[300px] shrink-0 overflow-y-auto border-l border-t border-white/[0.06] bg-[#171b27] px-4 py-5 relative">
       {hasLoadError ? (
         <div className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
           Не удалось загрузить участников этого канала.

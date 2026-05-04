@@ -4,19 +4,19 @@ ARG NUGET_GITHUB_TOKEN
 
 WORKDIR /src
 
-COPY FileService.sln ./
-COPY src/FileService.Application/FileService.Application.csproj ./src/FileService.Application/
-# COPY src/FileService.Core/FileService.Core.csproj ./src/FileService.Core/
-COPY src/FileService.Infrastructure/FileService.Infrastructure.csproj ./src/FileService.Infrastructure/
-COPY src/FileService.Web/FileService.Web.csproj ./src/FileService.Web/
+COPY src/FileService/FileService.sln ./src/FileService/
+COPY src/FileService/src/FileProject.Core/FileProject.Core.csproj ./src/FileService/src/FileProject.Core/
+COPY src/FileService/src/FileService.Application/FileService.Application.csproj ./src/FileService/src/FileService.Application/
+COPY src/FileService/src/FileService.Infrastructure/FileService.Infrastructure.csproj ./src/FileService/src/FileService.Infrastructure/
+COPY src/FileService/src/FileService.Web/FileService.Web.csproj ./src/FileService/src/FileService.Web/
 
 RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
     --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \
-    && dotnet restore src/FileService.Web/FileService.Web.csproj
+    && dotnet restore src/FileService/src/FileService.Web/FileService.Web.csproj
 
 COPY . .
 
-WORKDIR /src/src/FileService.Web
+WORKDIR /src/src/FileService/src/FileService.Web
 RUN dotnet publish -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime

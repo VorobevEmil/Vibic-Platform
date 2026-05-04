@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Vibic.Shared.Core.Exceptions;
 using Vibic.Shared.Core.Extensions;
 using Vibic.Shared.EF.Interfaces;
+using Vibic.Shared.Messaging.Contracts.Chat;
 
 namespace ChatChannelService.Application.Features.InviteFeatures.Commands;
 
@@ -42,6 +43,11 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
 
         Invite invite = new(Guid.NewGuid().ToString("N"), server);
         await _inviteRepository.CreateAsync(invite, cancellationToken);
+
+        // Here you would need to get the receiver ID from the request
+        // For now, we'll just create the invite and publish the event
+        // In a real scenario, you'd pass the receiver ID as a parameter
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new InviteDto(invite.Code);

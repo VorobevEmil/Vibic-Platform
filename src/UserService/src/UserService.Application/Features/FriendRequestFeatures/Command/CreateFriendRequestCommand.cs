@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using UserService.Application.Repositories;
 using UserService.Core.Entities;
 using Vibic.Shared.Core.Extensions;
+using Vibic.Shared.EF.Entities;
 using Vibic.Shared.EF.Interfaces;
+using Vibic.Shared.Messaging.Contracts.Users;
 
 namespace UserService.Application.Features.FriendRequestFeatures.Command;
 
@@ -36,6 +38,16 @@ public class CreateFriendRequestCommandHandler : IRequestHandler<CreateFriendReq
 
         FriendRequest friendRequest = new(sender, receiver);
         await _friendRequestRepository.CreateAsync(friendRequest, cancellationToken);
+
+        var @event = new FriendRequestCreatedEvent(
+            friendRequest.Id,
+            senderId,
+            sender.DisplayName,
+            request.ReceiverId);
+        
+        var outboxMessage = OutboxMessage.Create(@event);
+        await _unitOfWork.OutboxRepository.AddAsync(outboxMessage, cancellationToken);
+        
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

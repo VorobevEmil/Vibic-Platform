@@ -40,6 +40,7 @@ public static class DependencyInjection
                     }
                 }));
 
+        services.AddScoped<IOutboxRepository, OutboxRepository<TDbContext>>();
         services.AddScoped<IUnitOfWork, UnitOfWork<TDbContext>>();
 
         return services;

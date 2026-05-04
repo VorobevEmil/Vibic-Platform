@@ -28,6 +28,9 @@ export default function useCallConnection({
     const [remoteStreamStarted, setRemoteStreamStarted] = useState(false);
     const [isRemoteCamOn, setIsRemoteCamOn] = useState(false);
     const [isRemoteMicOn, setIsRemoteMicOn] = useState(true);
+    const [isScreenSharing, setIsScreenSharing] = useState(false);
+    const [isRemoteScreenSharing, setIsRemoteScreenSharing] = useState(false);
+    const screenStreamRef = useRef<MediaStream | null>(null);
 
     const attachLocalStreamToElement = useCallback((element: HTMLVideoElement | null) => {
         localVideoElementRef.current = element;
@@ -188,6 +191,77 @@ export default function useCallConnection({
         });
     };
 
+    const toggleScreenShare = useCallback(async () => {
+        try {
+            if (isScreenSharing && screenStreamRef.current) {
+                // Stop screen sharing
+                screenStreamRef.current.getTracks().forEach(track => track.stop());
+                screenStreamRef.current = null;
+                setIsScreenSharing(false);
+                
+                // Notify peer
+                callHubConnection.invoke('NotifyScreenShareStatusChanged', peerUserId, false).catch(console.error);
+                
+                // Restore camera if it was on
+                if (isCamOn && streamRef.current) {
+                    const videoTrack = streamRef.current.getVideoTracks()[0];
+                    if (videoTrack && peerConnection.current) {
+                        const sender = peerConnection.current.getSenders().find(s => s.track?.kind === 'video');
+                        if (sender) {
+                            sender.replaceTrack(videoTrack);
+                        }
+                    }
+                }
+            } else {
+                // Start screen sharing
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: false
+                });
+                
+                screenStreamRef.current = screenStream;
+                setIsScreenSharing(true);
+                
+                // Notify peer
+                callHubConnection.invoke('NotifyScreenShareStatusChanged', peerUserId, true).catch(console.error);
+                
+                // Replace video track with screen
+                if (peerConnection.current) {
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    const sender = peerConnection.current.getSenders().find(s => s.track?.kind === 'video');
+                    if (sender) {
+                        await sender.replaceTrack(screenTrack);
+                    }
+                    
+                    // Handle when user stops sharing via browser UI
+                    screenTrack.onended = () => {
+                        // Use setTimeout to avoid state update during render
+                        setTimeout(() => {
+                            if (screenStreamRef.current) {
+                                screenStreamRef.current.getTracks().forEach(track => track.stop());
+                                screenStreamRef.current = null;
+                                setIsScreenSharing(false);
+                                callHubConnection.invoke('NotifyScreenShareStatusChanged', peerUserId, false).catch(console.error);
+                                // Restore camera if it was on
+                                if (isCamOn && streamRef.current) {
+                                    const videoTrack = streamRef.current.getVideoTracks()[0];
+                                    if (videoTrack && peerConnection.current) {
+                                        const sender = peerConnection.current.getSenders().find(s => s.track?.kind === 'video');
+                                        if (sender) {
+                                            sender.replaceTrack(videoTrack);
+                                        }
+                                    }
+                                }
+                            }
+                        }, 0);
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Failed to toggle screen share:', error);
+        }
+    }, [isScreenSharing, isCamOn, peerUserId]);
+
     useEffect(() => {
         if (streamRef.current) {
             streamRef.current.getVideoTracks().forEach((track) => {
@@ -228,6 +302,7 @@ export default function useCallConnection({
             ['CancelAcceptedCall', () => closeCall(false)],
             ['PeerCameraStatusChanged', (isCam) => setIsRemoteCamOn(Boolean(isCam))],
             ['PeerMicStatusChanged', (isMic) => setIsRemoteMicOn(Boolean(isMic))],
+            ['PeerScreenShareStatusChanged', (isSharing) => setIsRemoteScreenSharing(Boolean(isSharing))],
             ['ReceiveOffer', async (fromUserId, offer) => {
                 if (typeof fromUserId !== 'string') {
                     return;
@@ -349,8 +424,11 @@ export default function useCallConnection({
         isMicOn,
         isRemoteCamOn,
         isRemoteMicOn,
+        isRemoteScreenSharing,
         remoteStreamStarted,
         toggleCam,
         closeCall,
+        isScreenSharing,
+        toggleScreenShare,
     };
 }

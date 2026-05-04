@@ -225,6 +225,11 @@ public class CallHub : Hub
         await SendToUserAsync(toUserId, "PeerMicStatusChanged", isMicOn);
     }
 
+    public async Task NotifyScreenShareStatusChanged(string toUserId, bool isScreenSharing)
+    {
+        await SendToUserAsync(toUserId, "PeerScreenShareStatusChanged", isScreenSharing);
+    }
+
     public async Task SendOffer(SendOfferRequest request)
     {
         Console.WriteLine("Оффер получен");

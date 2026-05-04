@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Copy, Pencil, Reply, Smile, Trash2 } from 'lucide-react';
 import { resolveAssetUrl } from '../../../api/httpClient';
 import MessageResponse from '../../../types/MessageType';
@@ -15,6 +16,7 @@ import { formatMessageTime, formatTimeOnly } from '../../../utils/formatMessageT
 import { renderContent } from '../../../utils/renderContent';
 import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import EmojiPicker from './EmojiPicker';
+import { ReactionBar } from '../ReactionBar';
 import UserProfileModal from './UserProfileModal';
 
 const GROUP_TIME_WINDOW_MS = 5 * 60 * 1000;
@@ -60,6 +62,8 @@ interface ChatMessageProps {
   onDeleteMessage?: (messageId: string) => void;
   onEditMessage?: (messageId: string, newContent: string) => void;
   onReply?: (message: MessageResponse) => void;
+  onAddReaction?: (messageId: string, emoji: string) => void;
+  onRemoveReaction?: (messageId: string, emoji: string) => void;
 }
 
 interface QuotedSenderInfo {
@@ -79,6 +83,8 @@ interface MessageRowProps {
   onAvatarClick?: (e: React.MouseEvent, message: MessageResponse) => void;
   onQuoteUserClick?: (e: React.MouseEvent, senderId: string, username: string, avatarUrl: string) => void;
   onScrollToMessage?: (messageId: string) => void;
+  onAddReaction?: (messageId: string, emoji: string) => void;
+  onRemoveReaction?: (messageId: string, emoji: string) => void;
 }
 
 interface VirtualMessageItem {
@@ -202,7 +208,7 @@ function MessageSkeletonRow({
       <div className="flex items-start gap-[14px] px-4 py-1.5">
         <div className="w-8 shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
-          <div className={`h-4 rounded-full bg-white/[0.06] animate-pulse ${compact ? 'w-[34%]' : 'w-[48%]'}`} />
+          <div className={`h-4 rounded-full bg-white/[0.05] animate-pulse ${compact ? 'w-[34%]' : 'w-[48%]'}`} />
           {!compact && <div className="h-4 w-[78%] rounded-full bg-white/[0.05] animate-pulse" />}
         </div>
       </div>
@@ -211,14 +217,14 @@ function MessageSkeletonRow({
 
   return (
     <div className="flex items-start gap-[14px] px-4 py-3">
-      <div className="h-8 w-8 shrink-0 rounded-full bg-white/[0.07] animate-pulse" />
+      <div className="h-8 w-8 shrink-0 rounded-full bg-white/[0.06] animate-pulse" />
       <div className="min-w-0 flex-1 space-y-2.5">
         <div className="flex items-center gap-2">
-          <div className="h-4 w-24 rounded-full bg-white/[0.07] animate-pulse" />
+          <div className="h-4 w-24 rounded-full bg-white/[0.06] animate-pulse" />
           <div className="h-3 w-16 rounded-full bg-white/[0.05] animate-pulse" />
         </div>
         <div className="space-y-2">
-          <div className="h-4 w-[68%] rounded-full bg-white/[0.06] animate-pulse" />
+          <div className="h-4 w-[68%] rounded-full bg-white/[0.05] animate-pulse" />
           <div className="h-4 w-[52%] rounded-full bg-white/[0.05] animate-pulse" />
         </div>
       </div>
@@ -260,6 +266,8 @@ function MessageRow({
   onAvatarClick,
   onQuoteUserClick,
   onScrollToMessage,
+  onAddReaction,
+  onRemoveReaction,
 }: MessageRowProps) {
   const editRef = useRef<HTMLTextAreaElement | null>(null);
   const rowRef = useRef<HTMLDivElement | null>(null);
@@ -268,6 +276,9 @@ function MessageRow({
   const [editValue, setEditValue] = useState('');
   const [editError, setEditError] = useState<string | null>(null);
   const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false);
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [reactionPickerPos, setReactionPickerPos] = useState<{ x: number; y: number } | null>(null);
+  const reactionBtnRef = useRef<HTMLButtonElement>(null);
   const isOwn = currentUserId === message.senderId;
   const { text, quote } = parseMessageContent(message.content);
 
@@ -378,14 +389,36 @@ function MessageRow({
     });
   }, [editValue]);
 
-  const actions = isOwn && !isEditing ? (
-    <div className="absolute -top-3 right-2 hidden group-hover:flex items-center gap-0.5 bg-[#2b2d31] border border-white/10 rounded-lg px-1 py-0.5 shadow-lg z-10">
-      <button type="button" onClick={startEdit} title="Редактировать" className="p-1 rounded text-gray-400 hover:text-white transition-colors">
-        <Pencil className="w-3.5 h-3.5" />
+  const openReactionPicker = () => {
+    const rect = reactionBtnRef.current?.getBoundingClientRect();
+    if (rect) {
+      setReactionPickerPos({ x: rect.right, y: rect.top });
+    }
+    setShowReactionPicker(v => !v);
+  };
+
+  const actions = !isEditing ? (
+    <div className={`absolute -top-3 right-2 items-center gap-0.5 bg-[#171b27] border border-white/[0.08] rounded-lg px-1 py-0.5 shadow-xl z-10 ${showReactionPicker ? 'flex' : 'hidden group-hover:flex'}`}>
+      {/* Reaction button — portal picker to escape overflow */}
+      <button
+        ref={reactionBtnRef}
+        type="button"
+        onClick={openReactionPicker}
+        title="Добавить реакцию"
+        className={`p-1 rounded transition-colors ${showReactionPicker ? 'text-indigo-400' : 'text-gray-400 hover:text-white'}`}
+      >
+        <Smile className="w-3.5 h-3.5" />
       </button>
-      <button type="button" onClick={() => onDelete?.(message.id)} title="Удалить" className="p-1 rounded text-gray-400 hover:text-red-400 transition-colors">
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      {isOwn && (
+        <>
+          <button type="button" onClick={startEdit} title="Редактировать" className="p-1 rounded text-gray-400 hover:text-white transition-colors">
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button type="button" onClick={() => onDelete?.(message.id)} title="Удалить" className="p-1 rounded text-gray-400 hover:text-red-400 transition-colors">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </>
+      )}
     </div>
   ) : null;
 
@@ -397,7 +430,7 @@ function MessageRow({
           onClose={() => setShowEditEmojiPicker(false)}
         />
       )}
-      <div className="mt-1 flex items-end gap-2 rounded-lg border border-indigo-500/50 bg-[#383a40] px-3 py-2">
+      <div className="mt-1 flex items-end gap-2 rounded-lg border border-indigo-500/40 bg-[#1c2032] px-3 py-2">
         <textarea
           ref={editRef}
           value={editValue}
@@ -417,11 +450,10 @@ function MessageRow({
         <button
           type="button"
           onClick={handleEditEmojiButtonClick}
-          className={`mb-0.5 shrink-0 rounded-lg p-1.5 transition-colors ${
-            showEditEmojiPicker
+          className={`mb-0.5 shrink-0 rounded-lg p-1.5 transition-colors ${showEditEmojiPicker
               ? 'bg-indigo-500/10 text-indigo-400'
               : 'text-gray-400 hover:bg-white/10 hover:text-white'
-          }`}
+            }`}
           title="Эмодзи"
         >
           <Smile className="h-4 w-4" />
@@ -480,83 +512,129 @@ function MessageRow({
     </div>
   ) : null;
 
+  const closeReactionPicker = () => {
+    setShowReactionPicker(false);
+    setReactionPickerPos(null);
+  };
+
+  // Portal-rendered picker — escapes overflow-hidden scroll container
+  const reactionPickerPortal = showReactionPicker && reactionPickerPos
+    ? createPortal(
+      <div
+        style={{
+          position: 'fixed',
+          bottom: `${window.innerHeight - reactionPickerPos.y}px`,
+          right: `${window.innerWidth - reactionPickerPos.x}px`,
+          zIndex: 200,
+        }}
+      >
+        <EmojiPicker
+          onSelect={(emoji) => {
+            onAddReaction?.(message.id, emoji);
+            closeReactionPicker();
+          }}
+          onClose={closeReactionPicker}
+        />
+      </div>,
+      document.body
+    )
+    : null;
+
   if (isGrouped) {
     return (
+      <>
+        <div
+          ref={rowRef}
+          data-message-id={message.id}
+          onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
+          className={`group relative flex flex-col pb-1 px-4 -mx-4 rounded-lg hover:bg-white/[0.03] transition-colors duration-100 ${highlightClass}`}
+        >
+          {actions}
+          {replyReference}
+          <div className="flex items-start gap-[14px]">
+            <div className="w-8 shrink-0">
+              <span className="absolute right-0 top-0.5 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity select-none pointer-events-none whitespace-nowrap">
+                {formatTimeOnly(message.sentAt)}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              {isEditing ? editUI : (
+                <div
+                  className="text-sm text-gray-300 break-words"
+                  style={{ overflowWrap: 'anywhere' }}
+                >
+                  {renderContent(text)}
+                  {message.isEdited && <span className="text-[11px] text-gray-500 ml-1">(изменено)</span>}
+                </div>
+              )}
+              <ReactionBar
+                message={message}
+                currentUserId={currentUserId}
+                onAddReaction={(msgId, emoji) => onAddReaction?.(msgId, emoji)}
+                onRemoveReaction={(msgId, emoji) => onRemoveReaction?.(msgId, emoji)}
+              />
+            </div>
+          </div>
+        </div>
+        {reactionPickerPortal}
+      </>
+    );
+  }
+
+  return (
+    <>
       <div
         ref={rowRef}
         data-message-id={message.id}
         onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
-        className={`group relative flex flex-col pb-1 px-4 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
+        className={`group relative flex flex-col px-[18px] pt-2 pb-3 -mx-4 rounded-lg hover:bg-white/[0.03] transition-colors duration-100 ${highlightClass}`}
       >
         {actions}
         {replyReference}
         <div className="flex items-start gap-[14px]">
-          <div className="w-8 shrink-0 relative">
-            <span className="absolute right-0 top-0.5 text-[10px] text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity select-none pointer-events-none whitespace-nowrap">
-              {formatTimeOnly(message.sentAt)}
-            </span>
-          </div>
+          <button
+            type="button"
+            onClick={e => onAvatarClick?.(e, message)}
+            className="shrink-0 mt-0.5 rounded-full focus:outline-none"
+          >
+            <img
+              src={resolveAssetUrl(message.senderAvatarUrl)}
+              className="w-8 h-8 rounded-full hover:brightness-110 transition-[filter] cursor-pointer"
+              alt={message.senderUsername}
+              loading="lazy"
+            />
+          </button>
           <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold">
+              <button
+                type="button"
+                onClick={e => onAvatarClick?.(e, message)}
+                className="text-white hover:underline cursor-pointer focus:outline-none"
+              >
+                {message.senderUsername}
+              </button>
+              <span className="text-xs text-gray-400 ml-2">{formatMessageTime(message.sentAt)}</span>
+            </div>
             {isEditing ? editUI : (
               <div
-                className="text-sm text-gray-300 break-words"
+                className="text-sm text-gray-300 mt-1 break-words"
                 style={{ overflowWrap: 'anywhere' }}
               >
                 {renderContent(text)}
                 {message.isEdited && <span className="text-[11px] text-gray-500 ml-1">(изменено)</span>}
               </div>
             )}
+            <ReactionBar
+              message={message}
+              currentUserId={currentUserId}
+              onAddReaction={(msgId, emoji) => onAddReaction?.(msgId, emoji)}
+              onRemoveReaction={(msgId, emoji) => onRemoveReaction?.(msgId, emoji)}
+            />
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div
-      ref={rowRef}
-      data-message-id={message.id}
-      onContextMenu={e => { e.preventDefault(); onContextMenu?.(e, message); }}
-      className={`group relative flex flex-col px-[18px] pt-2 pb-3 -mx-4 rounded-md hover:bg-white/[0.04] transition-colors ${highlightClass}`}
-    >
-      {actions}
-      {replyReference}
-      <div className="flex items-start gap-[14px]">
-        <button
-          type="button"
-          onClick={e => onAvatarClick?.(e, message)}
-          className="shrink-0 mt-0.5 rounded-full focus:outline-none"
-        >
-          <img
-            src={resolveAssetUrl(message.senderAvatarUrl)}
-            className="w-8 h-8 rounded-full hover:brightness-110 transition-[filter] cursor-pointer"
-            alt={message.senderUsername}
-            loading="lazy"
-          />
-        </button>
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">
-            <button
-              type="button"
-              onClick={e => onAvatarClick?.(e, message)}
-              className="text-white hover:underline cursor-pointer focus:outline-none"
-            >
-              {message.senderUsername}
-            </button>
-            <span className="text-xs text-gray-400 ml-2">{formatMessageTime(message.sentAt)}</span>
-          </div>
-          {isEditing ? editUI : (
-            <div
-              className="text-sm text-gray-300 mt-1 break-words"
-              style={{ overflowWrap: 'anywhere' }}
-            >
-              {renderContent(text)}
-              {message.isEdited && <span className="text-[11px] text-gray-500 ml-1">(изменено)</span>}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      {reactionPickerPortal}
+    </>
   );
 }
 
@@ -576,6 +654,8 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
     onDeleteMessage,
     onEditMessage,
     onReply,
+    onAddReaction,
+    onRemoveReaction,
   },
   ref,
 ) {
@@ -892,7 +972,7 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
       },
     ];
     if (isOwn) {
-      items.push({ label: '---', onClick: () => {} });
+      items.push({ label: '---', onClick: () => { } });
       items.push({
         label: 'Редактировать',
         icon: <Pencil className="w-4 h-4" />,
@@ -961,6 +1041,8 @@ const ChatMessages = forwardRef<ChatMessagesRef, ChatMessageProps>(function Chat
                       onAvatarClick={(e, m) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: m.senderId, username: m.senderUsername, avatarUrl: m.senderAvatarUrl })}
                       onQuoteUserClick={(e, senderId, username, avatarUrl) => setProfileModal({ x: e.clientX + 12, y: e.clientY - 20, userId: senderId, username, avatarUrl })}
                       onScrollToMessage={handleScrollToMessage}
+                      onAddReaction={onAddReaction}
+                      onRemoveReaction={onRemoveReaction}
                     />
                   </MeasuredMessageItem>
                 ))}

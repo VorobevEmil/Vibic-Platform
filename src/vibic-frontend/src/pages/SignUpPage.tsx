@@ -21,7 +21,7 @@ function SignUpPage() {
     >
       <form className="space-y-4" onSubmit={handleRegister}>
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Email
           </label>
           <input
@@ -35,7 +35,7 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Отображаемое имя
           </label>
           <input
@@ -49,7 +49,7 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Имя пользователя
           </label>
           <input
@@ -63,7 +63,7 @@ function SignUpPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#555c78] mb-1.5">
             Пароль
           </label>
           <input

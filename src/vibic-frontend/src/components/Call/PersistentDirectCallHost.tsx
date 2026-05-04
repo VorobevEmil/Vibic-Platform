@@ -59,8 +59,11 @@ function ActiveDirectCallSession({
     isMicOn,
     isRemoteCamOn,
     isRemoteMicOn,
+    isRemoteScreenSharing,
     remoteStreamStarted,
     toggleCam,
+    isScreenSharing,
+    toggleScreenShare,
     closeCall,
   } = useCallConnection({
     callRequest,
@@ -154,7 +157,7 @@ function ActiveDirectCallSession({
     : document.getElementById(getDirectCallSlotId(callRequest.channelId));
 
   const panelContent = (
-    <div className="shrink-0 border-b border-[#1e1f22] bg-[#1e1f22]">
+    <div className="shrink-0 border-b border-[#1e1f22] bg-[#0e1016]">
       <CallPanel
         callRequest={callRequest}
         height={clampCallPanelHeight(callPanelHeight)}
@@ -164,8 +167,11 @@ function ActiveDirectCallSession({
         isMicOn={isMicOn}
         isRemoteCamOn={isRemoteCamOn}
         isRemoteMicOn={isRemoteMicOn}
+        isRemoteScreenSharing={isRemoteScreenSharing}
         remoteStreamStarted={remoteStreamStarted}
         toggleCam={toggleCam}
+        isScreenSharing={isScreenSharing}
+        toggleScreenShare={toggleScreenShare}
         closeCall={closeCall}
       />
 

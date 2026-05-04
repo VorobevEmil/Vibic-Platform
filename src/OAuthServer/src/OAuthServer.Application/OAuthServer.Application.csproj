@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -9,16 +9,16 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-        <PackageReference Include="Vibic.Shared.Core" Version="10.0.1"/>
+        <PackageReference Include="Vibic.Shared.Core" Version="10.0.2"/>
+        <PackageReference Include="Vibic.Shared.Messaging" Version="10.0.2"/>
         <PackageReference Include="MediatR" Version="14.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.7" />
         <PackageReference Include="OpenIddict.Abstractions" Version="7.2.0"/>
         <PackageReference Include="OpenIddict.Server.AspNetCore" Version="7.2.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\OAuthServer.Core\OAuthServer.Core.csproj" />
-      <ProjectReference Include="..\..\..\Vibic Libraries\Vibic.Shared.Messaging\Vibic.Shared.Messaging\Vibic.Shared.Messaging.csproj" />
     </ItemGroup>
 
 </Project>

@@ -111,7 +111,7 @@ export default function FriendCenterPanel() {
             {Array.from({ length: tab === 'add' ? 1 : 5 }).map((_, index) => (
                 <div
                     key={index}
-                    className={`rounded-xl border border-white/[0.05] bg-[#2b2d31] ${
+                    className={`rounded-xl border border-white/[0.05] bg-[#171b27] ${
                         tab === 'add' ? 'px-4 py-4' : 'px-4 py-3'
                     }`}
                 >
@@ -156,7 +156,7 @@ export default function FriendCenterPanel() {
                     <p className="text-sm text-gray-400 mb-4">
                         Введите ID пользователя, чтобы отправить заявку в друзья.
                     </p>
-                    <div className="flex items-center gap-2 bg-[#1e1f22] border border-white/10 rounded-xl px-4 py-1 focus-within:border-indigo-500/50">
+                    <div className="flex items-center gap-2 bg-[#0e1016] border border-white/10 rounded-xl px-4 py-1 focus-within:border-indigo-500/50">
                         <input
                             type="text"
                             className="flex-1 bg-transparent text-white text-sm py-2.5 outline-none placeholder-gray-500"
@@ -187,7 +187,7 @@ export default function FriendCenterPanel() {
                         <p className="text-sm text-gray-500">Нет отправленных заявок.</p>
                     )}
                     {outgoing.map(({ userProfile, requestId }) => (
-                        <div key={requestId} className="flex items-center justify-between gap-3 px-4 py-3 bg-[#2b2d31] hover:bg-[#313338] border border-white/[0.05] rounded-xl transition-colors group">
+                        <div key={requestId} className="flex items-center justify-between gap-3 px-4 py-3 bg-[#171b27] hover:bg-[#1c2032] border border-white/[0.05] rounded-xl transition-colors group">
                             <div className="flex items-center gap-3">
                                 <img
                                     src={resolveAssetUrl(userProfile.avatarUrl)}
@@ -222,7 +222,7 @@ export default function FriendCenterPanel() {
                         <p className="text-sm text-gray-500">Нет входящих заявок.</p>
                     )}
                     {incoming.map(({ userProfile, requestId }) => (
-                        <div key={requestId} className="flex items-center justify-between gap-3 px-4 py-3 bg-[#2b2d31] hover:bg-[#313338] border border-white/[0.05] rounded-xl transition-colors">
+                        <div key={requestId} className="flex items-center justify-between gap-3 px-4 py-3 bg-[#171b27] hover:bg-[#1c2032] border border-white/[0.05] rounded-xl transition-colors">
                             <div className="flex items-center gap-3">
                                 <img
                                     src={resolveAssetUrl(userProfile.avatarUrl)}
@@ -271,7 +271,7 @@ export default function FriendCenterPanel() {
                     return (
                         <div
                             key={friend.id}
-                            className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl hover:bg-[#2b2d31] border border-transparent hover:border-white/[0.05] transition-all group cursor-pointer"
+                            className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl hover:bg-[#171b27] border border-transparent hover:border-white/[0.05] transition-all group cursor-pointer"
                             onClick={() => void startDirectMessage(friend.id)}
                         >
                             <div className="flex items-center gap-3 min-w-0">
@@ -315,7 +315,7 @@ export default function FriendCenterPanel() {
     };
 
     return (
-        <div className="flex-1 bg-[#313338] flex flex-col overflow-hidden">
+        <div className="flex-1 bg-[#1c2032] flex flex-col overflow-hidden">
             {/* Header / Tab bar */}
             <div className="flex items-center gap-1 px-6 py-3 border-b border-white/[0.06] shrink-0">
                 {TABS.map(({ id, label }) => (

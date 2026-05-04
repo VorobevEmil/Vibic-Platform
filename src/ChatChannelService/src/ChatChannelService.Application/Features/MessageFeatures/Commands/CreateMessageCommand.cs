@@ -6,7 +6,9 @@ using ChatChannelService.Core.Enums;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Vibic.Shared.Core.Exceptions;
+using Vibic.Shared.EF.Entities;
 using Vibic.Shared.EF.Interfaces;
+using Vibic.Shared.Messaging.Contracts.Chat;
 
 namespace ChatChannelService.Application.Features.MessageFeatures.Commands;
 
@@ -57,16 +59,14 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
         switch (request.ChannelType)
         {
             case ChannelType.Direct:
-                channel = await _channelRepository
-                    .FindDirectChannelForUserAsync(request.UserId, request.ChannelId, cancellationToken);
+                channel = await _channelRepository.FindDirectChannelForUserAsync(request.UserId, request.ChannelId, cancellationToken);
                 break;
             case ChannelType.Server:
-                channel = await _channelRepository
-                    .FindAccessibleServerChannelForUserAsync(
-                        request.UserId,
-                        request.ServerId!.Value,
-                        request.ChannelId,
-                        cancellationToken);
+                channel = await _channelRepository.FindAccessibleServerChannelForUserAsync(
+                    request.UserId,
+                    request.ServerId!.Value,
+                    request.ChannelId,
+                    cancellationToken);
                 break;
             default:
                 throw new ValidationException("Channel type is invalid.");
@@ -82,6 +82,36 @@ public class CreateMessageHandler : IRequestHandler<CreateMessageCommand, Messag
         Message message = new(channel, senderUser, request.Content);
 
         await _messageRepository.CreateAsync(message, cancellationToken);
+
+        List<Guid>? receiverIds = null;
+
+        if (request.ChannelType == ChannelType.Direct)
+        {
+            var receiver = channel.ChannelMembers.FirstOrDefault(m => m.ChatUserId != request.UserId);
+            if (receiver != null)
+                receiverIds = [receiver.ChatUserId];
+        }
+        else if (request.ChannelType == ChannelType.Server)
+        {
+            receiverIds = channel.Server!.ServerMembers
+                .Where(sm => sm.ChatUserId != request.UserId)
+                .Select(sm => sm.ChatUserId)
+                .ToList();
+        }
+
+        if (receiverIds is { Count: > 0 })
+        {
+            var @event = new MessageCreatedEvent(
+                message.Id,
+                request.ChannelId,
+                request.UserId,
+                senderUser.DisplayName,
+                receiverIds,
+                request.Content);
+
+            await _unitOfWork.OutboxRepository.AddAsync(OutboxMessage.Create(@event), cancellationToken);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         MessageDto messageDto = message.MapToDto(_configuration);

@@ -17,7 +17,7 @@ namespace ChatChannelService.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.2")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -168,6 +168,33 @@ namespace ChatChannelService.Infrastructure.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("ChatChannelService.Core.Entities.Reaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId", "UserId", "Emoji")
+                        .IsUnique();
+
+                    b.ToTable("Reactions");
+                });
+
             modelBuilder.Entity("ChatChannelService.Core.Entities.Server", b =>
                 {
                     b.Property<Guid>("Id")
@@ -288,6 +315,40 @@ namespace ChatChannelService.Infrastructure.Migrations
                     b.ToTable("ServerMemberServerRole");
                 });
 
+            modelBuilder.Entity("Vibic.Shared.EF.Entities.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("AvailableAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OutboxMessages");
+                });
+
             modelBuilder.Entity("ChatChannelService.Core.Entities.Channel", b =>
                 {
                     b.HasOne("ChatChannelService.Core.Entities.Server", "Server")
@@ -344,6 +405,17 @@ namespace ChatChannelService.Infrastructure.Migrations
                     b.Navigation("Channel");
 
                     b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("ChatChannelService.Core.Entities.Reaction", b =>
+                {
+                    b.HasOne("ChatChannelService.Core.Entities.Message", "Message")
+                        .WithMany("Reactions")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
                 });
 
             modelBuilder.Entity("ChatChannelService.Core.Entities.Server", b =>
@@ -416,6 +488,11 @@ namespace ChatChannelService.Infrastructure.Migrations
                     b.Navigation("Messages");
 
                     b.Navigation("ServerMembers");
+                });
+
+            modelBuilder.Entity("ChatChannelService.Core.Entities.Message", b =>
+                {
+                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("ChatChannelService.Core.Entities.Server", b =>

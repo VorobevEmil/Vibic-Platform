@@ -113,7 +113,7 @@ export default function EditChannelModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/65 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#2b2d31] p-6 text-white shadow-2xl">
+      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#171b27] p-6 text-white shadow-2xl">
         <button
           type="button"
           onClick={onClose}
@@ -167,7 +167,7 @@ export default function EditChannelModal({
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     placeholder="новый-канал"
-                    className="w-full rounded-xl bg-[#1e1f22] py-2.5 pl-8 pr-3 text-sm text-white outline-none ring-1 ring-transparent transition focus:ring-indigo-500/60"
+                    className="w-full rounded-xl bg-[#0e1016] py-2.5 pl-8 pr-3 text-sm text-white outline-none ring-1 ring-transparent transition focus:ring-indigo-500/60"
                   />
                 </div>
               </div>

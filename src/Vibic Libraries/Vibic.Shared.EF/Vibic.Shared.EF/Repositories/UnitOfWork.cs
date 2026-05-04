@@ -6,10 +6,13 @@ public class UnitOfWork<TDbContext> : IUnitOfWork where TDbContext : SharedDbCon
 {
     private readonly TDbContext _context;
 
-    public UnitOfWork(TDbContext context)
+    public UnitOfWork(TDbContext context, IOutboxRepository outboxRepository)
     {
         _context = context;
+        OutboxRepository = outboxRepository;
     }
+
+    public IOutboxRepository OutboxRepository { get; }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {

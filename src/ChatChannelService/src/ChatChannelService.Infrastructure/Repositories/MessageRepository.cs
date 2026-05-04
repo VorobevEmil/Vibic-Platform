@@ -24,6 +24,7 @@ public class MessageRepository : IMessageRepository
         IQueryable<Message> query = _dbContext.Messages
             .Include(m => m.Channel)
             .Include(m => m.Sender)
+            .Include(m => m.Reactions)
             .Where(m => m.ChannelId == channelId);
 
         query = query.OrderByDescending(m => m.CreatedAt)
@@ -46,6 +47,7 @@ public class MessageRepository : IMessageRepository
         return await _dbContext.Messages
             .Include(m => m.Channel)
             .Include(m => m.Sender)
+            .Include(m => m.Reactions)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 

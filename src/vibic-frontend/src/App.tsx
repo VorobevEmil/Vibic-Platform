@@ -13,15 +13,18 @@ import { HeaderProvider } from './context/HeaderContext';
 import { RightSidebarProvider } from './context/RightSidebarContext';
 import ServerAvailabilityToast from './components/Layout/ServerAvailabilityToast';
 import { ToastProvider } from './context/ToastContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 function ProtectedAppLayout() {
   return (
     <AuthProvider>
-      <RightSidebarProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
-      </RightSidebarProvider>
+      <NotificationProvider>
+        <RightSidebarProvider>
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        </RightSidebarProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
@@ -32,18 +35,18 @@ function App() {
     <HeaderProvider>
       <ServerAvailabilityToast />
       <Routes>
-        <Route element={<PrivateRoute />}>
-          <Route path="/invite/:inviteCode" element={<InvitePage />} />
-          <Route element={<ProtectedAppLayout />}>
-            <Route path="/channels/@me" element={<HomePage />} />
-            <Route path="/channels/@me/:id" element={<ChannelPage />} />
-            <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
-          </Route>
+      <Route element={<PrivateRoute />}>
+        <Route path="/invite/:inviteCode" element={<InvitePage />} />
+        <Route element={<ProtectedAppLayout />}>
+          <Route path="/channels/@me" element={<HomePage />} />
+          <Route path="/channels/@me/:id" element={<ChannelPage />} />
+          <Route path="/channels/:serverId/:channelId" element={<ServerPage />} />
         </Route>
-        <Route path="/sign-in" element={<SignInPage />} />
-        <Route path="/sign-up" element={<SignUpPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      </Route>
+      <Route path="/sign-in" element={<SignInPage />} />
+      <Route path="/sign-up" element={<SignUpPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
     </HeaderProvider>
     </ToastProvider>
   );

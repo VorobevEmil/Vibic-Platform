@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function NotFoundPage() {
   return (
-    <div className="min-h-screen bg-[#1e1f22] flex flex-col items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#0e1016] flex flex-col items-center justify-center px-4 relative overflow-hidden">
       {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/4 w-96 h-96 rounded-full bg-indigo-600/[0.10] blur-3xl" />

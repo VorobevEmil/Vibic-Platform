@@ -19,9 +19,10 @@ Vibic Platform is a microservice-based communication platform with servers, dire
 | ApiGateway | `src/ApiGateway` | Ocelot gateway used by the frontend |
 | OAuthServer | `src/OAuthServer` | Authentication, JWT issuance, and OpenIddict endpoints |
 | UserService | `src/UserService` | User profiles, avatars, friends, and presence hub |
-| ChatChannelService | `src/ChatChannelService` | Servers, channels, invites, messages, and chat hub |
+| ChatChannelService | `src/ChatChannelService` | Servers, channels, invites, messages, reactions, and chat hub |
 | MediaService | `src/MediaService` | Call signaling and voice-channel presence |
 | FileService | `src/FileService` | File upload and retrieval backed by MinIO |
+| NotificationService | `src/NotificationService` | Push notifications for messages, friend requests, and invites |
 | Vibic Libraries | `src/Vibic Libraries` | Source for shared libraries published as `Vibic.Shared.*` packages |
 
 ## Architecture
@@ -35,24 +36,25 @@ flowchart TD
     Gateway --> Chat["ChatChannelService<br/>port 7138"]
     Gateway --> Media["MediaService<br/>port 7139"]
     Gateway --> Files["FileService<br/>port 7205"]
+    Gateway --> Notif["NotificationService<br/>port 7210"]
 
     OAuth --> Postgres["PostgreSQL"]
     Users --> Postgres
     Chat --> Postgres
+    Notif --> Postgres
 
     OAuth --> Rabbit["RabbitMQ"]
     Users --> Rabbit
     Chat --> Rabbit
     Media --> Rabbit
+    Notif --> Rabbit
 
     Files --> Minio["MinIO"]
 ```
 
-Containerized development uses one PostgreSQL instance and separates service data with schemas (`oauth`, `users`, and `chat`). The local example configs use dedicated database names for readability.
+Containerized development uses one PostgreSQL instance and separates service data with schemas (`oauth`, `users`, `chat`, and `notifications`). The local example configs use dedicated database names for readability.
 
 ## Gateway routes
-
-ApiGateway currently proxies these routes:
 
 | Upstream route | Destination |
 |---|---|
@@ -60,26 +62,25 @@ ApiGateway currently proxies these routes:
 | `/auth/sign-up` | OAuthServer |
 | `/servers/*` | ChatChannelService |
 | `/channels/*` | ChatChannelService |
+| `/messages/*` | ChatChannelService |
 | `/invites/*` | ChatChannelService |
 | `/user-profiles/*` | UserService |
 | `/friends*` | UserService |
 | `/files/*` | FileService |
+| `/notifications/*` | NotificationService |
 | `/hubs/chat` | ChatChannelService |
 | `/hubs/call` | MediaService |
-
-Direct service endpoints that are not currently routed through ApiGateway:
-
-- OAuthServer: `/connect/*`, `/settings/applications`
-- UserService: `/hubs/presence`
+| `/hubs/presence` | UserService |
+| `/hubs/notifications` | NotificationService |
 
 ## Prerequisites
 
 - Docker + Docker Compose for the full containerized stack
 - .NET 10 SDK for local backend work
 - Node.js 22+ for local frontend work
-- A GitHub Personal Access Token with access to GitHub Packages
+- A GitHub Personal Access Token with `read:packages` scope
 
-Most backend services restore `Vibic.Shared.*` packages from GitHub Packages, even though the source for those libraries also lives in this repository.
+Backend services restore `Vibic.Shared.*` packages (`Vibic.Shared.Core`, `Vibic.Shared.EF`, `Vibic.Shared.Messaging` — version 10.0.2) from GitHub Packages at `https://nuget.pkg.github.com/VorobevEmil/index.json`.
 
 ## Running with Docker
 
@@ -104,8 +105,7 @@ docker compose up --build
 Notes:
 
 - `ApiGateway` switches to `ocelot.Docker.json` through `ASPNETCORE_ENVIRONMENT=Docker`.
-- Docker mounts service configs from `configs/` for `OAuthServer`, `UserService`, `ChatChannelService`, and `FileService`.
-- `MediaService` is started without an additional mounted config file in `docker-compose.yml`.
+- Docker mounts service configs from `configs/` for each backend service.
 
 ### Available URLs
 
@@ -118,6 +118,7 @@ Notes:
 | ChatChannelService | http://localhost:7138 |
 | MediaService | http://localhost:7139 |
 | FileService | http://localhost:7205 |
+| NotificationService | http://localhost:7210 |
 | RabbitMQ UI | http://localhost:15672 |
 | MinIO Console | http://localhost:9001 |
 
@@ -135,7 +136,7 @@ Default credentials:
 docker compose up postgres rabbitmq minio
 ```
 
-2. Add the GitHub Packages feed used by the backend Dockerfiles:
+2. Add the GitHub Packages feed:
 
 ```bash
 dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
@@ -155,6 +156,7 @@ dotnet run --project src/UserService/src/UserService.Web
 dotnet run --project src/ChatChannelService/src/ChatChannelService.Web
 dotnet run --project src/FileService/src/FileService.Web
 dotnet run --project src/MediaService/src/MediaService.Web
+dotnet run --project src/NotificationService/src/NotificationService.Web
 dotnet run --project src/ApiGateway/src/ApiGateway.Web
 ```
 
@@ -179,6 +181,7 @@ The frontend uses `VITE_API_BASE_URL`, which defaults to `http://localhost:7157`
 | ChatChannelService | 7138 |
 | MediaService | 7139 |
 | FileService | 7205 |
+| NotificationService | 7210 |
 | PostgreSQL | 5432 |
 | RabbitMQ (AMQP) | 5672 |
 | RabbitMQ (UI) | 15672 |
@@ -187,7 +190,7 @@ The frontend uses `VITE_API_BASE_URL`, which defaults to `http://localhost:7157`
 
 ## Shared libraries
 
-The repository includes the source for three shared libraries under `src/Vibic Libraries`, while the service projects currently consume the published NuGet packages:
+The repository includes the source for three shared libraries under `src/Vibic Libraries`. Services consume them as NuGet packages (version 10.0.2) restored from GitHub Packages:
 
 | Package | Purpose |
 |---|---|

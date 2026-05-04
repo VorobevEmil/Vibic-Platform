@@ -9,7 +9,6 @@ COPY src/UserService/src/UserService.Application/UserService.Application.csproj 
 COPY src/UserService/src/UserService.Core/UserService.Core.csproj ./src/UserService/src/UserService.Core/
 COPY src/UserService/src/UserService.Infrastructure/UserService.Infrastructure.csproj ./src/UserService/src/UserService.Infrastructure/
 COPY src/UserService/src/UserService.Web/UserService.Web.csproj ./src/UserService/src/UserService.Web/
-COPY ["src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/Vibic.Shared.Messaging.csproj", "./src/Vibic Libraries/Vibic.Shared.Messaging/Vibic.Shared.Messaging/"]
 
 RUN dotnet nuget add source "https://nuget.pkg.github.com/VorobevEmil/index.json" \
     --name github --username VorobevEmil --password "${NUGET_GITHUB_TOKEN}" --store-password-in-clear-text \

@@ -34,7 +34,7 @@ export default function UserProfileCard({ onClose, onOpenSettings }: Props) {
     return (
         <div
             ref={ref}
-            className="absolute bottom-16 left-4 z-50 bg-[#2b2d31] w-72 rounded-xl border border-[#3a3c42] p-4 text-white shadow-xl"
+            className="absolute bottom-16 left-4 z-50 bg-[#171b27] w-72 rounded-xl border border-[#3a3c42] p-4 text-white shadow-xl"
         >
             <div className="text-sm font-bold mb-2">Личное</div>
 

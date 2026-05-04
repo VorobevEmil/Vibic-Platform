@@ -135,11 +135,11 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
   return (
     <div
       ref={ref}
-      className="absolute bottom-full mb-2 right-0 w-80 bg-[#2b2d31] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+      className="absolute bottom-full mb-2 right-0 w-80 bg-[#171b27] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
     >
       {/* Search */}
       <div className="px-2 pt-2 pb-1">
-        <div className="flex items-center gap-1.5 bg-[#1e1f22] rounded-lg px-2.5 py-1.5">
+        <div className="flex items-center gap-1.5 bg-[#0e1016] rounded-lg px-2.5 py-1.5">
           <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
           <input
             ref={searchRef}
